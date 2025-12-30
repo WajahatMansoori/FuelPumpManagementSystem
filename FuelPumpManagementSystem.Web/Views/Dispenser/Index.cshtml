@@ -11,52 +11,7 @@
             <small class="text-muted">Manage dispenser API & nozzle setup</small>
         </div>
 
-<script>
-    (function () {
-        const fileInput = document.getElementById('siteLogoInput');
-        const imgPreview = document.getElementById('siteLogoPreview');
-        const errorSpan = document.getElementById('siteLogoError');
-
-        if (!fileInput || !imgPreview) return;
-
-        const clearError = () => {
-            if (errorSpan) {
-                errorSpan.textContent = '';
-                errorSpan.classList.add('d-none');
-            }
-        };
-
-        const showError = (message) => {
-            if (errorSpan) {
-                errorSpan.textContent = message;
-                errorSpan.classList.remove('d-none');
-            } else {
-                alert(message);
-            }
-        };
-
-        fileInput.addEventListener('change', function (e) {
-            clearError();
-
-            const file = e.target.files && e.target.files[0];
-            if (!file) return;
-
-            // Allow only image files
-            const isImage = file.type && file.type.startsWith('image/');
-            if (!isImage) {
-                showError('Selected file is not a supported image. Please upload PNG, JPG, or JPEG only.');
-                fileInput.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function (ev) {
-                imgPreview.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-    })();
-</script>
+        
 
         <!-- Site Settings Button -->
         <button class="btn btn-outline-secondary"
@@ -239,7 +194,8 @@
                         <div class="col-md-4 text-center">
                             <div class="border rounded p-3 h-100">
                                 <img id="siteLogoPreview"
-                                     src="@(Model.SiteDetail?.SiteLogo ?? "/images/site-placeholder.png")"
+                                     src="@(Model.SiteDetail?.SiteLogo
+                                     ?? Url.Content("~/uploads/defaultlogo.png"))"
                                      class="img-fluid rounded mb-3"
                                      style="max-height:120px;" />
 
@@ -301,3 +257,36 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const input = document.getElementById('siteLogoInput');
+            const preview = document.getElementById('siteLogoPreview');
+            const error = document.getElementById('siteLogoError');
+
+            if (!input || !preview) return;
+
+            input.addEventListener('change', function () {
+
+                const file = this.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith('image/')) {
+                    error.textContent = 'Invalid image file.';
+                    error.classList.remove('d-none');
+                    this.value = '';
+                    return;
+                }
+
+                error.textContent = '';
+                error.classList.add('d-none');
+
+                const reader = new FileReader();
+                reader.onload = e => preview.src = e.target.result;
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
+}
