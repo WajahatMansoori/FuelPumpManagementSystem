@@ -15,7 +15,9 @@ namespace Shared.FPMS_DB
             var optionsBuilder = new DbContextOptionsBuilder<FPMSDbContext>();
 
             // Set your connection string (absolute path recommended)
-            optionsBuilder.UseSqlite(@"Data Source=D:/Work/Freelance/Windsurf/FPMS/Shared/FuelPumpManagementSystem.db");
+            //optionsBuilder.UseSqlite(@"Data Source=D:/Work/Freelance/Windsurf/FPMS/Shared/FuelPumpManagementSystem.db");
+            optionsBuilder.UseSqlite("Data Source=FuelPumpManagementSystem.db");
+
 
             return new FPMSDbContext(optionsBuilder.Options);
         }

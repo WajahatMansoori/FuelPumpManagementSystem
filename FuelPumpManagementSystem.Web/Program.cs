@@ -8,11 +8,11 @@ using Shared.Helpers;
 var builder = WebApplication.CreateBuilder(args);
 
 
-//builder.Services.AddDbContext<FPMSDbContext>(options =>
-//    options.UseSqlite(builder.Configuration.GetConnectionString("FPMSDb")));
-var connectionString = @"Data Source=D:\Work\Freelance\Windsurf\FPMS\Shared\FuelPumpManagementSystem.db";
 builder.Services.AddDbContext<FPMSDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseSqlite(builder.Configuration.GetConnectionString("FPMSDb")));
+//var connectionString = @"Data Source=D:\Work\Freelance\Windsurf\FPMS\Shared\FuelPumpManagementSystem.db";
+//builder.Services.AddDbContext<FPMSDbContext>(options =>
+//    options.UseSqlite(connectionString));
 
 builder.Services.AddScoped<IDispenserService, DispenserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
@@ -118,6 +118,11 @@ app.Lifetime.ApplicationStopping.Register(() =>
     catch { }
 });
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<FPMSDbContext>();
+    db.Database.EnsureCreated();
+}
 
 
 app.Run();
