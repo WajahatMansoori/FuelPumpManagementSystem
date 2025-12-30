@@ -3,6 +3,7 @@ using FuelPumpManagementSystem.Application.Interfaces;
 using FuelPumpManagementSystem.Application.Services;
 using Microsoft.EntityFrameworkCore;
 using Shared.FPMS_DB;
+using Shared.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,7 @@ builder.Services.AddDbContext<FPMSDbContext>(options =>
 builder.Services.AddScoped<IDispenserService, DispenserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISiteService, SiteService>();
+builder.Services.AddTransient<FileUploadHelper>();
 
 
 // Add services to the container.
