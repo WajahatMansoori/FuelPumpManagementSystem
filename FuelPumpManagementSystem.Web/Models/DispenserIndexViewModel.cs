@@ -7,5 +7,7 @@ namespace FuelPumpManagementSystem.Web.Models
     {
         public ConfigureDispenserRequestDTO Configure { get; set; }
         public List<DispenserResponseDTO> Dispensers { get; set; }
+        public List<ProductResponseDTO> Products { get; set; }
+        public SiteDetailRequestDTO SiteDetail { get; set; }
     }
 }

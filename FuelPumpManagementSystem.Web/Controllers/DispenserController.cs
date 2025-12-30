@@ -9,13 +9,17 @@ namespace FuelPumpManagementSystem.Web.Controllers
     public class DispenserController : Controller
     {
         private readonly IDispenserService _dispenserService;
-        public DispenserController(IDispenserService dispenserService)
+        private readonly IProductService _productService;
+
+        public DispenserController(IDispenserService dispenserService, IProductService productService)
         {
             _dispenserService = dispenserService;
+            _productService = productService;
         }
         public async Task<IActionResult> Index(int? id)
         {
             var dispensers = await _dispenserService.GetAllAsync();
+            var products = await _productService.GetAllAsync();
             var configure = new ConfigureDispenserRequestDTO();
 
             if (id.HasValue)
@@ -38,7 +42,8 @@ namespace FuelPumpManagementSystem.Web.Controllers
             var vm = new DispenserIndexViewModel
             {
                 Configure = configure,
-                Dispensers = dispensers
+                Dispensers = dispensers,
+                Products = products
             };
 
             return View(vm);

@@ -13,10 +13,9 @@ var connectionString = @"Data Source=D:\Work\Freelance\Windsurf\FPMS\Shared\Fuel
 builder.Services.AddDbContext<FPMSDbContext>(options =>
     options.UseSqlite(connectionString));
 
-
-
 builder.Services.AddScoped<IDispenserService, DispenserService>();
-
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ISiteService, SiteService>();
 
 
 // Add services to the container.
