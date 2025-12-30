@@ -8,6 +8,7 @@ namespace FuelPumpManagementSystem.Application.DTOs.Request
 {
     public class ConfigureDispenserRequestDTO
     {
+        public int? DispenserId { get; set; }
         public string? ApiEndPoint { get; set; }
         public bool IsNozzle1Enabled { get; set; }
         public bool IsNozzle2Enabled { get; set; }

@@ -9,7 +9,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 //builder.Services.AddDbContext<FPMSDbContext>(options =>
 //    options.UseSqlite(builder.Configuration.GetConnectionString("FPMSDb")));
-var connectionString = @"Data Source=D:\Work\Freelance\Project\FPMS\Shared\FuelPumpManagementSystem.db";
+var connectionString = @"Data Source=D:\Work\Freelance\Windsurf\FPMS\Shared\FuelPumpManagementSystem.db";
 builder.Services.AddDbContext<FPMSDbContext>(options =>
     options.UseSqlite(connectionString));
 

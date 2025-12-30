@@ -11,7 +11,7 @@ using Shared.FPMS_DB;
 namespace Shared.Migrations
 {
     [DbContext(typeof(FPMSDbContext))]
-    [Migration("20251229230252_InitialCreate")]
+    [Migration("20251230091646_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -360,6 +360,33 @@ namespace Shared.Migrations
                     b.HasKey("TransactionId");
 
                     b.ToTable("Transaction");
+                });
+
+            modelBuilder.Entity("Shared.FPMS_DB.Entities.User", b =>
+                {
+                    b.Property<int>("UserId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("datetime('now')");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("IsAdminLogin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Password")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("User");
                 });
 
             modelBuilder.Entity("Shared.FPMS_DB.Entities.DispenserNozzle", b =>

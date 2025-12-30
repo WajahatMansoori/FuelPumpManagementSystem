@@ -21,14 +21,8 @@ namespace Shared.FPMS_DB
         public DbSet<SiteDetail> SiteDetail { get; set; }
         public DbSet<DispenserActionType> DispenserActionType { get; set; }
         public DbSet<DispenserActionLog> DispenserActionLog { get; set; }
-
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        //{
-        //    if (!optionsBuilder.IsConfigured)
-        //    {
-        //        optionsBuilder.UseSqlite("Data Source=FuelPumpManagementSystem.db");
-        //    }
-        //}
+        public DbSet<User> User { get; set; }
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -51,6 +45,7 @@ namespace Shared.FPMS_DB
             ConfigureCommon<DispenserActionLog>();
             ConfigureCommon<DispenserActionLog>();
             ConfigureCommon<Dispenser>();
+            ConfigureCommon<User>();
 
             // Configure Dispenser defaults
             modelBuilder.Entity<Dispenser>(entity =>

@@ -25,6 +25,7 @@ namespace FuelPumpManagementSystem.Web.Controllers
                 {
                     configure = new ConfigureDispenserRequestDTO
                     {
+                        DispenserId = selected.DispenserId,
                         ApiEndPoint = selected.ApiEndPoint,
                         IsNozzle1Enabled = selected.Nozzle1Enabled,
                         IsNozzle2Enabled = selected.Nozzle2Enabled,
@@ -45,10 +46,14 @@ namespace FuelPumpManagementSystem.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Configure(DispenserIndexViewModel model)
         {
-            bool nozzle1 = model.Configure.IsNozzle1Enabled;
-            bool nozzle2 = model.Configure.IsNozzle2Enabled;
-
-            await _dispenserService.ConfigureDispenserAsync(model.Configure);
+            if (model.Configure.DispenserId.HasValue && model.Configure.DispenserId.Value > 0)
+            {
+                await _dispenserService.UpdateDispenserAsync(model.Configure);
+            }
+            else
+            {
+                await _dispenserService.ConfigureDispenserAsync(model.Configure);
+            }
             return RedirectToAction(nameof(Index));
         }
       

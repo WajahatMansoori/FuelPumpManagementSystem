@@ -23,7 +23,9 @@ namespace FuelPumpManagementSystem.Application.Services
 
         public async Task<List<DispenserResponseDTO>> GetAllAsync()
         {
-            return await _db.Dispenser
+            try
+            {
+                return await _db.Dispenser
                 .Include(d => d.Nozzles)
                     .ThenInclude(n => n.Product)
                 .Select(d => new DispenserResponseDTO
@@ -50,6 +52,13 @@ namespace FuelPumpManagementSystem.Application.Services
                         .FirstOrDefault()
                 })
                 .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+
+                throw;
+            }
+            
         }
 
         public async Task ConfigureDispenserAsync1(ConfigureDispenserRequestDTO request)
@@ -135,6 +144,84 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 throw;
             }
+        }
+
+        public async Task UpdateDispenserAsync(ConfigureDispenserRequestDTO request)
+        {
+            if (!request.DispenserId.HasValue)
+            {
+                throw new ArgumentException("DispenserId is required for update.");
+            }
+
+            var dispenser = await _db.Dispenser
+                .Include(d => d.Nozzles)
+                .FirstOrDefaultAsync(d => d.DispenserId == request.DispenserId.Value);
+
+            if (dispenser == null)
+            {
+                throw new InvalidOperationException($"Dispenser with id {request.DispenserId.Value} not found.");
+            }
+
+            var nozzle1 = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 1);
+            var nozzle2 = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 2);
+
+            // Update nozzle 1
+            if (request.IsNozzle1Enabled)
+            {
+                if (nozzle1 == null)
+                {
+                    nozzle1 = new DispenserNozzle
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 1,
+                        IsEnable = true,
+                        ProductId = request.Nozzle1ProductTypeId ?? 0
+                    };
+                    _db.DispenserNozzle.Add(nozzle1);
+                }
+                else
+                {
+                    nozzle1.IsEnable = true;
+                    if (request.Nozzle1ProductTypeId.HasValue)
+                    {
+                        nozzle1.ProductId = request.Nozzle1ProductTypeId.Value;
+                    }
+                }
+            }
+            else if (nozzle1 != null)
+            {
+                nozzle1.IsEnable = false;
+            }
+
+            // Update nozzle 2
+            if (request.IsNozzle2Enabled)
+            {
+                if (nozzle2 == null)
+                {
+                    nozzle2 = new DispenserNozzle
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 2,
+                        IsEnable = true,
+                        ProductId = request.Nozzle2ProductTypeId ?? 0
+                    };
+                    _db.DispenserNozzle.Add(nozzle2);
+                }
+                else
+                {
+                    nozzle2.IsEnable = true;
+                    if (request.Nozzle2ProductTypeId.HasValue)
+                    {
+                        nozzle2.ProductId = request.Nozzle2ProductTypeId.Value;
+                    }
+                }
+            }
+            else if (nozzle2 != null)
+            {
+                nozzle2.IsEnable = false;
+            }
+
+            await _db.SaveChangesAsync();
         }
     }
 }

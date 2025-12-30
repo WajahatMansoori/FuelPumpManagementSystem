@@ -12,5 +12,6 @@ namespace FuelPumpManagementSystem.Application.Interfaces
     {
         Task ConfigureDispenserAsync(ConfigureDispenserRequestDTO request);
         Task<List<DispenserResponseDTO>> GetAllAsync();
+        Task UpdateDispenserAsync(ConfigureDispenserRequestDTO request);
     }
 }

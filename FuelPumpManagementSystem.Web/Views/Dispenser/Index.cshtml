@@ -11,10 +11,21 @@
     <h3>Dispenser Configuration</h3>
 
     <form asp-action="Configure" method="post" class="card p-3 mb-4">
+        <input asp-for="Configure.DispenserId" type="hidden" />
 
-        <input asp-for="Configure.ApiEndPoint"
-               class="form-control mb-2"
-               placeholder="Dispenser API IP" />
+        @if (Model.Configure != null && Model.Configure.DispenserId.HasValue && Model.Configure.DispenserId.Value > 0)
+        {
+            <input asp-for="Configure.ApiEndPoint"
+                   class="form-control mb-2"
+                   placeholder="Dispenser API IP"
+                   readonly="readonly" />
+        }
+        else
+        {
+            <input asp-for="Configure.ApiEndPoint"
+                   class="form-control mb-2"
+                   placeholder="Dispenser API IP" />
+        }
 
         <div class="row">
             <div class="col">
