@@ -1,0 +1,85 @@
+﻿@using FuelPumpManagementSystem.Application.DTOs.Response
+@*
+    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+*@
+@{
+
+    @model DispenserIndexViewModel
+
+
+
+    <h3>Dispenser Configuration</h3>
+
+    <form asp-action="Configure" method="post" class="card p-3 mb-4">
+
+        <input asp-for="Configure.ApiEndPoint"
+               class="form-control mb-2"
+               placeholder="Dispenser API IP" />
+
+        <div class="row">
+            <div class="col">
+                <div class="form-check">
+                    <input asp-for="Configure.IsNozzle1Enabled"
+                           class="form-check-input" />
+                    <label class="form-check-label">
+                        Nozzle 1
+                    </label>
+                </div>
+
+                <input asp-for="Configure.Nozzle1ProductTypeId"
+                       class="form-control mt-2"
+                       placeholder="Product Type" />
+            </div>
+
+            <div class="col">
+                <div class="form-check">
+                    <input asp-for="Configure.IsNozzle2Enabled"
+                           class="form-check-input" />
+                    <label class="form-check-label">
+                        Nozzle 2
+                    </label>
+                </div>
+
+                <input asp-for="Configure.Nozzle2ProductTypeId"
+                       class="form-control mt-2"
+                       placeholder="Product Type" />
+            </div>
+        </div>
+
+        <button class="btn btn-primary mt-3">Save</button>
+    </form>
+
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>DispenserId</th>
+                <th>IP</th>
+                <th>Nozzle 1</th>
+                <th>Nozzle 2</th>
+                <th>N1 Product</th>
+                <th>N2 Product</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var d in Model.Dispensers)
+            {
+                <tr>
+                    <td>@d.DispenserId</td>
+                    <td>@d.ApiEndPoint</td>
+                    <td>@(d.Nozzle1Enabled ? "Enabled" : "Disabled")</td>
+                    <td>@(d.Nozzle2Enabled ? "Enabled" : "Disabled")</td>
+                    <td>@d.Nozzle1ProductTypeId</td>
+                    <td>@d.Nozzle2ProductTypeId</td>
+                    <td>
+                        <a asp-action="Index" asp-route-id="@d.DispenserId" class="btn btn-sm btn-link" title="Edit">
+                            <span>&#9998;</span>
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
