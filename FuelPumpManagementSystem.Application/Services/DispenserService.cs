@@ -105,7 +105,28 @@ namespace FuelPumpManagementSystem.Application.Services
         {
             try
             {
-                string apiEndPoint = "http://" + request.ApiEndPoint + "/";
+                var rawIp = request.ApiEndPoint?.Trim();
+                if (string.IsNullOrWhiteSpace(rawIp))
+                {
+                    throw new InvalidOperationException("Please enter a valid dispenser IP address before saving.");
+                }
+
+                // Require at least one enabled nozzle with a selected product
+                bool hasNozzle1 = request.IsNozzle1Enabled && request.Nozzle1ProductTypeId.HasValue;
+                bool hasNozzle2 = request.IsNozzle2Enabled && request.Nozzle2ProductTypeId.HasValue;
+                if (!hasNozzle1 && !hasNozzle2)
+                {
+                    throw new InvalidOperationException("Please configure at least one nozzle with an associated product before saving.");
+                }
+
+                string apiEndPoint = "http://" + rawIp + "/";
+
+                // Ensure ApiEndPoint is unique per dispenser
+                bool exists = await _db.Dispenser.AnyAsync(d => d.ApiEndPoint == apiEndPoint);
+                if (exists)
+                {
+                    throw new InvalidOperationException("Dispenser IP already exists. Please use a unique IP address.");
+                }
                 var dispenser = new Dispenser
                 {
                     ApiEndPoint = apiEndPoint,

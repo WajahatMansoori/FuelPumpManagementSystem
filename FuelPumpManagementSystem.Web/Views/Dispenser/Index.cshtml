@@ -15,12 +15,39 @@
     (function () {
         const fileInput = document.getElementById('siteLogoInput');
         const imgPreview = document.getElementById('siteLogoPreview');
+        const errorSpan = document.getElementById('siteLogoError');
 
         if (!fileInput || !imgPreview) return;
 
+        const clearError = () => {
+            if (errorSpan) {
+                errorSpan.textContent = '';
+                errorSpan.classList.add('d-none');
+            }
+        };
+
+        const showError = (message) => {
+            if (errorSpan) {
+                errorSpan.textContent = message;
+                errorSpan.classList.remove('d-none');
+            } else {
+                alert(message);
+            }
+        };
+
         fileInput.addEventListener('change', function (e) {
+            clearError();
+
             const file = e.target.files && e.target.files[0];
             if (!file) return;
+
+            // Allow only image files
+            const isImage = file.type && file.type.startsWith('image/');
+            if (!isImage) {
+                showError('Selected file is not a supported image. Please upload PNG, JPG, or JPEG only.');
+                fileInput.value = '';
+                return;
+            }
 
             const reader = new FileReader();
             reader.onload = function (ev) {
@@ -46,6 +73,16 @@
         </div>
 
         <div class="card-body">
+            @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+            {
+                <div class="alert alert-danger d-flex align-items-center mb-4" role="alert">
+                    <span class="me-2">⚠️</span>
+                    <div>
+                        <strong>Action required:</strong> @ViewBag.ErrorMessage
+                    </div>
+                </div>
+            }
+
             <form asp-action="Configure" method="post">
                 <input asp-for="Configure.DispenserId" type="hidden" />
 
@@ -209,11 +246,14 @@
                                 <input type="file"
                                        name="SiteLogo"
                                        id="siteLogoInput"
+                                       accept="image/*"
                                        class="form-control form-control-sm" />
 
                                 <small class="text-muted d-block mt-2">
-                                    Upload site logo
+                                    Upload site logo (PNG, JPG, JPEG)
                                 </small>
+
+                                <small id="siteLogoError" class="text-danger d-none mt-1"></small>
                             </div>
                         </div>
 

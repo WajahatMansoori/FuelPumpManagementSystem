@@ -63,15 +63,38 @@ namespace FuelPumpManagementSystem.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Configure(DispenserIndexViewModel model)
         {
-            if (model.Configure.DispenserId.HasValue && model.Configure.DispenserId.Value > 0)
+            try
             {
-                await _dispenserService.UpdateDispenserAsync(model.Configure);
+                if (model.Configure.DispenserId.HasValue && model.Configure.DispenserId.Value > 0)
+                {
+                    await _dispenserService.UpdateDispenserAsync(model.Configure);
+                }
+                else
+                {
+                    await _dispenserService.ConfigureDispenserAsync(model.Configure);
+                }
+
+                return RedirectToAction(nameof(Index));
             }
-            else
+            catch (InvalidOperationException ex)
             {
-                await _dispenserService.ConfigureDispenserAsync(model.Configure);
+                // Handle duplicate IP or other business rule violations
+                ViewBag.ErrorMessage = ex.Message;
+
+                var dispensers = await _dispenserService.GetAllAsync();
+                var products = await _productService.GetAllAsync();
+                var siteDetail = await _siteService.GetAsync();
+
+                var vm = new DispenserIndexViewModel
+                {
+                    Configure = model.Configure,
+                    Dispensers = dispensers,
+                    Products = products,
+                    SiteDetail = siteDetail
+                };
+
+                return View("Index", vm);
             }
-            return RedirectToAction(nameof(Index));
         }
 
         [HttpPost]
