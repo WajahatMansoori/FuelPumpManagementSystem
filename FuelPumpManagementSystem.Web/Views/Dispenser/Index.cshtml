@@ -1,96 +1,147 @@
 ﻿@using FuelPumpManagementSystem.Application.DTOs.Response
-@*
-    For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-*@
-@{
+@model DispenserIndexViewModel
 
-    @model DispenserIndexViewModel
+<div class="container-fluid px-4">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Dispenser Configuration</h2>
+            <small class="text-muted">Manage dispenser API & nozzle setup</small>
+        </div>
+    </div>
 
-
-
-    <h3>Dispenser Configuration</h3>
-
-    <form asp-action="Configure" method="post" class="card p-3 mb-4">
-        <input asp-for="Configure.DispenserId" type="hidden" />
-
-        @if (Model.Configure != null && Model.Configure.DispenserId.HasValue && Model.Configure.DispenserId.Value > 0)
-        {
-            <input asp-for="Configure.ApiEndPoint"
-                   class="form-control mb-2"
-                   placeholder="Dispenser API IP"
-                   readonly="readonly" />
-        }
-        else
-        {
-            <input asp-for="Configure.ApiEndPoint"
-                   class="form-control mb-2"
-                   placeholder="Dispenser API IP" />
-        }
-
-        <div class="row">
-            <div class="col">
-                <div class="form-check">
-                    <input asp-for="Configure.IsNozzle1Enabled"
-                           class="form-check-input" />
-                    <label class="form-check-label">
-                        Nozzle 1
-                    </label>
-                </div>
-
-                <input asp-for="Configure.Nozzle1ProductTypeId"
-                       class="form-control mt-2"
-                       placeholder="Product Type" />
-            </div>
-
-            <div class="col">
-                <div class="form-check">
-                    <input asp-for="Configure.IsNozzle2Enabled"
-                           class="form-check-input" />
-                    <label class="form-check-label">
-                        Nozzle 2
-                    </label>
-                </div>
-
-                <input asp-for="Configure.Nozzle2ProductTypeId"
-                       class="form-control mt-2"
-                       placeholder="Product Type" />
-            </div>
+    <!-- Configuration Card -->
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Configure Dispenser</h5>
         </div>
 
-        <button class="btn btn-primary mt-3">Save</button>
-    </form>
+        <div class="card-body">
+            <form asp-action="Configure" method="post">
+                <input asp-for="Configure.DispenserId" type="hidden" />
 
+                <!-- API Endpoint -->
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Dispenser API Endpoint</label>
 
-    <table class="table table-bordered table-striped">
-        <thead>
-            <tr>
-                <th>DispenserId</th>
-                <th>IP</th>
-                <th>Nozzle 1</th>
-                <th>Nozzle 2</th>
-                <th>N1 Product</th>
-                <th>N2 Product</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var d in Model.Dispensers)
-            {
-                <tr>
-                    <td>@d.DispenserId</td>
-                    <td>@d.ApiEndPoint</td>
-                    <td>@(d.Nozzle1Enabled ? "Enabled" : "Disabled")</td>
-                    <td>@(d.Nozzle2Enabled ? "Enabled" : "Disabled")</td>
-                    <td>@d.Nozzle1ProductTypeId</td>
-                    <td>@d.Nozzle2ProductTypeId</td>
-                    <td>
-                        <a asp-action="Index" asp-route-id="@d.DispenserId" class="btn btn-sm btn-link" title="Edit">
-                            <span>&#9998;</span>
-                        </a>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
+                    @if (Model.Configure?.DispenserId > 0)
+                    {
+                        <input asp-for="Configure.ApiEndPoint"
+                               class="form-control"
+                               readonly />
+                    }
+                    else
+                    {
+                        <input asp-for="Configure.ApiEndPoint"
+                               class="form-control"
+                               placeholder="e.g. 192.168.1.10" />
+                    }
+                </div>
 
-}
+                <!-- Nozzles -->
+                <div class="row g-4">
+                    <!-- Nozzle 1 -->
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="form-check form-switch mb-3">
+                                <input asp-for="Configure.IsNozzle1Enabled"
+                                       class="form-check-input" />
+                                <label class="form-check-label fw-semibold">
+                                    Nozzle 1 Enabled
+                                </label>
+                            </div>
+
+                            <label class="form-label">Product Type</label>
+                            <input asp-for="Configure.Nozzle1ProductTypeId"
+                                   class="form-control"
+                                   placeholder="Select product type" />
+                        </div>
+                    </div>
+
+                    <!-- Nozzle 2 -->
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 h-100">
+                            <div class="form-check form-switch mb-3">
+                                <input asp-for="Configure.IsNozzle2Enabled"
+                                       class="form-check-input" />
+                                <label class="form-check-label fw-semibold">
+                                    Nozzle 2 Enabled
+                                </label>
+                            </div>
+
+                            <label class="form-label">Product Type</label>
+                            <input asp-for="Configure.Nozzle2ProductTypeId"
+                                   class="form-control"
+                                   placeholder="Select product type" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="text-end mt-4">
+                    <button type="submit" class="btn btn-success px-4">
+                        💾 Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dispenser List -->
+    <div class="card shadow-sm">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0">Configured Dispensers</h5>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID</th>
+                            <th>API IP</th>
+                            <th>Nozzle 1</th>
+                            <th>Nozzle 2</th>
+                            <th>N1 Product</th>
+                            <th>N2 Product</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var d in Model.Dispensers)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@d.DispenserId</td>
+                                <td>@d.ApiEndPoint</td>
+
+                                <td>
+                                    <span class="badge @(d.Nozzle1Enabled ? "bg-success" : "bg-secondary")">
+                                        @(d.Nozzle1Enabled ? "Enabled" : "Disabled")
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span class="badge @(d.Nozzle2Enabled ? "bg-success" : "bg-secondary")">
+                                        @(d.Nozzle2Enabled ? "Enabled" : "Disabled")
+                                    </span>
+                                </td>
+
+                                <td>@d.Nozzle1ProductTypeName</td>
+                                <td>@d.Nozzle2ProductTypeName</td>
+
+                                <td class="text-center">
+                                    <a asp-action="Index"
+                                       asp-route-id="@d.DispenserId"
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Edit Dispenser">
+                                        ✏️ Edit
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
