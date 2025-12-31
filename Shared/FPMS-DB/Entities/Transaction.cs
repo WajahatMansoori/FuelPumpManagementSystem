@@ -16,6 +16,7 @@ namespace Shared.FPMS_DB.Entities
         public decimal UnitPrice { get; set; }
         public int ProductTypeId { get; set; }
         public DateTime CreatedAt { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
+        public DateTime? UpdatedAt { get; set; }
     }
 }

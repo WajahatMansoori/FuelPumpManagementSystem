@@ -17,6 +17,7 @@ namespace Shared.FPMS_DB.Entities
         public decimal? LastTotalCash { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; } = true;
+        public DateTime UpdatedAt { get; set; }
         public Dispenser? Dispenser { get; set; }
         public Product? Product { get; set; }
     }

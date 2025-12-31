@@ -17,6 +17,7 @@ namespace Shared.FPMS_DB.Entities
         public int PriceUpdateBatchId { get; set; }
         public bool IsRecallAndResolve { get; set; }
         public DateTime CreatedAt { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
+        public DateTime? UpdatedAt { get; set; }
     }
 }

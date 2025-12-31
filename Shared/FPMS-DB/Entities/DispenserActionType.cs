@@ -12,5 +12,6 @@ namespace Shared.FPMS_DB.Entities
         public string? DispenserActionTypeName { get; set; }
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; }
+        public DateTime? UpdatedAt { get; set; }
     }
 }

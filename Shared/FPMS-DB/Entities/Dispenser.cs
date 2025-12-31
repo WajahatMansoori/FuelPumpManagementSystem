@@ -14,6 +14,7 @@ namespace Shared.FPMS_DB.Entities
         public bool IsLocked { get; set; } = false;
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; } = true;
+        public DateTime? UpdatedAt { get; set; }
         public ICollection<DispenserNozzle> Nozzles { get; set; }
     }
 }

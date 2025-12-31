@@ -14,6 +14,7 @@ namespace Shared.FPMS_DB.Entities
         public string? SitePhone { get; set; }
         public string? SiteLogo { get; set; }
         public DateTime CreatedAt { get; set; }
-        public bool IsActive { get; set; }
+        public bool IsActive { get; set; } = true;
+        public DateTime? UpdatedAt { get; set; }
     }
 }

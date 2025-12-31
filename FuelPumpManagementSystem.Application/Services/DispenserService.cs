@@ -203,6 +203,7 @@ namespace FuelPumpManagementSystem.Application.Services
                 else
                 {
                     nozzle1.IsEnable = true;
+                    nozzle1.UpdatedAt = DateTime.Now;
                     if (request.Nozzle1ProductTypeId.HasValue)
                     {
                         nozzle1.ProductId = request.Nozzle1ProductTypeId.Value;
@@ -212,6 +213,7 @@ namespace FuelPumpManagementSystem.Application.Services
             else if (nozzle1 != null)
             {
                 nozzle1.IsEnable = false;
+                nozzle1.UpdatedAt = DateTime.Now;
             }
 
             // Update nozzle 2
@@ -231,6 +233,7 @@ namespace FuelPumpManagementSystem.Application.Services
                 else
                 {
                     nozzle2.IsEnable = true;
+                    nozzle2.UpdatedAt = DateTime.Now;
                     if (request.Nozzle2ProductTypeId.HasValue)
                     {
                         nozzle2.ProductId = request.Nozzle2ProductTypeId.Value;
@@ -240,6 +243,7 @@ namespace FuelPumpManagementSystem.Application.Services
             else if (nozzle2 != null)
             {
                 nozzle2.IsEnable = false;
+                nozzle2.UpdatedAt = DateTime.Now;
             }
 
             await _db.SaveChangesAsync();
