@@ -100,6 +100,27 @@ namespace FuelPumpManagementSystem.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveSiteDetail(DispenserIndexViewModel model, IFormFile SiteLogo)
         {
+            if (string.IsNullOrWhiteSpace(model.SiteDetail?.SiteName) ||
+                string.IsNullOrWhiteSpace(model.SiteDetail?.SiteAddress) ||
+                string.IsNullOrWhiteSpace(model.SiteDetail?.SitePhone))
+            {
+                ViewBag.SiteErrorMessage = "All fields are required except logo.";
+
+                var dispensers = await _dispenserService.GetAllAsync();
+                var products = await _productService.GetAllAsync();
+                var siteDetail = await _siteService.GetAsync();
+
+                var vm = new DispenserIndexViewModel
+                {
+                    Configure = new ConfigureDispenserRequestDTO(),
+                    Dispensers = dispensers,
+                    Products = products,
+                    SiteDetail = siteDetail ?? model.SiteDetail
+                };
+
+                return View("Index", vm);
+            }
+
             string? logoPath = model.SiteDetail?.SiteLogo;
 
             if (SiteLogo != null && SiteLogo.Length > 0)

@@ -185,9 +185,37 @@
 
             <form asp-action="SaveSiteDetail"
                   method="post"
+                  id="siteConfigForm"
                   enctype="multipart/form-data">
 
                 <div class="modal-body">
+                    <!-- Server-side Validation Error -->
+                    @if (!string.IsNullOrEmpty(ViewBag.SiteErrorMessage))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <div class="d-flex align-items-start">
+                                <span class="me-2" style="font-size: 24px;">⚠️</span>
+                                <div class="flex-grow-1">
+                                    <h6 class="alert-heading mb-1 fw-bold">Validation Error</h6>
+                                    <p class="mb-0">@ViewBag.SiteErrorMessage</p>
+                                </div>
+                            </div>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Client-side Validation Summary -->
+                    <div id="validationAlert" class="alert alert-danger alert-dismissible fade d-none" role="alert">
+                        <div class="d-flex align-items-start">
+                            <span class="me-2" style="font-size: 24px;">⚠️</span>
+                            <div class="flex-grow-1">
+                                <h6 class="alert-heading mb-2 fw-bold">Please fix the following errors:</h6>
+                                <ul id="validationErrors" class="mb-0 ps-3"></ul>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" onclick="hideValidationAlert()"></button>
+                    </div>
+
                     <div class="row g-4">
 
                         <!-- Logo -->
@@ -206,7 +234,7 @@
                                        class="form-control form-control-sm" />
 
                                 <small class="text-muted d-block mt-2">
-                                    Upload site logo (PNG, JPG, JPEG)
+                                    Upload site logo (PNG, JPG, JPEG) - Optional
                                 </small>
 
                                 <small id="siteLogoError" class="text-danger d-none mt-1"></small>
@@ -216,25 +244,43 @@
                         <!-- Site Details -->
                         <div class="col-md-8">
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Site Name</label>
+                                <label class="form-label fw-semibold">
+                                    Site Name <span class="text-danger">*</span>
+                                </label>
                                 <input asp-for="SiteDetail.SiteName"
+                                       id="siteName"
                                        class="form-control"
                                        placeholder="Fuel Pump Name" />
+                                <div class="invalid-feedback" id="siteNameError" style="display: none;">
+                                    Site name is required
+                                </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Site Address</label>
+                                <label class="form-label fw-semibold">
+                                    Site Address <span class="text-danger">*</span>
+                                </label>
                                 <textarea asp-for="SiteDetail.SiteAddress"
+                                          id="siteAddress"
                                           class="form-control"
                                           rows="2"
                                           placeholder="Complete address"></textarea>
+                                <div class="invalid-feedback" id="siteAddressError" style="display: none;">
+                                    Site address is required
+                                </div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Contact Phone</label>
+                                <label class="form-label fw-semibold">
+                                    Contact Phone <span class="text-danger">*</span>
+                                </label>
                                 <input asp-for="SiteDetail.SitePhone"
+                                       id="sitePhone"
                                        class="form-control"
                                        placeholder="+92 300 1234567" />
+                                <div class="invalid-feedback" id="sitePhoneError" style="display: none;">
+                                    Contact phone is required
+                                </div>
                             </div>
                         </div>
 
@@ -259,34 +305,279 @@
 </div>
 
 @section Scripts {
+    <style>
+        /* Professional validation styles */
+        .form-control.is-invalid {
+            border: 2px solid #ff4757;
+            background-color: #fff5f5;
+            box-shadow: 0 0 0 0.2rem rgba(255, 71, 87, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .form-control.is-invalid:focus {
+            border-color: #ff4757;
+            box-shadow: 0 0 0 0.25rem rgba(255, 71, 87, 0.25);
+        }
+
+        .form-control.is-valid {
+            border: 2px solid #2ecc71;
+            background-color: #f0fff4;
+            box-shadow: 0 0 0 0.2rem rgba(46, 204, 113, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .form-control.is-valid:focus {
+            border-color: #2ecc71;
+            box-shadow: 0 0 0 0.25rem rgba(46, 204, 113, 0.25);
+        }
+
+        .invalid-feedback {
+            color: #ff4757;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e7 100%);
+            border-left: 3px solid #ff4757;
+            border-radius: 4px;
+            animation: slideInLeft 0.3s ease-out;
+        }
+
+        .invalid-feedback::before {
+            content: "⚠ ";
+            font-size: 1rem;
+            margin-right: 0.25rem;
+        }
+
+        @@keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        #validationAlert {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe5e7 100%);
+            border: none;
+            border-left: 5px solid #ff4757;
+            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.2);
+            animation: slideDown 0.4s ease-out;
+        }
+
+        #validationAlert .alert-heading {
+            color: #d63447;
+            font-size: 1.1rem;
+        }
+
+        @@keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        #validationErrors {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        #validationErrors li {
+            padding: 0.4rem 0.75rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            border-radius: 4px;
+            color: #d63447;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        #validationErrors li::before {
+            content: "✕ ";
+            color: #ff4757;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        /* Required field indicator */
+        .text-danger {
+            color: #ff4757 !important;
+            font-weight: 600;
+        }
+
+        /* Modal styling enhancement */
+        .modal-header {
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .modal-footer {
+            border-top: 2px solid #e9ecef;
+        }
+    </style>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
 
+            // Auto-open modal if server-side validation error exists
+            @if (!string.IsNullOrEmpty(ViewBag.SiteErrorMessage))
+            {
+                <text>
+                const siteModal = new bootstrap.Modal(document.getElementById('siteConfigModal'));
+                siteModal.show();
+                </text>
+            }
+
+            // Logo preview functionality
             const input = document.getElementById('siteLogoInput');
             const preview = document.getElementById('siteLogoPreview');
-            const error = document.getElementById('siteLogoError');
+            const logoError = document.getElementById('siteLogoError');
 
-            if (!input || !preview) return;
+            if (input && preview) {
+                input.addEventListener('change', function () {
+                    const file = this.files[0];
+                    if (!file) return;
 
-            input.addEventListener('change', function () {
+                    if (!file.type.startsWith('image/')) {
+                        logoError.textContent = '⚠️ Invalid image file.';
+                        logoError.classList.remove('d-none');
+                        this.value = '';
+                        return;
+                    }
 
-                const file = this.files[0];
-                if (!file) return;
+                    logoError.textContent = '';
+                    logoError.classList.add('d-none');
 
-                if (!file.type.startsWith('image/')) {
-                    error.textContent = 'Invalid image file.';
-                    error.classList.remove('d-none');
-                    this.value = '';
-                    return;
+                    const reader = new FileReader();
+                    reader.onload = e => preview.src = e.target.result;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            // Form validation
+            const form = document.getElementById('siteConfigForm');
+            const siteName = document.getElementById('siteName');
+            const siteAddress = document.getElementById('siteAddress');
+            const sitePhone = document.getElementById('sitePhone');
+
+            // Real-time validation on blur
+            siteName.addEventListener('blur', () => validateField(siteName, 'siteNameError', 'Site name'));
+            siteAddress.addEventListener('blur', () => validateField(siteAddress, 'siteAddressError', 'Site address'));
+            sitePhone.addEventListener('blur', () => validateField(sitePhone, 'sitePhoneError', 'Contact phone'));
+
+            // Clear validation on input
+            siteName.addEventListener('input', () => clearFieldValidation(siteName, 'siteNameError'));
+            siteAddress.addEventListener('input', () => clearFieldValidation(siteAddress, 'siteAddressError'));
+            sitePhone.addEventListener('input', () => clearFieldValidation(sitePhone, 'sitePhoneError'));
+
+            // Form submission validation
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
+
+                const errors = [];
+                let isValid = true;
+
+                // Validate Site Name
+                if (!siteName.value.trim()) {
+                    errors.push('Site name is required');
+                    showFieldError(siteName, 'siteNameError');
+                    isValid = false;
+                } else {
+                    showFieldSuccess(siteName, 'siteNameError');
                 }
 
-                error.textContent = '';
-                error.classList.add('d-none');
+                // Validate Site Address
+                if (!siteAddress.value.trim()) {
+                    errors.push('Site address is required');
+                    showFieldError(siteAddress, 'siteAddressError');
+                    isValid = false;
+                } else {
+                    showFieldSuccess(siteAddress, 'siteAddressError');
+                }
 
-                const reader = new FileReader();
-                reader.onload = e => preview.src = e.target.result;
-                reader.readAsDataURL(file);
+                // Validate Site Phone
+                if (!sitePhone.value.trim()) {
+                    errors.push('Contact phone is required');
+                    showFieldError(sitePhone, 'sitePhoneError');
+                    isValid = false;
+                } else {
+                    showFieldSuccess(sitePhone, 'sitePhoneError');
+                }
+
+                if (!isValid) {
+                    showValidationAlert(errors);
+                    // Scroll to first error
+                    const firstInvalid = form.querySelector('.is-invalid');
+                    if (firstInvalid) {
+                        firstInvalid.focus();
+                    }
+                } else {
+                    hideValidationAlert();
+                    form.submit();
+                }
             });
+
+            function validateField(field, errorId, fieldName) {
+                if (!field.value.trim()) {
+                    showFieldError(field, errorId);
+                    return false;
+                } else {
+                    showFieldSuccess(field, errorId);
+                    return true;
+                }
+            }
+
+            function showFieldError(field, errorId) {
+                field.classList.add('is-invalid');
+                field.classList.remove('is-valid');
+                const errorDiv = document.getElementById(errorId);
+                errorDiv.style.display = 'block';
+            }
+
+            function showFieldSuccess(field, errorId) {
+                field.classList.remove('is-invalid');
+                field.classList.add('is-valid');
+                const errorDiv = document.getElementById(errorId);
+                errorDiv.style.display = 'none';
+            }
+
+            function clearFieldValidation(field, errorId) {
+                if (field.value.trim()) {
+                    field.classList.remove('is-invalid');
+                    const errorDiv = document.getElementById(errorId);
+                    errorDiv.style.display = 'none';
+                }
+            }
+
+            function showValidationAlert(errors) {
+                const alert = document.getElementById('validationAlert');
+                const errorsList = document.getElementById('validationErrors');
+                
+                errorsList.innerHTML = '';
+                errors.forEach(error => {
+                    const li = document.createElement('li');
+                    li.textContent = error;
+                    errorsList.appendChild(li);
+                });
+
+                alert.classList.remove('d-none');
+                alert.classList.add('show');
+
+                // Scroll to alert
+                alert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
         });
+
+        function hideValidationAlert() {
+            const alert = document.getElementById('validationAlert');
+            alert.classList.add('d-none');
+            alert.classList.remove('show');
+        }
     </script>
 }
