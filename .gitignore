@@ -366,3 +366,4 @@ FodyWeavers.xsd
 # SQLite temporary files
 FuelPumpManagementSystem.db-shm
 FuelPumpManagementSystem.db-wal
+FuelPumpManagementSystem.db
