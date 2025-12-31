@@ -42,7 +42,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Dashboard}/{action=Index}/{id?}");
 
 var chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
 var url = "http://localhost:5000";

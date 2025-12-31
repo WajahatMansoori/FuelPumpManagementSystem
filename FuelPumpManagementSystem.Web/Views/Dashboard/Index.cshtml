@@ -1,0 +1,150 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<link rel="stylesheet" href="~/css/dashboard.css" />
+
+<div class="dashboard-container">
+
+    <!-- ================= TOP STATS ================= -->
+    <div class="stats-row">
+        <div class="stat-card blue">
+            <span>💧</span>
+            <div>
+                <small>Total Sales</small>
+                <h3>1,842.4 L</h3>
+            </div>
+        </div>
+
+        <div class="stat-card green">
+            <span>💰</span>
+            <div>
+                <small>Revenue Today</small>
+                <h3>Rs. 472,180</h3>
+            </div>
+        </div>
+
+        <div class="stat-card purple">
+            <span>⛽</span>
+            <div>
+                <small>Active Dispensers</small>
+                <h3>8 / 10</h3>
+            </div>
+        </div>
+
+        <div class="stat-card orange">
+            <span>🔄</span>
+            <div>
+                <small>Sync Status</small>
+                <h3>ACTIVE</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= UNITS ================= -->
+    <div class="units-grid">
+
+        <!-- ================= UNIT ================= -->
+        <div class="unit-card active">
+            <div class="unit-header">
+                <span class="status-dot green"></span>
+                <strong>UNIT #1</strong>
+                <span class="badge">ACTIVE FLOW</span>
+            </div>
+
+            <div class="unit-body two-dispensers">
+
+                <!-- DISPENSER 1 -->
+                <div class="dispenser fueling">
+                    <div class="pump">DISPENSE</div>
+                    <div class="nozzle"></div>
+
+                    <!-- Fuel drops -->
+                    <div class="fuel-drop d1"></div>
+                    <div class="fuel-drop d2"></div>
+                    <div class="fuel-drop d3"></div>
+
+                    <div class="car">
+                        <div class="wheel front"></div>
+                        <div class="wheel back"></div>
+                    </div>
+                </div>
+
+
+                <!-- DISPENSER 2 -->
+                <div class="dispenser">
+                    <div class="pump">DISPENSE</div>
+                    <div class="nozzle"></div>
+                    <div class="car blue-car">
+                        <div class="wheel front"></div>
+                        <div class="wheel back"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="unit-footer">
+                <div>
+                    <small>PETROL (N1)</small><br />
+                    <strong>5.63 L</strong><br />
+                    <small>Rs. 256 / L</small><br />
+                    <strong>Rs. 1,441</strong>
+                </div>
+
+                <div class="green-text">
+                    <small>DIESEL (N2)</small><br />
+                    <strong>14.82 L</strong><br />
+                    <small>Rs. 278 / L</small><br />
+                    <strong>Rs. 4,121</strong>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- ================= UNIT ================= -->
+        <div class="unit-card">
+            <div class="unit-header">
+                <span class="status-dot red"></span>
+                <strong>UNIT #2</strong>
+            </div>
+
+            <div class="unit-body two-dispensers">
+
+                <div class="dispenser idle">
+                    <div class="pump ready">READY</div>
+                    <div class="car faded">
+                        <div class="wheel front"></div>
+                        <div class="wheel back"></div>
+                    </div>
+                </div>
+
+                <div class="dispenser idle">
+                    <div class="pump ready">READY</div>
+                    <div class="car faded blue-car">
+                        <div class="wheel front"></div>
+                        <div class="wheel back"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="unit-footer">
+                <div>
+                    <small>PETROL (N1)</small><br />
+                    <strong>5.63 L</strong><br />
+                    <small>Rs. 256 / L</small><br />
+                    <strong>Rs. 1,441</strong>
+                </div>
+
+                <div class="green-text">
+                    <small>DIESEL (N2)</small><br />
+                    <strong>14.82 L</strong><br />
+                    <small>Rs. 278 / L</small><br />
+                    <strong>Rs. 4,121</strong>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
