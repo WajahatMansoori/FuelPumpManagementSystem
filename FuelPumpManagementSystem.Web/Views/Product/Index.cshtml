@@ -299,13 +299,13 @@
                 }
             }
 
-            // Update Prices Button Click Handler (placeholder for future implementation)
-            updatePricesBtn?.addEventListener('click', function() {
+            // Update Prices Button Click Handler
+            updatePricesBtn?.addEventListener('click', async function() {
                 const selectedProducts = [];
                 
                 productCheckboxes.forEach(checkbox => {
                     if (checkbox.checked) {
-                        const productId = checkbox.dataset.productId;
+                        const productId = parseInt(checkbox.dataset.productId);
                         const priceInput = document.getElementById(`newPrice_${productId}`);
                         const newPrice = parseFloat(priceInput.value);
                         
@@ -318,12 +318,41 @@
                     }
                 });
 
-                if (selectedProducts.length > 0) {
-                    // TODO: Implement API call to update prices
-                    console.log('Selected products for update:', selectedProducts);
-                    alert(`Ready to update ${selectedProducts.length} product(s). API integration pending.`);
-                } else {
+                if (selectedProducts.length === 0) {
                     alert('Please enter valid prices for selected products.');
+                    return;
+                }
+
+                // Disable button and show loading state
+                updatePricesBtn.disabled = true;
+                const originalText = updatePricesBtn.innerHTML;
+                updatePricesBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Updating Prices...';
+
+                try {
+                    const response = await fetch('/Product/UpdatePrices', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(selectedProducts)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        alert(`✅ ${result.message}\n\nUpdated ${selectedProducts.length} product(s) successfully!`);
+                        
+                        // Reload page to show updated prices
+                        window.location.reload();
+                    } else {
+                        alert(`❌ Error: ${result.message}`);
+                        updatePricesBtn.disabled = false;
+                        updatePricesBtn.innerHTML = originalText;
+                    }
+                } catch (error) {
+                    alert(`❌ Error updating prices: ${error.message}`);
+                    updatePricesBtn.disabled = false;
+                    updatePricesBtn.innerHTML = originalText;
                 }
             });
         });

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FuelPumpManagementSystem.Application.DTOs.Request;
 using FuelPumpManagementSystem.Application.DTOs.Response;
 
 namespace FuelPumpManagementSystem.Application.Interfaces
@@ -10,5 +11,6 @@ namespace FuelPumpManagementSystem.Application.Interfaces
     public interface IProductService
     {
         Task<List<ProductResponseDTO>> GetAllAsync();
+        Task<bool> UpdateProductPricesAsync(List<UpdateProductPriceRequestDTO> priceUpdates);
     }
 }

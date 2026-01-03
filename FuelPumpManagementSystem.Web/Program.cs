@@ -20,6 +20,8 @@ builder.Services.AddScoped<ISiteService, SiteService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddTransient<FileUploadHelper>();
 
+// Add HttpClient for API calls
+builder.Services.AddHttpClient();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
