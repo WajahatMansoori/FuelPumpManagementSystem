@@ -1,5 +1,8 @@
-﻿using FuelPumpManagementSystem.Application.Interfaces;
+﻿using FuelPumpManagementSystem.Application.DTOs.Response;
+using FuelPumpManagementSystem.Application.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Shared.FPMS_DB;
+using Shared.FPMS_DB.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,5 +19,88 @@ namespace FuelPumpManagementSystem.Application.Services
         {
             _db = db;
         }
+
+        //public async Task<List<TransactionResponseDTO>> GetAllTransactionsAsync()
+        //{
+        //    try
+        //    {
+        //        var transactions = await _db.Transaction
+        //            .Select(t => new TransactionResponseDTO
+        //            {
+        //                TransactionId = t.TransactionId,
+        //                DispenserId = t.DispenserId,
+        //                NozzleId = t.NozzleId,
+        //                Amount = t.Amount,
+        //                Liter = t.Liter,
+        //                UnitPrice = t.UnitPrice,
+        //                ProductTypeId = t.ProductTypeId,
+        //                CreatedAt = t.CreatedAt,
+        //                LastTotalCash = _db.DispenserNozzle
+        //                    .Where(dn => dn.DispenserId == t.DispenserId && dn.NozzleId == t.NozzleId)
+        //                    .Select(dn => dn.LastTotalCash)
+        //                    .FirstOrDefault(),
+        //                LastTotalLitre = _db.DispenserNozzle
+        //                    .Where(dn => dn.DispenserId == t.DispenserId && dn.NozzleId == t.NozzleId)
+        //                    .Select(dn => dn.LastTotalLiter)
+        //                    .FirstOrDefault()
+        //            })
+        //            .OrderByDescending(t => t.CreatedAt)
+        //            .ToListAsync();
+
+        //        return transactions;
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Log exception here if needed
+        //        throw new Exception("Error retrieving transactions", ex);
+        //    }
+        //}
+
+        public async Task<List<TransactionResponseDTO>> GetAllTransactionsAsync(DateTime? fromDate = null, DateTime? toDate = null)
+        {
+            try
+            {
+                var query = _db.Transaction.AsQueryable();
+
+                // Apply date filters
+                if (fromDate.HasValue)
+                    query = query.Where(t => t.CreatedAt.Date >= fromDate.Value.Date);
+
+                if (toDate.HasValue)
+                    query = query.Where(t => t.CreatedAt.Date <= toDate.Value.Date);
+
+                var transactions = await query
+                    .Select(t => new TransactionResponseDTO
+                    {
+                        TransactionId = t.TransactionId,
+                        DispenserId = t.DispenserId,
+                        NozzleId = t.NozzleId,
+                        Amount = t.Amount,
+                        Liter = t.Liter,
+                        UnitPrice = t.UnitPrice,
+                        ProductTypeId = t.ProductTypeId,
+                        CreatedAt = t.CreatedAt,
+                        LastTotalCash = _db.DispenserNozzle
+                            .Where(dn => dn.DispenserId == t.DispenserId && dn.NozzleId == t.NozzleId)
+                            .Select(dn => dn.LastTotalCash)
+                            .FirstOrDefault(),
+                        LastTotalLitre = _db.DispenserNozzle
+                            .Where(dn => dn.DispenserId == t.DispenserId && dn.NozzleId == t.NozzleId)
+                            .Select(dn => dn.LastTotalLiter)
+                            .FirstOrDefault()
+                    })
+                    .OrderByDescending(t => t.CreatedAt)
+                    .ToListAsync();
+
+                return transactions;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Error retrieving transactions", ex);
+            }
+        }
     }
+
+
 }
+
