@@ -1,331 +1,314 @@
-﻿/* ================= BASE ================= */
-.dashboard-container {
-    background: #000;
-    min-height: calc(100vh - 40px);
-    margin: -20px;
-    padding: 24px;
-    color: #fff;
-    font-family: 'Segoe UI', sans-serif;
+﻿/* ================= ROOT ================= */
+:root {
+    --bg: #0b1220;
+    --card: #111a2e;
+    --card-dark: #0e1628;
+    --border: rgba(255, 255, 255, 0.08);
+    --blue: #3b82f6;
+    --green: #22c55e;
+    --purple: #a855f7;
+    --orange: #f59e0b;
+    --red: #ef4444;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
 }
 
-/* ================= STATS ================= */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Inter", system-ui, sans-serif;
+}
+
+body {
+    background: radial-gradient(circle at top, #0f172a, #020617);
+    color: var(--text);
+}
+
+/* ================= LAYOUT ================= */
+.dashboard-container {
+    max-width: 1400px;
+/*    margin: auto;*/
+    padding: 24px;
+}
+
+/* ================= TOP STATS ================= */
 .stats-row {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
 }
 
 .stat-card {
-    background: #0a0a0a;
-    padding: 16px;
-    border-radius: 14px;
-    flex: 1;
+    background: linear-gradient(180deg, #141c33, #0b1220);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 18px;
     display: flex;
+    gap: 14px;
     align-items: center;
-    gap: 12px;
-    border: 1px solid #1a1a1a;
-    box-shadow: 0 10px 25px rgba(255,255,255,.05);
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
 }
 
-    .stat-card span {
-        font-size: 26px;
-    }
+.stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-size: 20px;
+}
 
-/* ================= GRID ================= */
+.blue {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--blue);
+}
+
+.green {
+    background: rgba(34, 197, 94, 0.2);
+    color: var(--green);
+}
+
+.purple {
+    background: rgba(168, 85, 247, 0.2);
+    color: var(--purple);
+}
+
+.orange {
+    background: rgba(245, 158, 11, 0.2);
+    color: var(--orange);
+}
+
+.stat-card small {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.stat-card h3 {
+    margin-top: 4px;
+    font-size: 22px;
+}
+
+.green-text {
+    color: var(--green);
+}
+
+.orange-text {
+    color: var(--orange);
+}
+
+/* ================= UNITS GRID ================= */
 .units-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 18px;
 }
 
-/* ================= UNIT ================= */
+/* ================= UNIT CARD ================= */
 .unit-card {
-    background: #0a0a0a;
+    background: linear-gradient(180deg, #141c33, #0b1220);
+    border: 1px solid var(--border);
     border-radius: 18px;
     padding: 14px;
-    border: 1px solid #1a1a1a;
-    box-shadow: 0 0 30px rgba(255,255,255,.05);
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.4);
 }
 
     .unit-card.active {
-        border-color: #2ecc71;
+        border-color: rgba(59, 130, 246, 0.4);
+        box-shadow: 0 0 25px rgba(59, 130, 246, 0.25);
     }
 
 /* ================= HEADER ================= */
 .unit-header {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    font-size: 13px;
     margin-bottom: 12px;
 }
 
 .status-dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
 }
 
     .status-dot.green {
-        background: #2ecc71;
+        background: var(--green);
     }
 
     .status-dot.red {
-        background: #e74c3c;
+        background: var(--red);
     }
 
 .badge {
     margin-left: auto;
-    background: #2ecc71;
-    color: #000;
-    padding: 4px 10px;
-    border-radius: 10px;
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--blue);
+    padding: 4px 8px;
     font-size: 11px;
-    font-weight: 600;
+    border-radius: 999px;
 }
 
 /* ================= BODY ================= */
 .unit-body {
     display: flex;
-    gap: 12px;
+    justify-content: space-between;
+    margin: 12px 0;
 }
 
-/* ================= DISPENSER ================= */
 .dispenser {
+    width: 46%;
+    height: 120px;
     position: relative;
-    background: #050505;
-    border-radius: 16px;
-    padding: 14px;
-    height: 190px;
-    flex: 1;
-    border: 1px solid #1a1a1a;
+    background: #0b1327;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 8px;
 }
-
-    .dispenser.idle {
-        opacity: .55;
-    }
 
 /* Pump */
 .pump {
-    width: 78px;
-    height: 92px;
-    background: linear-gradient(180deg, #1abc9c, #0e6655);
-    border-radius: 14px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    padding-bottom: 10px;
-    font-size: 12px;
-    font-weight: 700;
-    box-shadow: inset 0 -4px 0 rgba(0,0,0,.35), 0 8px 18px rgba(0,0,0,.4);
+    width: 38px;
+    height: 58px;
+    background: linear-gradient(180deg, #1f2a44, #0b1220);
+    border-radius: 6px;
+    font-size: 9px;
+    display: grid;
+    place-items: center;
+    color: var(--blue);
 }
 
     .pump.ready {
-        background: #555;
+        color: var(--muted);
     }
 
-/* ================= NOZZLE ================= */
-/* ================= NOZZLE (HIDDEN BY DEFAULT) ================= */
+/* Nozzle */
 .nozzle {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--blue);
     position: absolute;
-    left: 78px;
-    top: 68px;
-    opacity: 0;
-    transform: scaleX(0);
-    transform-origin: left center;
+    right: 14px;
+    top: 50%;
 }
 
-/* ================= SHOW ONLY WHEN FUELING ================= */
-.dispenser.fueling .nozzle {
-    opacity: 1;
-    transform: scaleX(1);
-    animation: nozzleAttach 0.9s ease-out forwards;
-}
-
-/* Curved hose (short & clean) */
-.nozzle::before {
-    content: '';
+/* Fuel drops animation */
+.fueling .fuel-drop {
+    width: 4px;
+    height: 10px;
+    background: var(--blue);
     position: absolute;
-    width: 26px; /* ⬅ reduced length */
-    height: 30px;
-    border: 4px solid #f1c40f;
-    border-top: none;
-    border-right: none;
-    border-radius: 0 0 0 40px;
-    box-shadow: 0 0 14px rgba(241,196,15,.6);
+    right: 22px;
+    top: 60%;
+    animation: drip 1s infinite;
 }
 
-/* Straight connector to car */
-.nozzle::after {
-    content: '';
-    position: absolute;
-    left: 34px;
-    top: 26px;
-    width: 0px; /* ⬅ precise connection */
-    height: 3px;
-    background: linear-gradient(90deg, #f1c40f, #f39c12);
-    border-radius: 3px;
-    box-shadow: 0 0 12px rgba(241,196,15,.7);
-}
-
-/* ================= NOZZLE ATTACH ANIMATION ================= */
-@keyframes nozzleAttach {
+@keyframes drip {
     0% {
         opacity: 0;
-        transform: scaleX(0);
-        filter: blur(1px);
+        transform: translateY(0);
     }
 
-    60% {
+    50% {
         opacity: 1;
-        transform: scaleX(1.1);
     }
 
     100% {
-        transform: scaleX(1);
-        filter: blur(0);
+        opacity: 0;
+        transform: translateY(16px);
     }
 }
 
-
-/* ================= REALISTIC CAR ================= */
+/* Car */
 .car {
+    width: 40px;
+    height: 20px;
+    background: #1e293b;
+    border-radius: 6px;
     position: absolute;
-    right: -6px;
-    bottom: 34px;
-    width: 130px;
-    height: 30px;
-    background: linear-gradient(180deg, #3a8dde, #1b3f66);
-    border-radius: 20px 24px 12px 12px;
-    box-shadow: inset 0 -3px 0 rgba(0,0,0,.35);
+    right: 4px;
+    bottom: 8px;
 }
-
-    .car::before {
-        content: '';
-        position: absolute;
-        left: 32px;
-        top: -18px;
-        width: 66px;
-        height: 22px;
-        background: linear-gradient(180deg, #4fa3ff, #245a8d);
-        border-radius: 16px 16px 6px 6px;
-    }
-
-    .car::after {
-        content: '';
-        position: absolute;
-        left: 44px;
-        top: -14px;
-        width: 38px;
-        height: 12px;
-        background: rgba(255,255,255,.25);
-        border-radius: 4px;
-    }
-
-/* Wheels */
-.wheel {
-    position: absolute;
-    bottom: -9px;
-    width: 18px;
-    height: 18px;
-    background: radial-gradient(circle, #333 30%, #000 70%);
-    border-radius: 50%;
-}
-
-    .wheel.front {
-        left: 26px;
-    }
-
-    .wheel.back {
-        right: 26px;
-    }
 
 .blue-car {
-    background: linear-gradient(180deg, #2c82c9, #1b3f66);
+    background: #1d4ed8;
 }
 
-.faded {
-    opacity: .4;
+.car.faded {
+    opacity: 0.3;
+}
+
+.car-svg {
+    position: absolute;
+    right: 0px;
+    bottom: 25px;
+    filter: drop-shadow(0 0 6px rgba(59, 130, 246, 0.6));
+}
+
+.dispenser-svg {
+    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.35));
+}
+
+.fuel-line path {
+    animation: fuelFlow 1.2s linear infinite;
+    filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
+}
+
+@keyframes fuelFlow {
+    to {
+        stroke-dashoffset: -20;
+    }
+}
+
+.dispensers-row {
+    display: flex;
+    gap: 12px;
+}
+
+.dispenser-ui {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    background: #0b1220;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 10px;
+}
+
+    .dispenser-ui.active {
+        box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.15);
+    }
+
+.fuel-line {
+    position: absolute;
+    left: 42px;
+    top: 75px;
+}
+
+.dispenser-ui.idle {
+    opacity: 0.4;
+}
+
+.dispenser-ui.active .fuel-line {
+    display: block;
+}
+
+.dispenser-ui.idle .fuel-line {
+    display: none;
 }
 
 /* ================= FOOTER ================= */
 .unit-footer {
     display: flex;
     justify-content: space-between;
-    margin-top: 12px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
     font-size: 12px;
 }
 
-    .unit-footer strong {
-        font-size: 13px;
+    .unit-footer small {
+        color: var(--muted);
     }
-
-.green-text {
-    color: #2ecc71;
-}
-
-/* ================= FUELING ================= */
-.dispenser.fueling .nozzle::before,
-.dispenser.fueling .nozzle::after {
-    animation: glow 1.6s ease-in-out infinite;
-}
-
-@keyframes glow {
-    50% {
-        box-shadow: 0 0 22px rgba(241,196,15,.8);
-    }
-}
-
-.fuel-drop {
-    position: absolute;
-    left: 100px;
-    top: 96px;
-    width: 8px;
-    height: 8px;
-    background: radial-gradient(circle, #f1c40f, #f39c12);
-    border-radius: 50%;
-    opacity: 0;
-}
-
-.dispenser.fueling .fuel-drop {
-    animation: drop 1.8s infinite;
-}
-
-.fuel-drop.d2 {
-    animation-delay: .6s;
-}
-
-.fuel-drop.d3 {
-    animation-delay: 1.2s;
-}
-
-@keyframes drop {
-    10% {
-        opacity: 1;
-    }
-
-    50% {
-        transform: translateY(15px) scale(.8);
-    }
-
-    100% {
-        transform: translateY(30px) scale(.5);
-        opacity: 0;
-    }
-}
-
-.dispenser.fueling .car {
-    animation: carGlow 2s infinite;
-}
-
-    /* ================= CAR FUEL INLET GLOW ================= */
-    .dispenser.fueling .car::after {
-        background: rgba(255,255,255,.25);
-        box-shadow: -6px 2px 14px rgba(241,196,15,.8), -10px 4px 22px rgba(241,196,15,.4);
-    }
-
-
-@keyframes carGlow {
-    50% {
-        box-shadow: 0 0 22px rgba(241,196,15,.6);
-    }
-}
