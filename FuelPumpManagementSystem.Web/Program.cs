@@ -17,6 +17,7 @@ builder.Services.AddDbContext<FPMSDbContext>(options =>
 builder.Services.AddScoped<IDispenserService, DispenserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISiteService, SiteService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddTransient<FileUploadHelper>();
 
 
