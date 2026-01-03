@@ -2,149 +2,228 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<link rel="stylesheet" href="~/css/dashboard.css" />
+<!DOCTYPE html>
+<html lang="en">
 
-<div class="dashboard-container">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="~/css/dashboard.css" rel="stylesheet" />
+	<title>Fuel Station Dashboard</title>
+</head>
 
-    <!-- ================= TOP STATS ================= -->
-    <div class="stats-row">
-        <div class="stat-card blue">
-            <span>💧</span>
-            <div>
-                <small>Total Sales</small>
-                <h3>1,842.4 L</h3>
+<body>
+    <div class="dashboard-container">
+
+        <!-- ================= TOP STATS ================= -->
+        <div class="stats-row">
+
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <svg width="22" height="22" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12 2C12 2 5 9 5 14a7 7 0 0 0 14 0c0-5-7-12-7-12Z" />
+                    </svg>
+                </div>
+                <div>
+                    <small>Total Sales (Ltr)</small>
+                    <h3>1,842.4 L</h3>
+                </div>
             </div>
+
+            <div class="stat-card">
+                <div class="stat-icon green">$</div>
+                <div>
+                    <small>Revenue Today</small>
+                    <h3 class="green-text">Rs. 472,180</h3>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon purple">∿</div>
+                <div>
+                    <small>Active Dispenser</small>
+                    <h3>8 / 10</h3>
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon orange">⟳</div>
+                <div>
+                    <small>Sync Status</small>
+                    <h3 class="orange-text">Active</h3>
+                </div>
+            </div>
+
         </div>
 
-        <div class="stat-card green">
-            <span>💰</span>
-            <div>
-                <small>Revenue Today</small>
-                <h3>Rs. 472,180</h3>
-            </div>
-        </div>
+        <!-- ================= UNITS GRID ================= -->
+        <div class="units-grid">
 
-        <div class="stat-card purple">
-            <span>⛽</span>
-            <div>
-                <small>Active Dispensers</small>
-                <h3>8 / 10</h3>
-            </div>
-        </div>
+            <!-- ================= UNIT #1 ================= -->
+            <div class="unit-card active">
 
-        <div class="stat-card orange">
-            <span>🔄</span>
-            <div>
-                <small>Sync Status</small>
-                <h3>ACTIVE</h3>
+                <div class="unit-header">
+                    <span class="status-dot green"></span>
+                    <strong>UNIT #1</strong>
+                    <span class="badge">ACTIVE</span>
+                </div>
+
+                <div class="unit-body">
+
+                    <!-- ============ DISPENSER ROW (2 DISPENSERS) ============ -->
+                    <div class="dispensers-row">
+
+                        <!-- DISPENSER A -->
+                        <div class="dispenser-ui active ">
+
+                            <svg class="dispenser-svg" width="100" height="80" viewBox="0 0 100 80">
+                                <rect x="6" y="2" width="40" height="76" rx="6" fill="#0F172A" />
+                                <rect x="10" y="10" width="20" height="16" rx="2" fill="#020617" />
+                                <text x="23" y="22" font-size="7" text-anchor="middle" fill="#38BDF8">
+                                    DISPENSE
+                                </text>
+                            </svg>
+
+                            <svg class="fuel-line" width="35" height="60" viewBox="0 0 35 60">
+                                <path d="M10 10 C 50 10, 60 50, 110 50" stroke="#38BDF8" stroke-width="2"
+                                      stroke-dasharray="4 6" fill="none" />
+                            </svg>
+
+                            <svg class="car-svg" width="72" height="36" viewBox="0 0 72 36">
+                                <rect x="10" y="14" width="44" height="12" rx="4" fill="#1E40AF" />
+                                <rect x="20" y="8" width="22" height="8" rx="3" fill="#2563EB" />
+                                <circle cx="20" cy="30" r="4" fill="#020617" />
+                                <circle cx="46" cy="30" r="4" fill="#020617" />
+                            </svg>
+
+                        </div>
+
+                        <!-- DISPENSER B -->
+                        <div class="dispenser-ui idle">
+
+                            <svg class="dispenser-svg" width="100" height="80" viewBox="0 0 100 80">
+                                <rect x="6" y="2" width="40" height="76" rx="6" fill="#0F172A" />
+                                <rect x="10" y="10" width="20" height="16" rx="2" fill="#020617" />
+                                <text x="23" y="22" font-size="7" text-anchor="middle" fill="#38BDF8">
+                                    DISPENSE
+                                </text>
+                            </svg>
+
+                            <svg class="fuel-line" width="35" height="60" viewBox="0 0 35 60">
+                                <path d="M10 10 C 50 10, 60 50, 110 50" stroke="#38BDF8" stroke-width="2"
+                                      stroke-dasharray="4 6" fill="none" />
+                            </svg>
+
+                            <svg class="car-svg" width="72" height="36" viewBox="0 0 72 36">
+                                <rect x="10" y="14" width="44" height="12" rx="4" fill="#1E40AF" />
+                                <rect x="20" y="8" width="22" height="8" rx="3" fill="#2563EB" />
+                                <circle cx="20" cy="30" r="4" fill="#020617" />
+                                <circle cx="46" cy="30" r="4" fill="#020617" />
+                            </svg>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="unit-footer">
+                    <div>
+                        <small>PETROL (N1)</small><br />
+                        <strong>5.63 L</strong><br />
+                        <small>Rs. 256 / L</small><br />
+                        <strong>Rs. 1,441</strong>
+                    </div>
+
+                    <div class="green-text">
+                        <small>DIESEL (N2)</small><br />
+                        <strong>14.82 L</strong><br />
+                        <small>Rs. 278 / L</small><br />
+                        <strong>Rs. 4,121</strong>
+                    </div>
+                </div>
+
             </div>
+
+            <!-- ================= UNIT #2 ================= -->
+            <div class="unit-card">
+
+                <div class="unit-header">
+                    <span class="status-dot red"></span>
+                    <strong>UNIT #2</strong>
+                </div>
+
+                <div class="unit-body">
+
+                    <!-- ============ DISPENSER ROW (2 DISPENSERS) ============ -->
+                    <div class="dispensers-row">
+
+                        <!-- DISPENSER A -->
+                        <div class="dispenser-ui idle">
+
+                            <svg class="dispenser-svg" width="100" height="80" viewBox="0 0 100 80">
+                                <rect x="6" y="2" width="40" height="76" rx="6" fill="#0F172A" />
+                                <rect x="10" y="10" width="20" height="16" rx="2" fill="#020617" />
+                                <text x="23" y="22" font-size="7" text-anchor="middle" fill="#38BDF8">
+                                    DISPENSE
+                                </text>
+                            </svg>
+
+                            <svg class="fuel-line" width="35" height="60" viewBox="0 0 35 60">
+                                <path d="M10 10 C 50 10, 60 50, 110 50" stroke="#38BDF8" stroke-width="2"
+                                      stroke-dasharray="4 6" fill="none" />
+                            </svg>
+
+                            <svg class="car-svg" width="72" height="36" viewBox="0 0 72 36">
+                                <rect x="10" y="14" width="44" height="12" rx="4" fill="#1E40AF" />
+                                <rect x="20" y="8" width="22" height="8" rx="3" fill="#2563EB" />
+                                <circle cx="20" cy="30" r="4" fill="#020617" />
+                                <circle cx="46" cy="30" r="4" fill="#020617" />
+                            </svg>
+
+                        </div>
+
+                        <!-- DISPENSER B -->
+                        <div class="dispenser-ui idle">
+
+                            <svg class="dispenser-svg" width="100" height="80" viewBox="0 0 100 80">
+                                <rect x="6" y="2" width="40" height="76" rx="6" fill="#0F172A" />
+                                <rect x="10" y="10" width="20" height="16" rx="2" fill="#020617" />
+                                <text x="23" y="22" font-size="7" text-anchor="middle" fill="#38BDF8">
+                                    DISPENSE
+                                </text>
+                            </svg>
+
+                            <svg class="fuel-line" width="35" height="60" viewBox="0 0 35 60">
+                                <path d="M10 10 C 50 10, 60 50, 110 50" stroke="#38BDF8" stroke-width="2"
+                                      stroke-dasharray="4 6" fill="none" />
+                            </svg>
+
+                            <svg class="car-svg" width="72" height="36" viewBox="0 0 72 36">
+                                <rect x="10" y="14" width="44" height="12" rx="4" fill="#1E40AF" />
+                                <rect x="20" y="8" width="22" height="8" rx="3" fill="#2563EB" />
+                                <circle cx="20" cy="30" r="4" fill="#020617" />
+                                <circle cx="46" cy="30" r="4" fill="#020617" />
+                            </svg>
+
+                        </div>
+                    </div>
+                </div>
+
+                <div class="unit-footer">
+                    <div>
+                        <small>PETROL (N1)</small><br />
+                        <strong>7.92 L</strong>
+                    </div>
+
+                    <div>
+                        <small>DIESEL (N2)</small><br />
+                        <strong>3.67 L</strong>
+                    </div>
+                </div>
+
+            </div>
+
         </div>
     </div>
+</body>
 
-    <!-- ================= UNITS ================= -->
-    <div class="units-grid">
-
-        <!-- ================= UNIT ================= -->
-        <div class="unit-card active">
-            <div class="unit-header">
-                <span class="status-dot green"></span>
-                <strong>UNIT #1</strong>
-                <span class="badge">ACTIVE FLOW</span>
-            </div>
-
-            <div class="unit-body two-dispensers">
-
-                <!-- DISPENSER 1 -->
-                <div class="dispenser fueling">
-                    <div class="pump">DISPENSE</div>
-                    <div class="nozzle"></div>
-
-                    <!-- Fuel drops -->
-                    <div class="fuel-drop d1"></div>
-                    <div class="fuel-drop d2"></div>
-                    <div class="fuel-drop d3"></div>
-
-                    <div class="car">
-                        <div class="wheel front"></div>
-                        <div class="wheel back"></div>
-                    </div>
-                </div>
-
-
-                <!-- DISPENSER 2 -->
-                <div class="dispenser">
-                    <div class="pump">DISPENSE</div>
-                    <div class="nozzle"></div>
-                    <div class="car blue-car">
-                        <div class="wheel front"></div>
-                        <div class="wheel back"></div>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="unit-footer">
-                <div>
-                    <small>PETROL (N1)</small><br />
-                    <strong>5.63 L</strong><br />
-                    <small>Rs. 256 / L</small><br />
-                    <strong>Rs. 1,441</strong>
-                </div>
-
-                <div class="green-text">
-                    <small>DIESEL (N2)</small><br />
-                    <strong>14.82 L</strong><br />
-                    <small>Rs. 278 / L</small><br />
-                    <strong>Rs. 4,121</strong>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- ================= UNIT ================= -->
-        <div class="unit-card">
-            <div class="unit-header">
-                <span class="status-dot red"></span>
-                <strong>UNIT #2</strong>
-            </div>
-
-            <div class="unit-body two-dispensers">
-
-                <div class="dispenser idle">
-                    <div class="pump ready">READY</div>
-                    <div class="car faded">
-                        <div class="wheel front"></div>
-                        <div class="wheel back"></div>
-                    </div>
-                </div>
-
-                <div class="dispenser idle">
-                    <div class="pump ready">READY</div>
-                    <div class="car faded blue-car">
-                        <div class="wheel front"></div>
-                        <div class="wheel back"></div>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="unit-footer">
-                <div>
-                    <small>PETROL (N1)</small><br />
-                    <strong>5.63 L</strong><br />
-                    <small>Rs. 256 / L</small><br />
-                    <strong>Rs. 1,441</strong>
-                </div>
-
-                <div class="green-text">
-                    <small>DIESEL (N2)</small><br />
-                    <strong>14.82 L</strong><br />
-                    <small>Rs. 278 / L</small><br />
-                    <strong>Rs. 4,121</strong>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-</div>
+</html>
