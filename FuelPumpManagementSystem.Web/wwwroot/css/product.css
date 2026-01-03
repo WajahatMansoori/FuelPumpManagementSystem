@@ -1,0 +1,276 @@
+/* Page Header Styling */
+.page-header-card {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.page-title {
+    color: white;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1rem;
+}
+
+.btn-update-prices {
+    background: white;
+    color: #1a1a1a;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.btn-update-prices:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    background: #f8f9fa;
+    color: #1a1a1a;
+}
+
+.btn-update-prices:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Card Styling */
+.product-card, .status-card {
+    border: none;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    padding: 1rem 1.5rem;
+}
+
+.bg-gradient-info {
+    background: linear-gradient(135deg, #2d2d2d 0%, #3a3a3a 100%);
+    padding: 1rem 1.5rem;
+}
+
+/* Product Table Styling */
+.product-table thead th {
+    background: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.product-table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+.product-row {
+    transition: all 0.3s ease;
+}
+
+.product-row:hover {
+    background-color: #f8f9fa;
+}
+
+.product-row.selected {
+    background-color: #e7f3ff;
+}
+
+/* Product Color Indicator */
+.product-color-indicator {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 2px solid white;
+}
+
+/* Product Name */
+.product-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #2d3748;
+}
+
+/* Current Price Badge */
+.current-price-badge {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+.current-price-badge .price-value {
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+/* New Price Input */
+.new-price-input {
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.6rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.new-price-input:focus {
+    border-color: #1a1a1a;
+    box-shadow: 0 0 0 0.2rem rgba(26, 26, 26, 0.25);
+}
+
+.new-price-input:disabled {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+.input-group-text {
+    background: #1a1a1a;
+    color: white;
+    border: 2px solid #1a1a1a;
+    font-weight: 600;
+}
+
+/* Price Change Badge */
+.price-change-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    display: inline-block;
+    min-width: 100px;
+    text-align: center;
+}
+
+.price-change-badge.increase {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+.price-change-badge.decrease {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+}
+
+.price-change-badge.no-change {
+    background: #e2e8f0;
+    color: #718096;
+}
+
+/* Checkbox Styling */
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid #cbd5e0;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #1a1a1a;
+    border-color: #1a1a1a;
+}
+
+/* Status Table Styling */
+.status-table thead th {
+    background: #f8f9fa;
+    color: #495057;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.status-table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+/* Status Indicator */
+.status-indicator {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.status-indicator.status-pending {
+    background: #e2e8f0;
+    color: #718096;
+}
+
+.status-indicator.status-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    animation: pulse 2s infinite;
+}
+
+.status-indicator.status-failed {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Dispenser Name */
+.dispenser-name {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 1rem;
+}
+
+/* API Endpoint */
+.api-endpoint {
+    background: #f7fafc;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #4a5568;
+    border: 1px solid #e2e8f0;
+}
+
+/* Status Badge */
+.status-badge {
+    padding: 0.5rem 1rem;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 8px;
+}
+
+.status-badge.bg-success {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%) !important;
+}
+
+.status-badge.bg-danger {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.product-row, .dispenser-status-row {
+    animation: fadeIn 0.4s ease-out;
+}

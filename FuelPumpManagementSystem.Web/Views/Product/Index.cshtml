@@ -1,0 +1,331 @@
+﻿@using FuelPumpManagementSystem.Application.DTOs.Response
+@{
+    ViewData["Title"] = "Product Price Management";
+    var products = ViewBag.Products as List<ProductResponseDTO>;
+    var dispensers = ViewBag.Dispensers as List<DispenserResponseDTO>;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/product.css" asp-append-version="true" />
+}
+
+<div class="container-fluid py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="page-header-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2 class="page-title mb-1">💰 Product Price Management</h2>
+                        <p class="page-subtitle mb-0">Update fuel prices across all dispensers</p>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-update-prices" id="updatePricesBtn" disabled>
+                        <i class="bi bi-arrow-repeat"></i> Update Selected Prices
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm product-card">
+                <div class="card-header bg-gradient-primary">
+                    <h5 class="mb-0 text-white">
+                        <i class="bi bi-fuel-pump"></i> Fuel Products
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover product-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="50">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll">
+                                        </div>
+                                    </th>
+                                    <th width="50"></th>
+                                    <th>Product Name</th>
+                                    <th width="200">Current Price (PKR)</th>
+                                    <th width="250">New Price (PKR)</th>
+                                    <th width="150">Price Change</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (products != null && products.Any())
+                                {
+                                    foreach (var product in products)
+                                    {
+                                        <tr class="product-row" data-product-id="@product.ProductId">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input class="form-check-input product-checkbox" 
+                                                           type="checkbox" 
+                                                           id="product_@product.ProductId"
+                                                           data-product-id="@product.ProductId">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="product-color-indicator" 
+                                                     style="background-color: @product.ProductColorCode;">
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="product-name-cell">
+                                                    <span class="product-name">@product.ProductName</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="current-price-badge">
+                                                    <span class="price-value">@product.ProductPrice.ToString("N2")</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">PKR</span>
+                                                    <input type="number" 
+                                                           class="form-control new-price-input" 
+                                                           id="newPrice_@product.ProductId"
+                                                           data-product-id="@product.ProductId"
+                                                           data-current-price="@product.ProductPrice"
+                                                           placeholder="Enter new price"
+                                                           step="0.01"
+                                                           min="0"
+                                                           disabled>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="price-change-badge" id="priceChange_@product.ProductId">
+                                                    --
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-4">
+                                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                            <p class="mb-0 mt-2">No products available</p>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Price Update Status Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm status-card">
+                <div class="card-header bg-gradient-info">
+                    <h5 class="mb-0 text-white">
+                        <i class="bi bi-activity"></i> Price Update Status
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover status-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th width="80">Status</th>
+                                    <th>Dispenser Name</th>
+                                    <th width="200">API Endpoint</th>
+                                    <th width="150">Update Status</th>
+                                    <th width="200">Last Updated</th>
+                                </tr>
+                            </thead>
+                            <tbody id="statusTableBody">
+                                @if (dispensers != null && dispensers.Any())
+                                {
+                                    foreach (var dispenser in dispensers)
+                                    {
+                                        <tr class="dispenser-status-row">
+                                            <td>
+                                                <div class="status-indicator status-pending">
+                                                    <i class="bi bi-clock"></i>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="dispenser-name">Dispenser #@dispenser.DispenserId</span>
+                                            </td>
+                                            <td>
+                                                <code class="api-endpoint">@dispenser.ApiEndPoint</code>
+                                            </td>
+                                            <td>
+                                                <span class="badge status-badge bg-secondary">
+                                                    <i class="bi bi-dash-circle"></i> Pending
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted">--</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">
+                                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+                                            <p class="mb-0 mt-2">No dispensers configured</p>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const productCheckboxes = document.querySelectorAll('.product-checkbox');
+            const updatePricesBtn = document.getElementById('updatePricesBtn');
+
+            // Select All functionality
+            selectAllCheckbox?.addEventListener('change', function() {
+                productCheckboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                    togglePriceInput(checkbox);
+                    updateRowSelection(checkbox);
+                });
+                updateButtonState();
+            });
+
+            // Individual checkbox functionality
+            productCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    togglePriceInput(this);
+                    updateRowSelection(this);
+                    updateSelectAllState();
+                    updateButtonState();
+                });
+            });
+
+            // Price input change handler
+            document.querySelectorAll('.new-price-input').forEach(input => {
+                input.addEventListener('input', function() {
+                    calculatePriceChange(this);
+                });
+            });
+
+            function togglePriceInput(checkbox) {
+                const productId = checkbox.dataset.productId;
+                const priceInput = document.getElementById(`newPrice_${productId}`);
+                
+                if (priceInput) {
+                    priceInput.disabled = !checkbox.checked;
+                    if (!checkbox.checked) {
+                        priceInput.value = '';
+                        const priceChangeBadge = document.getElementById(`priceChange_${productId}`);
+                        if (priceChangeBadge) {
+                            priceChangeBadge.textContent = '--';
+                            priceChangeBadge.className = 'price-change-badge';
+                        }
+                    }
+                }
+            }
+
+            function updateRowSelection(checkbox) {
+                const row = checkbox.closest('.product-row');
+                if (row) {
+                    if (checkbox.checked) {
+                        row.classList.add('selected');
+                    } else {
+                        row.classList.remove('selected');
+                    }
+                }
+            }
+
+            function updateSelectAllState() {
+                const allChecked = Array.from(productCheckboxes).every(cb => cb.checked);
+                const someChecked = Array.from(productCheckboxes).some(cb => cb.checked);
+                
+                if (selectAllCheckbox) {
+                    selectAllCheckbox.checked = allChecked;
+                    selectAllCheckbox.indeterminate = someChecked && !allChecked;
+                }
+            }
+
+            function updateButtonState() {
+                const anyChecked = Array.from(productCheckboxes).some(cb => cb.checked);
+                if (updatePricesBtn) {
+                    updatePricesBtn.disabled = !anyChecked;
+                }
+            }
+
+            function calculatePriceChange(input) {
+                const productId = input.dataset.productId;
+                const currentPrice = parseFloat(input.dataset.currentPrice);
+                const newPrice = parseFloat(input.value);
+                const priceChangeBadge = document.getElementById(`priceChange_${productId}`);
+
+                if (priceChangeBadge && !isNaN(newPrice) && newPrice > 0) {
+                    const difference = newPrice - currentPrice;
+                    const percentChange = ((difference / currentPrice) * 100).toFixed(2);
+                    
+                    let badgeClass = 'price-change-badge ';
+                    let icon = '';
+                    
+                    if (difference > 0) {
+                        badgeClass += 'increase';
+                        icon = '↑ ';
+                    } else if (difference < 0) {
+                        badgeClass += 'decrease';
+                        icon = '↓ ';
+                    } else {
+                        badgeClass += 'no-change';
+                        icon = '= ';
+                    }
+                    
+                    priceChangeBadge.className = badgeClass;
+                    priceChangeBadge.textContent = `${icon}${Math.abs(percentChange)}%`;
+                } else if (priceChangeBadge) {
+                    priceChangeBadge.textContent = '--';
+                    priceChangeBadge.className = 'price-change-badge';
+                }
+            }
+
+            // Update Prices Button Click Handler (placeholder for future implementation)
+            updatePricesBtn?.addEventListener('click', function() {
+                const selectedProducts = [];
+                
+                productCheckboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        const productId = checkbox.dataset.productId;
+                        const priceInput = document.getElementById(`newPrice_${productId}`);
+                        const newPrice = parseFloat(priceInput.value);
+                        
+                        if (!isNaN(newPrice) && newPrice > 0) {
+                            selectedProducts.push({
+                                productId: productId,
+                                newPrice: newPrice
+                            });
+                        }
+                    }
+                });
+
+                if (selectedProducts.length > 0) {
+                    // TODO: Implement API call to update prices
+                    console.log('Selected products for update:', selectedProducts);
+                    alert(`Ready to update ${selectedProducts.length} product(s). API integration pending.`);
+                } else {
+                    alert('Please enter valid prices for selected products.');
+                }
+            });
+        });
+    </script>
+}
