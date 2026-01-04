@@ -3,6 +3,8 @@ using FuelPumpManagementSystem.Application.Interfaces;
 using FuelPumpManagementSystem.Web.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Shared.FPMS_DB;
 using Shared.Helpers;
 using System.Linq;
 
@@ -14,17 +16,20 @@ namespace FuelPumpManagementSystem.Web.Controllers
         private readonly IProductService _productService;
         private readonly ISiteService _siteService;
         private readonly FileUploadHelper _fileUploadHelper;
+        private readonly FPMSDbContext _db;
 
         public DispenserController(
             IDispenserService dispenserService,
             IProductService productService,
             ISiteService siteService,
-            FileUploadHelper fileUploadHelper)
+            FileUploadHelper fileUploadHelper,
+            FPMSDbContext db)
         {
             _dispenserService = dispenserService;
             _productService = productService;
             _siteService = siteService;
             _fileUploadHelper = fileUploadHelper;
+            _db = db;
         }
         public async Task<IActionResult> Index(int? id)
         {
@@ -141,5 +146,56 @@ namespace FuelPumpManagementSystem.Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpPost]
+        public async Task<IActionResult> ValidateAdminAccessKey([FromBody] AdminAccessKeyRequestDTO request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.AccessKey))
+                {
+                    return Json(new { success = false, message = "Access key is required" });
+                }
+
+                // Check if access key matches any admin user password
+                var isValid = await _db.User
+                    .AnyAsync(u => u.Password == request.AccessKey && u.IsAdminLogin);
+
+                if (isValid)
+                {
+                    return Json(new { success = true, message = "Access granted" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Invalid Access Key" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LockUnlockDispenser([FromBody] LockUnlockDispenserRequestDTO request)
+        {
+            try
+            {
+                var success = await _dispenserService.LockUnlockDispenserAsync(request);
+
+                if (success)
+                {
+                    var action = request.IsLocked ? "locked" : "unlocked";
+                    return Json(new { success = true, message = $"Dispenser {action} successfully" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to update dispenser lock status" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
     }
 }
