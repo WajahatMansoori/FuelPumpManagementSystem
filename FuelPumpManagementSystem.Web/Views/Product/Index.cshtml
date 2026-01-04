@@ -21,7 +21,7 @@
                         <h2 class="page-title mb-1">💰 Product Price Management</h2>
                         <p class="page-subtitle mb-0">Update fuel prices across all dispensers</p>
                     </div>
-                    <button type="button" class="btn-update-prices" id="updatePricesBtn" disabled>
+                    <button type="button" class="btn btn-update-prices" id="updatePricesBtn" disabled>
                         <i class="bi bi-arrow-repeat"></i> Update Selected Prices
                     </button>
                 </div>
@@ -237,6 +237,24 @@
 
         // Start the timer when page loads
         resetInactivityTimer();
+
+        // Clear session when user navigates away from Product page
+        window.addEventListener('beforeunload', function(e) {
+            // Use sendBeacon for reliable async request that completes even if page is unloading
+            navigator.sendBeacon('/Product/ClearProductAccess');
+        });
+
+        // Also clear session when user clicks on navigation links
+        document.addEventListener('click', function(e) {
+            const link = e.target.closest('a');
+            if (link && link.href && !link.href.includes('/Product')) {
+                // User is navigating away from Product section
+                fetch('/Product/ClearProductAccess', {
+                    method: 'POST',
+                    keepalive: true
+                });
+            }
+        });
 
         // Toast notification system
         function showToast(type, title, message) {
