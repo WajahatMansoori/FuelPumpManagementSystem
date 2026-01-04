@@ -504,6 +504,20 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
+                        // Update current prices instantly
+                        selectedProducts.forEach(product => {
+                            const currentPriceElement = document.getElementById(`currentPrice_${product.productId}`);
+                            if (currentPriceElement) {
+                                currentPriceElement.textContent = product.newPrice.toFixed(2);
+                            }
+                            
+                            // Update data-current-price attribute for future calculations
+                            const priceInput = document.getElementById(`newPrice_${product.productId}`);
+                            if (priceInput) {
+                                priceInput.dataset.currentPrice = product.newPrice;
+                            }
+                        });
+                        
                         // Refresh dispenser statuses without reloading page
                         await refreshDispenserStatuses();
                         
