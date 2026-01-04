@@ -21,7 +21,7 @@
                         <h2 class="page-title mb-1">💰 Product Price Management</h2>
                         <p class="page-subtitle mb-0">Update fuel prices across all dispensers</p>
                     </div>
-                    <button type="button" class="btn btn-primary btn-update-prices" id="updatePricesBtn" disabled>
+                    <button type="button" class="btn-update-prices" id="updatePricesBtn" disabled>
                         <i class="bi bi-arrow-repeat"></i> Update Selected Prices
                     </button>
                 </div>
@@ -197,8 +197,87 @@
     }
 </div>
 
+<!-- Loader Overlay -->
+<div class="loader-overlay" id="loaderOverlay">
+    <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Updating Prices...</div>
+        <div class="loader-subtext">Please wait while we update prices across all dispensers</div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
 @section Scripts {
     <script>
+        // Inactivity timeout - 2 minutes
+        let inactivityTimer;
+        const INACTIVITY_TIMEOUT = 2 * 60 * 1000; // 2 minutes in milliseconds
+
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(function() {
+                // Clear session and redirect to dashboard
+                fetch('/Product/ClearProductAccess', {
+                    method: 'POST'
+                }).finally(function() {
+                    window.location.href = '/';
+                });
+            }, INACTIVITY_TIMEOUT);
+        }
+
+        // Track user activity - using passive listeners for better performance
+        document.addEventListener('mousemove', resetInactivityTimer, { passive: true });
+        document.addEventListener('mousedown', resetInactivityTimer, { passive: true });
+        document.addEventListener('keydown', resetInactivityTimer, { passive: true });
+        document.addEventListener('touchstart', resetInactivityTimer, { passive: true });
+        document.addEventListener('scroll', resetInactivityTimer, { passive: true });
+        document.addEventListener('wheel', resetInactivityTimer, { passive: true });
+
+        // Start the timer when page loads
+        resetInactivityTimer();
+
+        // Toast notification system
+        function showToast(type, title, message) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+            
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="bi ${iconClass}"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="bi bi-x"></i>
+                </button>
+                <div class="toast-progress"></div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('hiding');
+                setTimeout(() => toast.remove(), 400);
+            }, 5000);
+        }
+
+        // Show/Hide loader
+        function showLoader() {
+            document.getElementById('loaderOverlay').classList.add('show');
+        }
+
+        function hideLoader() {
+            document.getElementById('loaderOverlay').classList.remove('show');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             const selectAllCheckbox = document.getElementById('selectAll');
             const productCheckboxes = document.querySelectorAll('.product-checkbox');
@@ -308,6 +387,65 @@
                 }
             }
 
+            // Function to refresh dispenser statuses
+            async function refreshDispenserStatuses() {
+                try {
+                    const response = await fetch('/Product/GetDispenserStatuses');
+                    const result = await response.json();
+                    
+                    if (result.success && result.hasPriceUpdateLogs) {
+                        const statusTableBody = document.getElementById('statusTableBody');
+                        if (statusTableBody) {
+                            let html = '';
+                            result.dispenserStatuses.forEach(dispenser => {
+                                if (dispenser.hasUpdateLog) {
+                                    const statusClass = dispenser.isOnline ? 'status-online' : 'status-offline';
+                                    const statusIcon = dispenser.isOnline ? 'bi-check-circle' : 'bi-x-circle';
+                                    const updateStatusClass = dispenser.isErrorOccured ? 'bg-danger' : 'bg-success';
+                                    const updateStatusIcon = dispenser.isErrorOccured ? 'bi-x-circle' : 'bi-check-circle';
+                                    const updateStatusText = dispenser.isErrorOccured ? 'Failed' : 'Updated';
+                                    const lastUpdated = dispenser.lastUpdated ? new Date(dispenser.lastUpdated).toLocaleString('en-US', { 
+                                        month: 'short', 
+                                        day: 'numeric', 
+                                        year: 'numeric', 
+                                        hour: 'numeric', 
+                                        minute: '2-digit', 
+                                        hour12: true 
+                                    }) : '--';
+                                    
+                                    html += `
+                                        <tr class="dispenser-status-row">
+                                            <td>
+                                                <div class="status-indicator ${statusClass}">
+                                                    <i class="bi ${statusIcon}"></i>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="dispenser-name">${dispenser.dispenserName}</span>
+                                            </td>
+                                            <td>
+                                                <code class="api-endpoint">${dispenser.apiEndPoint}</code>
+                                            </td>
+                                            <td>
+                                                <span class="badge status-badge ${updateStatusClass}">
+                                                    <i class="bi ${updateStatusIcon}"></i> ${updateStatusText}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="text-muted">${lastUpdated}</span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }
+                            });
+                            statusTableBody.innerHTML = html;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error refreshing dispenser statuses:', error);
+                }
+            }
+
             // Update Prices Button Click Handler
             updatePricesBtn?.addEventListener('click', async function() {
                 const selectedProducts = [];
@@ -328,14 +466,13 @@
                 });
 
                 if (selectedProducts.length === 0) {
-                    alert('Please enter valid prices for selected products.');
+                    showToast('error', 'No Products Selected', 'Please select products and enter valid prices before updating.');
                     return;
                 }
 
-                // Disable button and show loading state
+                // Show loader and disable button
+                showLoader();
                 updatePricesBtn.disabled = true;
-                const originalText = updatePricesBtn.innerHTML;
-                updatePricesBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Updating Prices...';
 
                 try {
                     const response = await fetch('/Product/UpdatePrices', {
@@ -349,19 +486,30 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
-                        alert(`✅ ${result.message}\n\nUpdated ${selectedProducts.length} product(s) successfully!`);
+                        // Refresh dispenser statuses without reloading page
+                        await refreshDispenserStatuses();
                         
-                        // Reload page to show updated prices
-                        window.location.reload();
+                        // Reset form
+                        productCheckboxes.forEach(checkbox => {
+                            checkbox.checked = false;
+                            togglePriceInput(checkbox);
+                            updateRowSelection(checkbox);
+                        });
+                        updateSelectAllState();
+                        updateButtonState();
+                        
+                        // Hide loader and show success toast
+                        hideLoader();
+                        showToast('success', 'Prices Updated Successfully!', `Successfully updated prices for ${selectedProducts.length} product(s) across all dispensers.`);
                     } else {
-                        alert(`❌ Error: ${result.message}`);
+                        hideLoader();
+                        showToast('error', 'Update Failed', result.message || 'Failed to update prices. Please try again.');
                         updatePricesBtn.disabled = false;
-                        updatePricesBtn.innerHTML = originalText;
                     }
                 } catch (error) {
-                    alert(`❌ Error updating prices: ${error.message}`);
+                    hideLoader();
+                    showToast('error', 'Error Occurred', `An error occurred while updating prices: ${error.message}`);
                     updatePricesBtn.disabled = false;
-                    updatePricesBtn.innerHTML = originalText;
                 }
             });
         });
