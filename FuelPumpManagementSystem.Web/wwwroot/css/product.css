@@ -87,6 +87,7 @@
     background-color: #e7f3ff;
 }
 
+
 /* Product Color Indicator */
 .product-color-indicator {
     width: 32px;
@@ -274,3 +275,5 @@
 .product-row, .dispenser-status-row {
     animation: fadeIn 0.4s ease-out;
 }
+
+

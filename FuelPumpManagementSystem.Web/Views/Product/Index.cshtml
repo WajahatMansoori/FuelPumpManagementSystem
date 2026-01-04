@@ -1,7 +1,8 @@
 ﻿@using FuelPumpManagementSystem.Application.DTOs.Response
+@using FuelPumpManagementSystem.Web.Models
 @{
     ViewData["Title"] = "Product Price Management";
-    var products = ViewBag.Products as List<ProductResponseDTO>;
+    var products = ViewBag.Products as List<ProductPriceViewModel>;
     var dispensers = ViewBag.Dispensers as List<DispenserResponseDTO>;
 }
 
@@ -58,7 +59,8 @@
                                 {
                                     foreach (var product in products)
                                     {
-                                        <tr class="product-row" data-product-id="@product.ProductId">
+                                        <tr class="product-row" 
+                                            data-product-id="@product.ProductId">
                                             <td>
                                                 <div class="form-check">
                                                     <input class="form-check-input product-checkbox" 
@@ -73,13 +75,13 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="product-name-cell">
-                                                    <span class="product-name">@product.ProductName</span>
-                                                </div>
+                                                <span class="product-name">@product.ProductName</span>
                                             </td>
                                             <td>
                                                 <div class="current-price-badge">
-                                                    <span class="price-value">@product.ProductPrice.ToString("N2")</span>
+                                                    <span class="price-value" id="currentPrice_@product.ProductId">
+                                                        @(product.CurrentPrice > 0 ? product.CurrentPrice.ToString("N2") : "--")
+                                                    </span>
                                                 </div>
                                             </td>
                                             <td>
@@ -89,7 +91,7 @@
                                                            class="form-control new-price-input" 
                                                            id="newPrice_@product.ProductId"
                                                            data-product-id="@product.ProductId"
-                                                           data-current-price="@product.ProductPrice"
+                                                           data-current-price="@product.CurrentPrice"
                                                            placeholder="Enter new price"
                                                            step="0.01"
                                                            min="0"
@@ -273,7 +275,7 @@
                 const newPrice = parseFloat(input.value);
                 const priceChangeBadge = document.getElementById(`priceChange_${productId}`);
 
-                if (priceChangeBadge && !isNaN(newPrice) && newPrice > 0) {
+                if (priceChangeBadge && !isNaN(newPrice) && newPrice > 0 && currentPrice > 0) {
                     const difference = newPrice - currentPrice;
                     const percentChange = ((difference / currentPrice) * 100).toFixed(2);
                     

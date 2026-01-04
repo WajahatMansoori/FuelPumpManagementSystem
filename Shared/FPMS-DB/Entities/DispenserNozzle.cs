@@ -13,6 +13,7 @@ namespace Shared.FPMS_DB.Entities
         public int NozzleId { get; set; }
         public int? ProductId { get; set; }
         public bool IsEnable { get; set; } = true;
+        public decimal? CurrentProductPrice { get; set; }
         public decimal? LastTotalLiter { get; set; }
         public decimal? LastTotalCash { get; set; }
         public DateTime CreatedAt { get; set; }

@@ -33,7 +33,6 @@ namespace FuelPumpManagementSystem.Application.Services
                 {
                     ProductId = p.ProductId,
                     ProductName = p.ProductName,
-                    ProductPrice = p.ProductPrice,
                     ProductColorCode = p.ProductColorCode
                 })
                 .ToListAsync();
@@ -41,14 +40,10 @@ namespace FuelPumpManagementSystem.Application.Services
 
         public async Task<bool> UpdateProductPricesAsync(List<UpdateProductPriceRequestDTO> priceUpdates)
         {
-            // Get all active products with their current prices
-            var allProducts = await _db.Product
-                .Where(p => p.IsActive)
-                .ToDictionaryAsync(p => p.ProductId, p => p.ProductPrice);
-
             // Get dispensers that are online and have at least one enabled nozzle
             var eligibleDispensers = await _db.Dispenser
                 .Include(d => d.Nozzles)
+                    .ThenInclude(n => n.Product)
                 .Where(d => d.IsOnline && d.IsActive && d.Nozzles.Any(n => n.IsEnable && n.IsActive))
                 .ToListAsync();
 
@@ -75,36 +70,34 @@ namespace FuelPumpManagementSystem.Application.Services
             int successCount = 0;
             int failedCount = 0;
 
-            // Prepare price payload - all 6 products
-            var pricePayload = new Dictionary<string, decimal>();
-            for (int i = 1; i <= 6; i++)
-            {
-                var productId = i;
-                var priceUpdate = priceUpdates.FirstOrDefault(p => p.ProductId == productId);
-                
-                if (priceUpdate != null)
-                {
-                    // Use new price for updated products
-                    pricePayload[$"P{i}"] = priceUpdate.NewPrice;
-                }
-                else if (allProducts.ContainsKey(productId))
-                {
-                    // Use old price for non-updated products
-                    pricePayload[$"P{i}"] = allProducts[productId];
-                }
-                else
-                {
-                    // Default to 0 if product doesn't exist
-                    pricePayload[$"P{i}"] = 0;
-                }
-            }
-
             var httpClient = _httpClientFactory.CreateClient();
             httpClient.Timeout = TimeSpan.FromSeconds(30);
 
             // Call API for each eligible dispenser
             foreach (var dispenser in eligibleDispensers)
             {
+                // Prepare price payload for this dispenser - all 6 products
+                var pricePayload = new Dictionary<string, decimal>();
+                for (int i = 1; i <= 6; i++)
+                {
+                    var productId = i;
+                    var priceUpdate = priceUpdates.FirstOrDefault(p => p.ProductId == productId);
+                    
+                    if (priceUpdate != null)
+                    {
+                        // Use new price for updated products
+                        pricePayload[$"P{i}"] = priceUpdate.NewPrice;
+                    }
+                    else
+                    {
+                        // Use current price from this dispenser's nozzles or default to 0
+                        var nozzleWithProduct = dispenser.Nozzles
+                            .FirstOrDefault(n => n.ProductId == productId && n.IsActive);
+                        
+                        pricePayload[$"P{i}"] = nozzleWithProduct?.CurrentProductPrice ?? 0;
+                    }
+                }
+
                 var log = new PriceUpdateLog
                 {
                     DispensorId = dispenser.DispenserId,
@@ -128,9 +121,22 @@ namespace FuelPumpManagementSystem.Application.Services
 
                     if (response.IsSuccessStatusCode && response.StatusCode == System.Net.HttpStatusCode.OK)
                     {
-                        // Success
+                        // Success - Update prices in DispenserNozzle table for this dispenser
                         log.IsErrorOccured = false;
                         log.Message = "Price updated successfully";
+                        
+                        foreach (var priceUpdate in priceUpdates)
+                        {
+                            var nozzle = dispenser.Nozzles
+                                .FirstOrDefault(n => n.ProductId == priceUpdate.ProductId && n.IsActive);
+                            
+                            if (nozzle != null)
+                            {
+                                nozzle.CurrentProductPrice = priceUpdate.NewPrice;
+                                nozzle.UpdatedAt = DateTime.Now;
+                            }
+                        }
+                        
                         successCount++;
                     }
                     else
@@ -184,20 +190,8 @@ namespace FuelPumpManagementSystem.Application.Services
             batch.BatchStatusId = 2; // 2 = completed
             batch.UpdatedAt = DateTime.Now;
 
-            // Update product prices in database for successful updates
-            if (successCount > 0)
-            {
-                foreach (var priceUpdate in priceUpdates)
-                {
-                    var product = await _db.Product.FindAsync(priceUpdate.ProductId);
-                    if (product != null)
-                    {
-                        product.ProductPrice = priceUpdate.NewPrice;
-                        product.UpdatedAt = DateTime.Now;
-                    }
-                }
-            }
 
+            // Save all changes (batch, logs, and updated nozzle prices)
             await _db.SaveChangesAsync();
 
             return successCount > 0;
