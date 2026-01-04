@@ -42,8 +42,37 @@ namespace FuelPumpManagementSystem.Web.Controllers
                 })
                 .ToListAsync();
 
+            // Get latest price update log for each dispenser
+            var dispenserStatuses = await _db.Dispenser
+                .Where(d => d.IsActive)
+                .Select(d => new DispenserStatusViewModel
+                {
+                    DispenserId = d.DispenserId,
+                    DispenserName = $"Dispenser #{d.DispenserId}",
+                    ApiEndPoint = d.ApiEndPoint,
+                    IsOnline = d.IsOnline,
+                    HasUpdateLog = _db.PriceUpdateLog.Any(log => log.DispensorId == d.DispenserId && log.IsActive),
+                    IsErrorOccured = _db.PriceUpdateLog
+                        .Where(log => log.DispensorId == d.DispenserId && log.IsActive)
+                        .OrderByDescending(log => log.CreatedAt)
+                        .Select(log => log.IsErrorOccured)
+                        .FirstOrDefault(),
+                    Message = _db.PriceUpdateLog
+                        .Where(log => log.DispensorId == d.DispenserId && log.IsActive)
+                        .OrderByDescending(log => log.CreatedAt)
+                        .Select(log => log.Message)
+                        .FirstOrDefault(),
+                    LastUpdated = _db.PriceUpdateLog
+                        .Where(log => log.DispensorId == d.DispenserId && log.IsActive)
+                        .OrderByDescending(log => log.CreatedAt)
+                        .Select(log => log.CreatedAt)
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
+
             ViewBag.Products = productsWithPrices;
-            ViewBag.Dispensers = dispensers;
+            ViewBag.DispenserStatuses = dispenserStatuses;
+            ViewBag.HasPriceUpdateLogs = dispenserStatuses.Any(d => d.HasUpdateLog);
 
             return View();
         }

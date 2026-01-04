@@ -3,7 +3,8 @@
 @{
     ViewData["Title"] = "Product Price Management";
     var products = ViewBag.Products as List<ProductPriceViewModel>;
-    var dispensers = ViewBag.Dispensers as List<DispenserResponseDTO>;
+    var dispenserStatuses = ViewBag.DispenserStatuses as List<DispenserStatusViewModel>;
+    var hasPriceUpdateLogs = ViewBag.HasPriceUpdateLogs as bool? ?? false;
 }
 
 @section Styles {
@@ -124,70 +125,76 @@
     </div>
 
     <!-- Price Update Status Section -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow-sm status-card">
-                <div class="card-header bg-gradient-info">
-                    <h5 class="mb-0 text-white">
-                        <i class="bi bi-activity"></i> Price Update Status
-                    </h5>
-                </div>
-                <div class="card-body p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover status-table mb-0">
-                            <thead>
-                                <tr>
-                                    <th width="80">Status</th>
-                                    <th>Dispenser Name</th>
-                                    <th width="200">API Endpoint</th>
-                                    <th width="150">Update Status</th>
-                                    <th width="200">Last Updated</th>
-                                </tr>
-                            </thead>
-                            <tbody id="statusTableBody">
-                                @if (dispensers != null && dispensers.Any())
-                                {
-                                    foreach (var dispenser in dispensers)
-                                    {
-                                        <tr class="dispenser-status-row">
-                                            <td>
-                                                <div class="status-indicator status-pending">
-                                                    <i class="bi bi-clock"></i>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <span class="dispenser-name">Dispenser #@dispenser.DispenserId</span>
-                                            </td>
-                                            <td>
-                                                <code class="api-endpoint">@dispenser.ApiEndPoint</code>
-                                            </td>
-                                            <td>
-                                                <span class="badge status-badge bg-secondary">
-                                                    <i class="bi bi-dash-circle"></i> Pending
-                                                </span>
-                                            </td>
-                                            <td>
-                                                <span class="text-muted">--</span>
-                                            </td>
-                                        </tr>
-                                    }
-                                }
-                                else
-                                {
+    @if (hasPriceUpdateLogs)
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm status-card">
+                    <div class="card-header bg-gradient-info">
+                        <h5 class="mb-0 text-white">
+                            <i class="bi bi-activity"></i> Price Update Status
+                        </h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover status-table mb-0">
+                                <thead>
                                     <tr>
-                                        <td colspan="5" class="text-center text-muted py-4">
-                                            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
-                                            <p class="mb-0 mt-2">No dispensers configured</p>
-                                        </td>
+                                        <th width="80">Status</th>
+                                        <th>Dispenser Name</th>
+                                        <th width="200">API Endpoint</th>
+                                        <th width="150">Update Status</th>
+                                        <th width="200">Last Updated</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody id="statusTableBody">
+                                    @if (dispenserStatuses != null && dispenserStatuses.Any())
+                                    {
+                                        foreach (var dispenser in dispenserStatuses.Where(d => d.HasUpdateLog))
+                                        {
+                                            var statusClass = dispenser.IsOnline ? "status-online" : "status-offline";
+                                            var statusIcon = dispenser.IsOnline ? "bi-check-circle" : "bi-x-circle";
+                                            var updateStatusClass = dispenser.IsErrorOccured ? "bg-danger" : "bg-success";
+                                            var updateStatusIcon = dispenser.IsErrorOccured ? "bi-x-circle" : "bi-check-circle";
+                                            var updateStatusText = dispenser.IsErrorOccured ? "Failed" : "Updated";
+                                            <tr class="dispenser-status-row">
+                                                <td>
+                                                    <div class="status-indicator @statusClass">
+                                                        <i class="bi @statusIcon"></i>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span class="dispenser-name">@dispenser.DispenserName</span>
+                                                </td>
+                                                <td>
+                                                    <code class="api-endpoint">@dispenser.ApiEndPoint</code>
+                                                </td>
+                                                <td>
+                                                    <span class="badge status-badge @updateStatusClass">
+                                                        <i class="bi @updateStatusIcon"></i> @updateStatusText
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    @if (dispenser.LastUpdated.HasValue)
+                                                    {
+                                                        <span class="text-muted">@dispenser.LastUpdated.Value.ToString("MMM dd, yyyy hh:mm tt")</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted">--</span>
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    }
 </div>
 
 @section Scripts {
