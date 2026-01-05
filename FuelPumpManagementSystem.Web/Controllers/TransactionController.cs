@@ -20,20 +20,56 @@ namespace FuelPumpManagementSystem.Web.Controllers
 
         public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds)
         {
+            // Debug logging
+            System.Diagnostics.Debug.WriteLine($"Received dispenserIds: {(dispenserIds != null ? string.Join(",", dispenserIds) : "null")}");
+            System.Diagnostics.Debug.WriteLine($"Received nozzleId: {nozzleId}");
+            System.Diagnostics.Debug.WriteLine($"Received productIds: {(productIds != null ? string.Join(",", productIds) : "null")}");
+
             ViewData["FromDate"] = fromDate?.ToString("yyyy-MM-dd");
             ViewData["ToDate"] = toDate?.ToString("yyyy-MM-dd");
-            ViewData["DispenserIds"] = dispenserIds;
             ViewData["NozzleId"] = nozzleId;
             ViewData["ProductIds"] = productIds;
 
-            var transactions = await _transactionService.GetAllTransactionsAsync(fromDate, toDate, dispenserIds, nozzleId, productIds);
+            // Handle checkbox logic for dispensers
+            if (dispenserIds != null && dispenserIds.Contains("ALL"))
+            {
+                // If ALL is selected, set to null to show all dispensers
+                ViewData["DispenserIds"] = new string[] { "ALL" };
+                dispenserIds = new string[] { "ALL" };
+                System.Diagnostics.Debug.WriteLine("Setting dispenserIds to ALL");
+            }
+            else if (dispenserIds == null || dispenserIds.Length == 0)
+            {
+                // If no dispensers selected, default to ALL
+                ViewData["DispenserIds"] = new string[] { "ALL" };
+                dispenserIds = new string[] { "ALL" };
+                System.Diagnostics.Debug.WriteLine("No dispenserIds selected, defaulting to ALL");
+            }
+            else
+            {
+                // Individual dispensers selected
+                ViewData["DispenserIds"] = dispenserIds;
+                System.Diagnostics.Debug.WriteLine($"Using individual dispenserIds: {string.Join(",", dispenserIds)}");
+            }
+
+            // Get all transactions (without filtering) for dropdown options
+            var allTransactions = await _transactionService.GetAllTransactionsAsync(null, null, null, null, null);
+            
+            // Apply filters for grid display only
+            var filteredTransactions = await _transactionService.GetAllTransactionsAsync(fromDate, toDate, dispenserIds, nozzleId, productIds);
             var products = await _productService.GetAllAsync();
+
+            System.Diagnostics.Debug.WriteLine($"Found {filteredTransactions.Count} filtered transactions");
+            System.Diagnostics.Debug.WriteLine($"Found {allTransactions.Count} total transactions for dropdowns");
 
             var viewModel = new TransactionIndexViewModel
             {
-                Transactions = transactions,
+                Transactions = filteredTransactions,
                 Products = products
             };
+
+            // Pass all transactions to view for dropdown options
+            ViewData["AllTransactions"] = allTransactions;
 
             return View(viewModel);
         }

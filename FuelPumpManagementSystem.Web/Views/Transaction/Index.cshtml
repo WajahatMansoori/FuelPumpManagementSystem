@@ -12,27 +12,37 @@
 
         <form method="get" class="row g-2">
             <div class="col-md-2">
-                <input type="date" name="fromDate" class="form-control form-control-sm" value="@ViewData["FromDate"]" />
+                <input type="date" name="fromDate" class="form-control form-control-sm"
+                       value="@ViewData["FromDate"]" />
             </div>
 
             <div class="col-md-2">
-                <input type="date" name="toDate" class="form-control form-control-sm" value="@ViewData["ToDate"]" />
+                <input type="date" name="toDate" class="form-control form-control-sm"
+                       value="@ViewData["ToDate"]" />
             </div>
 
             <div class="col-md-2">
                 <label class="form-label">Dispenser</label>
                 @{
                     var selectedDispensers = ViewData["DispenserIds"] as string[];
-                    bool isAllDispensersSelected = selectedDispensers == null || selectedDispensers.Length == 0 || selectedDispensers.Contains("ALL");
+                    var allTransactions = ViewData["AllTransactions"] as List<FuelPumpManagementSystem.Application.DTOs.Response.TransactionResponseDTO>;
+
+                    bool isAllDispensersSelected =
+                        selectedDispensers == null ||
+                        selectedDispensers.Length == 0 ||
+                        selectedDispensers.Contains("ALL");
                 }
 
                 <select name="dispenserIds" class="form-select form-select-sm" multiple>
                     <option value="ALL" selected="@isAllDispensersSelected">ALL</option>
-                    @if (Model?.Transactions != null)
+                    @if (allTransactions != null)
                     {
-                        foreach (var d in Model.Transactions.Select(x => x.DispenserId).Distinct().OrderBy(x => x))
+                        foreach (var d in allTransactions.Select(x => x.DispenserId).Distinct().OrderBy(x => x))
                         {
-                            var isSelected = selectedDispensers != null && selectedDispensers.Contains(d.ToString());
+                            var isSelected = selectedDispensers != null &&
+                                             selectedDispensers.Contains(d.ToString()) &&
+                                             !isAllDispensersSelected;
+
                             <option value="@d" selected="@isSelected">@d</option>
                         }
                     }
@@ -44,14 +54,15 @@
                 <label class="form-label">Nozzle</label>
                 @{
                     var selectedNozzle = ViewData["NozzleId"] as string;
-                    bool isAllNozzlesSelected = string.IsNullOrEmpty(selectedNozzle) || selectedNozzle == "ALL";
+                    bool isAllNozzlesSelected =
+                        string.IsNullOrEmpty(selectedNozzle) || selectedNozzle == "ALL";
                 }
 
                 <select name="nozzleId" class="form-select form-select-sm">
                     <option value="ALL" selected="@isAllNozzlesSelected">ALL</option>
-                    @if (Model?.Transactions != null)
+                    @if (allTransactions != null)
                     {
-                        foreach (var n in Model.Transactions.Select(x => x.NozzleId).Distinct().OrderBy(x => x))
+                        foreach (var n in allTransactions.Select(x => x.NozzleId).Distinct().OrderBy(x => x))
                         {
                             <option value="@n" selected="@(selectedNozzle == n.ToString())">@n</option>
                         }
@@ -63,7 +74,10 @@
                 <label class="form-label">Product Type</label>
                 @{
                     var selectedProducts = ViewData["ProductIds"] as string[];
-                    bool isAllSelected = selectedProducts == null || selectedProducts.Length == 0 || selectedProducts.Contains("ALL");
+                    bool isAllSelected =
+                        selectedProducts == null ||
+                        selectedProducts.Length == 0 ||
+                        selectedProducts.Contains("ALL");
                 }
 
                 <select name="productIds" class="form-select form-select-sm" multiple>
@@ -72,8 +86,13 @@
                     {
                         foreach (var p in Model.Products)
                         {
-                            var isSelected = selectedProducts != null && selectedProducts.Contains(p.ProductId.ToString());
-                            <option value="@p.ProductId" selected="@isSelected">@p.ProductName</option>
+                            var isSelected =
+                                selectedProducts != null &&
+                                selectedProducts.Contains(p.ProductId.ToString());
+
+                            <option value="@p.ProductId" selected="@isSelected">
+                                @p.ProductName
+                            </option>
                         }
                     }
                 </select>
@@ -84,9 +103,29 @@
                 <button type="submit" class="btn btn-sm btn-light">Filter</button>
                 <a href="@Url.Action("Index")" class="btn btn-sm btn-secondary">Reset</a>
 
-                <!-- ✅ YOUR EXPORT BUTTONS -->
-                <a href="@Url.Action("ExportToExcel", new { fromDate = ViewData["FromDate"], toDate = ViewData["ToDate"], dispenserIds = ViewData["DispenserIds"], nozzleId = ViewData["NozzleId"], productIds = ViewData["ProductIds"] })" class="btn btn-sm btn-success">Export Excel</a>
-                <a href="@Url.Action("ExportToPdf", new { fromDate = ViewData["FromDate"], toDate = ViewData["ToDate"], dispenserIds = ViewData["DispenserIds"], nozzleId = ViewData["NozzleId"], productIds = ViewData["ProductIds"] })" class="btn btn-sm btn-danger">Export PDF</a>
+                <a class="btn btn-sm btn-success"
+                   href="@Url.Action("ExportToExcel",
+                        new {
+                            fromDate = ViewData["FromDate"],
+                            toDate = ViewData["ToDate"],
+                            dispenserIds = ViewData["DispenserIds"],
+                            nozzleId = ViewData["NozzleId"],
+                            productIds = ViewData["ProductIds"]
+                        })">
+                    Export Excel
+                </a>
+
+                <a class="btn btn-sm btn-danger"
+                   href="@Url.Action("ExportToPdf",
+                        new {
+                            fromDate = ViewData["FromDate"],
+                            toDate = ViewData["ToDate"],
+                            dispenserIds = ViewData["DispenserIds"],
+                            nozzleId = ViewData["NozzleId"],
+                            productIds = ViewData["ProductIds"]
+                        })">
+                    Export PDF
+                </a>
             </div>
         </form>
     </div>
@@ -111,7 +150,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model?.Transactions != null && Model.Transactions.Count > 0)
+                    @if (Model?.Transactions != null && Model.Transactions.Any())
                     {
                         foreach (var t in Model.Transactions)
                         {
@@ -127,8 +166,9 @@
                                 <td>@t.LastTotalLitre</td>
                                 <td>@t.LastTotalCash</td>
                                 <td>
-                                    <button class="btn btn-sm btn-primary" onclick="printTransaction(@t.TransactionId)">
-                                        <i class="fas fa-print"></i> Print
+                                    <button class="btn btn-sm btn-primary"
+                                            onclick="printTransaction(@t.TransactionId)">
+                                        Print
                                     </button>
                                 </td>
                             </tr>
@@ -137,7 +177,9 @@
                     else
                     {
                         <tr>
-                            <td colspan="11" class="text-center text-muted">No data available</td>
+                            <td colspan="11" class="text-center text-muted">
+                                No data available
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -146,15 +188,59 @@
     </div>
 </div>
 
-<!-- jQuery -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
 
-@section Scripts {
-    <script>
-        function printTransaction(transactionId) {
-            debugger;
-            // Simplified example, replace with your thermal logic
-            alert("Printing transaction: " + transactionId);
+<!-- JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+    function printTransaction(id) {
+        var row = $('#transactionTable tbody tr').filter(function () {
+            return $(this).find('td:first').text().trim() == id;
+        });
+
+        if (!row.length) {
+            alert('Transaction not found');
+            return;
         }
-    </script>
-}
+
+        var tds = row.find('td');
+
+        var receipt =
+"==============================\n" +
+"RES FUELING STATION\n" +
+"Gulshan-e-Shamim, Block-9\n" +
+"Yaseenabad, Karachi\n" +
+"Tel: +92-330-8530186\n" +
+"==============================\n\n" +
+"Transaction ID: " + tds.eq(0).text() + "\n" +
+"Date Time: " + tds.eq(1).text() + "\n" +
+"Dispenser: " + tds.eq(2).text() + "\n" +
+"Nozzle: " + tds.eq(3).text() + "\n" +
+"Fuel: " + tds.eq(4).text() + "\n" +
+"------------------------------\n" +
+"Litres: " + tds.eq(5).text() + "\n" +
+"Unit Price: " + tds.eq(6).text() + "\n" +
+"Amount: " + tds.eq(7).text() + "\n" +
+"------------------------------\n" +
+"Total Liter: " + tds.eq(8).text() + "\n" +
+"Total Cash: " + tds.eq(9).text() + "\n" +
+"------------------------------\n" +
+"Thank you for your business!\n";
+
+        var w = window.open('', '', 'width=350,height=500');
+        w.document.write('<pre>' + receipt + '</pre>');
+        w.document.close();
+        w.print();
+        w.close();
+    }
+
+    $(function () {
+        $('#transactionTable').DataTable({
+            order: [[1, 'desc']],
+            pageLength: 25
+        });
+    });
+</script>
