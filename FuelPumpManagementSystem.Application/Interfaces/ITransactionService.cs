@@ -9,10 +9,7 @@ namespace FuelPumpManagementSystem.Application.Interfaces
 {
     public interface ITransactionService
     {
-        //Task<List<TransactionResponseDTO>> GetAllTransactionsAsync();
-       
-            Task<List<TransactionResponseDTO>> GetAllTransactionsAsync(DateTime? fromDate = null, DateTime? toDate = null);
-        
-
+        Task<List<TransactionResponseDTO>> GetAllTransactionsAsync(DateTime? fromDate = null, DateTime? toDate = null, 
+            string[] dispenserIds = null, string nozzleId = null, string[] productIds = null);
     }
 }
