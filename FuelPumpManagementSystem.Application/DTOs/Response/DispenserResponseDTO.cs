@@ -18,6 +18,7 @@ namespace FuelPumpManagementSystem.Application.DTOs.Response
         public int? Nozzle2ProductTypeId { get; set; }
         public string? Nozzle1ProductTypeName { get; set; }
         public string? Nozzle2ProductTypeName { get; set; }
-
+        
+        public bool IsLocked { get; set; }
     }
 }

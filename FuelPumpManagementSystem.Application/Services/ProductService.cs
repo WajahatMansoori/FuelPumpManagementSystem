@@ -71,7 +71,7 @@ namespace FuelPumpManagementSystem.Application.Services
             int failedCount = 0;
 
             var httpClient = _httpClientFactory.CreateClient();
-            httpClient.Timeout = TimeSpan.FromSeconds(30);
+            httpClient.Timeout = TimeSpan.FromSeconds(5);
 
             // Call API for each eligible dispenser
             foreach (var dispenser in eligibleDispensers)

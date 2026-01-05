@@ -154,17 +154,93 @@
                                 <td>@d.Nozzle1ProductTypeName</td>
                                 <td>@d.Nozzle2ProductTypeName</td>
 
-                                <td class="text-center">
-                                    <a asp-action="Index"
-                                       asp-route-id="@d.DispenserId"
-                                       class="btn btn-sm btn-outline-primary">
-                                        ✏️ Edit
-                                    </a>
+                                <td class="text-center action-cell">
+                                    <div class="action-buttons-wrapper">
+                                        <a asp-action="Index"
+                                           asp-route-id="@d.DispenserId"
+                                           class="icon-action-btn edit-icon-btn"
+                                           data-tooltip="Edit Dispenser">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                        <button type="button"
+                                                class="icon-action-btn lock-icon-btn @(d.IsLocked ? "locked" : "unlocked")"
+                                                data-dispenser-id="@d.DispenserId"
+                                                data-api-endpoint="@d.ApiEndPoint"
+                                                data-is-locked="@d.IsLocked.ToString().ToLower()"
+                                                data-tooltip="@(d.IsLocked ? "Unlock Dispenser" : "Lock Dispenser")">
+                                            <i class="bi @(d.IsLocked ? "bi-unlock-fill" : "bi-lock-fill")"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loader Overlay -->
+<div class="loader-overlay" id="loaderOverlay">
+    <div class="loader-content">
+        <div class="loader-spinner"></div>
+        <div class="loader-text">Processing...</div>
+        <div class="loader-subtext">Please wait while we process your request</div>
+    </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- Admin Access Key Modal -->
+<div class="modal fade" id="adminAccessKeyModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content admin-modal">
+            <div class="modal-header admin-modal-header">
+                <div class="d-flex align-items-center">
+                    <div class="admin-icon-wrapper">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <div class="ms-3">
+                        <h5 class="modal-title mb-0">Admin Authentication Required</h5>
+                        <small class="text-white-50">Enter admin access key to continue</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="adminAccessKeyAlert" class="alert alert-danger d-none mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <span id="adminAccessKeyAlertMessage"></span>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Admin Access Key</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-key-fill text-primary"></i>
+                        </span>
+                        <input type="password" 
+                               class="form-control form-control-lg" 
+                               id="adminAccessKeyInput" 
+                               placeholder="Enter admin access key"
+                               autocomplete="off">
+                    </div>
+                    <small class="text-muted">This action requires admin privileges</small>
+                </div>
+                
+                <input type="hidden" id="modalDispenserId">
+                <input type="hidden" id="modalApiEndpoint">
+                <input type="hidden" id="modalIsLocked">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="confirmAdminAccessBtn">
+                    <i class="bi bi-check-circle me-1"></i> Confirm
+                </button>
             </div>
         </div>
     </div>
@@ -304,7 +380,179 @@
     </div>
 </div>
 
+@section Styles {
+    <link rel="stylesheet" href="~/css/dispenser.css" asp-append-version="true" />
+}
+
 @section Scripts {
+    <script>
+        // Toast notification system
+        function showToast(type, title, message) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            
+            const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-x-circle-fill';
+            
+            toast.innerHTML = `
+                <div class="toast-icon">
+                    <i class="bi ${iconClass}"></i>
+                </div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.parentElement.remove()">
+                    <i class="bi bi-x"></i>
+                </button>
+                <div class="toast-progress"></div>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('hiding');
+                setTimeout(() => toast.remove(), 400);
+            }, 5000);
+        }
+
+        // Show/Hide loader
+        function showLoader() {
+            document.getElementById('loaderOverlay').classList.add('show');
+        }
+
+        function hideLoader() {
+            document.getElementById('loaderOverlay').classList.remove('show');
+        }
+
+        // Lock/Unlock Dispenser functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const lockUnlockButtons = document.querySelectorAll('.lock-icon-btn');
+            const adminModal = new bootstrap.Modal(document.getElementById('adminAccessKeyModal'));
+            const adminAccessKeyInput = document.getElementById('adminAccessKeyInput');
+            const confirmAdminAccessBtn = document.getElementById('confirmAdminAccessBtn');
+            const adminAccessKeyAlert = document.getElementById('adminAccessKeyAlert');
+            const adminAccessKeyAlertMessage = document.getElementById('adminAccessKeyAlertMessage');
+
+            // Handle lock/unlock button clicks
+            lockUnlockButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    // Create ripple effect
+                    const ripple = document.createElement('span');
+                    ripple.classList.add('ripple');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    ripple.style.width = ripple.style.height = size + 'px';
+                    ripple.style.left = x + 'px';
+                    ripple.style.top = y + 'px';
+                    this.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+
+                    const dispenserId = this.dataset.dispenserId;
+                    const apiEndpoint = this.dataset.apiEndpoint;
+                    const isLocked = this.dataset.isLocked === 'true';
+
+                    // Store data in modal hidden fields
+                    document.getElementById('modalDispenserId').value = dispenserId;
+                    document.getElementById('modalApiEndpoint').value = apiEndpoint;
+                    document.getElementById('modalIsLocked').value = (!isLocked).toString();
+
+                    // Clear previous input and errors
+                    adminAccessKeyInput.value = '';
+                    adminAccessKeyAlert.classList.add('d-none');
+
+                    // Show modal
+                    adminModal.show();
+                });
+            });
+
+            // Handle confirm button in modal
+            confirmAdminAccessBtn.addEventListener('click', async function() {
+                const accessKey = adminAccessKeyInput.value.trim();
+
+                if (!accessKey) {
+                    adminAccessKeyAlertMessage.textContent = 'Please enter admin access key';
+                    adminAccessKeyAlert.classList.remove('d-none');
+                    return;
+                }
+
+                // Validate admin access key
+                try {
+                    const validateResponse = await fetch('/Dispenser/ValidateAdminAccessKey', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ accessKey: accessKey })
+                    });
+
+                    const validateResult = await validateResponse.json();
+
+                    if (validateResult.success) {
+                        // Access key is valid, proceed with lock/unlock
+                        adminModal.hide();
+                        
+                        const dispenserId = parseInt(document.getElementById('modalDispenserId').value);
+                        const apiEndpoint = document.getElementById('modalApiEndpoint').value;
+                        const isLocked = document.getElementById('modalIsLocked').value === 'true';
+
+                        // Show loader
+                        showLoader();
+
+                        // Call lock/unlock API
+                        const lockResponse = await fetch('/Dispenser/LockUnlockDispenser', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                dispenserId: dispenserId,
+                                apiEndPoint: apiEndpoint,
+                                isLocked: isLocked
+                            })
+                        });
+
+                        const lockResult = await lockResponse.json();
+                        hideLoader();
+
+                        if (lockResult.success) {
+                            showToast('success', '✓ Success!', lockResult.message);
+                            // Reload page to reflect changes
+                            setTimeout(() => window.location.reload(), 1500);
+                        } else {
+                            showToast('error', '✗ Failed', lockResult.message || 'Failed to update dispenser lock status. Please try again.');
+                        }
+                    } else {
+                        // Invalid access key
+                        adminAccessKeyAlertMessage.textContent = validateResult.message;
+                        adminAccessKeyAlert.classList.remove('d-none');
+                    }
+                } catch (error) {
+                    hideLoader();
+                    showToast('error', '✗ Error Occurred', 'An error occurred while processing your request: ' + error.message);
+                    adminModal.hide();
+                }
+            });
+
+            // Clear error on input
+            adminAccessKeyInput.addEventListener('input', function() {
+                if (this.value.trim()) {
+                    adminAccessKeyAlert.classList.add('d-none');
+                }
+            });
+
+            // Handle Enter key in access key input
+            adminAccessKeyInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    confirmAdminAccessBtn.click();
+                }
+            });
+        });
+    </script>
+
     <style>
         /* Professional validation styles */
         .form-control.is-invalid {

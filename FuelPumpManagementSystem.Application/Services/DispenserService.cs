@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using FuelPumpManagementSystem.Application.DTOs.Request;
 using FuelPumpManagementSystem.Application.DTOs.Response;
@@ -15,10 +17,12 @@ namespace FuelPumpManagementSystem.Application.Services
     public class DispenserService: IDispenserService
     {
         private readonly FPMSDbContext _db;
+        private readonly IHttpClientFactory _httpClientFactory;
 
-        public DispenserService(FPMSDbContext db)
+        public DispenserService(FPMSDbContext db, IHttpClientFactory httpClientFactory)
         {
             _db = db;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<List<DispenserResponseDTO>> GetAllAsync()
@@ -32,6 +36,7 @@ namespace FuelPumpManagementSystem.Application.Services
                 {
                     DispenserId = d.DispenserId,
                     ApiEndPoint = d.ApiEndPoint,
+                    IsLocked = d.IsLocked,
                     Nozzle1Enabled = d.Nozzles.Any(n => n.NozzleId == 1 && n.IsEnable),
                     Nozzle2Enabled = d.Nozzles.Any(n => n.NozzleId == 2 && n.IsEnable),
                     Nozzle1ProductTypeId = d.Nozzles
@@ -247,6 +252,112 @@ namespace FuelPumpManagementSystem.Application.Services
             }
 
             await _db.SaveChangesAsync();
+        }
+
+        public async Task<bool> LockUnlockDispenserAsync(LockUnlockDispenserRequestDTO request)
+        {
+            var log = new DispenserActionLog
+            {
+                DispenserId = request.DispenserId,
+                DispenserActionTypeId = request.IsLocked ? 1 : 2, // 1 = Lock, 2 = Unlock
+                CreatedAt = DateTime.Now,
+                IsActive = true
+            };
+
+            var httpClient = _httpClientFactory.CreateClient();
+            httpClient.Timeout = TimeSpan.FromSeconds(30);
+
+            try
+            {
+                // Build API URL: ApiEndPoint/Lock
+                var apiUrl = $"{request.ApiEndPoint.TrimEnd('/')}/Lock";
+
+                // Build request body: { "LOCK": true/false }
+                var requestBody = new { LOCK = request.IsLocked };
+                var jsonPayload = JsonSerializer.Serialize(requestBody);
+                log.ApiRequest = jsonPayload;
+
+                var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+                var response = await httpClient.PostAsync(apiUrl, content);
+
+                var responseContent = await response.Content.ReadAsStringAsync();
+                log.ApiResponse = responseContent;
+
+                if (response.IsSuccessStatusCode && response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    // Success
+                    log.IsErrorOccured = false;
+                    log.Message = request.IsLocked ? "Dispenser locked successfully" : "Dispenser unlocked successfully";
+
+                    // Update dispenser lock status in database
+                    var dispenser = await _db.Dispenser.FindAsync(request.DispenserId);
+                    if (dispenser != null)
+                    {
+                        dispenser.IsLocked = request.IsLocked;
+                        dispenser.UpdatedAt = DateTime.Now;
+                    }
+
+                    _db.DispenserActionLog.Add(log);
+                    await _db.SaveChangesAsync();
+
+                    return true;
+                }
+                else
+                {
+                    // Failed
+                    log.IsErrorOccured = true;
+
+                    try
+                    {
+                        var errorResponse = JsonSerializer.Deserialize<Dictionary<string, string>>(responseContent);
+                        log.Message = errorResponse?.ContainsKey("error") == true
+                            ? errorResponse["error"]
+                            : $"Lock/Unlock failed with status code: {response.StatusCode}";
+                    }
+                    catch
+                    {
+                        log.Message = $"Lock/Unlock failed with status code: {response.StatusCode}";
+                    }
+
+                    _db.DispenserActionLog.Add(log);
+                    await _db.SaveChangesAsync();
+
+                    return false;
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                log.IsErrorOccured = true;
+                log.Message = $"HTTP Error: {ex.Message}";
+                log.ApiResponse = ex.ToString();
+
+                _db.DispenserActionLog.Add(log);
+                await _db.SaveChangesAsync();
+
+                return false;
+            }
+            catch (TaskCanceledException ex)
+            {
+                log.IsErrorOccured = true;
+                log.Message = "Request timeout";
+                log.ApiResponse = ex.ToString();
+
+                _db.DispenserActionLog.Add(log);
+                await _db.SaveChangesAsync();
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                log.IsErrorOccured = true;
+                log.Message = $"Error: {ex.Message}";
+                log.ApiResponse = ex.ToString();
+
+                _db.DispenserActionLog.Add(log);
+                await _db.SaveChangesAsync();
+
+                return false;
+            }
         }
     }
 }
