@@ -18,8 +18,10 @@ builder.Services.AddScoped<IDispenserService, DispenserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISiteService, SiteService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddTransient<FileUploadHelper>();
 
+builder.Services.AddHostedService<DispenserMonitoringSyncService>();
 // Add HttpClient for API calls
 builder.Services.AddHttpClient();
 
