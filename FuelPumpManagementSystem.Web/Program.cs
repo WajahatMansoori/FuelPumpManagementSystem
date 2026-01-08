@@ -23,6 +23,7 @@ builder.Services.AddScoped<IPDFGenerationService, PDFGenerationService>();
 builder.Services.AddTransient<FileUploadHelper>();
 builder.Services.AddTransient<FuelPumpManagementSystem.Web.Services.PDFService>();
 
+builder.Services.AddHostedService<DispenserMonitoringSyncService>();
 // Add HttpClient for API calls
 builder.Services.AddHttpClient();
 
