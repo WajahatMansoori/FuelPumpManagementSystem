@@ -89,6 +89,28 @@ namespace FuelPumpManagementSystem.Application.Services
                 throw new Exception("Error retrieving transactions", ex);
             }
         }
+
+        public async Task<List<DispenserNozzleDto>> GetAllDispenserNozzlesAsync()
+        {
+            try
+            {
+                var dispenserNozzles = await _db.DispenserNozzle
+                    .Where(dn => dn.IsActive)
+                    .Select(dn => new DispenserNozzleDto
+                    {
+                        DispenserId = dn.DispenserId,
+                        NozzleId = dn.NozzleId
+                    })
+                    .ToListAsync();
+
+                return dispenserNozzles;
+            }
+            catch (Exception ex)
+            {
+                // Log exception here if needed
+                throw new Exception("Error retrieving dispenser nozzles", ex);
+            }
+        }
     }
 }
 

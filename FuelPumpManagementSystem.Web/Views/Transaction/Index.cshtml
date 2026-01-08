@@ -25,7 +25,7 @@
                 <label class="form-label">Dispenser</label>
                 @{
                     var selectedDispensers = ViewData["DispenserIds"] as string[];
-                    var allTransactions = ViewData["AllTransactions"] as List<FuelPumpManagementSystem.Application.DTOs.Response.TransactionResponseDTO>;
+                    var allDispenserNozzles = ViewData["AllDispenserNozzles"] as List<FuelPumpManagementSystem.Application.DTOs.Response.DispenserNozzleDto>;
 
                     bool isAllDispensersSelected =
                         selectedDispensers == null ||
@@ -35,15 +35,17 @@
 
                 <select name="dispenserIds" class="form-select form-select-sm" multiple>
                     <option value="ALL" selected="@isAllDispensersSelected">ALL</option>
-                    @if (allTransactions != null)
+                    @if (allDispenserNozzles != null)
                     {
-                        foreach (var d in allTransactions.Select(x => x.DispenserId).Distinct().OrderBy(x => x))
+                        var dispenserIds = allDispenserNozzles.Select(x => x.DispenserId).Distinct().OrderBy(x => x);
+
+                        foreach (var d in dispenserIds)
                         {
                             var isSelected = selectedDispensers != null &&
                                              selectedDispensers.Contains(d.ToString()) &&
                                              !isAllDispensersSelected;
 
-                            <option value="@d" selected="@isSelected">@d</option>
+                            <option value="@d" selected="@isSelected">Dispenser @d</option>
                         }
                     }
                 </select>
@@ -60,9 +62,11 @@
 
                 <select name="nozzleId" class="form-select form-select-sm">
                     <option value="ALL" selected="@isAllNozzlesSelected">ALL</option>
-                    @if (allTransactions != null)
+                    @if (allDispenserNozzles != null)
                     {
-                        foreach (var n in allTransactions.Select(x => x.NozzleId).Distinct().OrderBy(x => x))
+                        var nozzleIds = allDispenserNozzles.Select(x => x.NozzleId).Distinct().OrderBy(x => x);
+
+                        foreach (var n in nozzleIds)
                         {
                             <option value="@n" selected="@(selectedNozzle == n.ToString())">@n</option>
                         }

@@ -1,6 +1,8 @@
 using FuelPumpManagementSystem.Application.DTOs.Response;
 using FuelPumpManagementSystem.Application.Interfaces;
 using FuelPumpManagementSystem.Web.Models;
+using Microsoft.EntityFrameworkCore;
+using Shared.FPMS_DB;
 using Microsoft.AspNetCore.Mvc;
 using System.Text;
 using System.IO;
@@ -52,24 +54,20 @@ namespace FuelPumpManagementSystem.Web.Controllers
                 System.Diagnostics.Debug.WriteLine($"Using individual dispenserIds: {string.Join(",", dispenserIds)}");
             }
 
-            // Get all transactions (without filtering) for dropdown options
-            var allTransactions = await _transactionService.GetAllTransactionsAsync(null, null, null, null, null);
-            
-            // Apply filters for grid display only
-            var filteredTransactions = await _transactionService.GetAllTransactionsAsync(fromDate, toDate, dispenserIds, nozzleId, productIds);
+            var transactions = await _transactionService.GetAllTransactionsAsync(fromDate, toDate, dispenserIds, nozzleId, productIds);
             var products = await _productService.GetAllAsync();
+            var allDispenserNozzles = await _transactionService.GetAllDispenserNozzlesAsync();
 
-            System.Diagnostics.Debug.WriteLine($"Found {filteredTransactions.Count} filtered transactions");
-            System.Diagnostics.Debug.WriteLine($"Found {allTransactions.Count} total transactions for dropdowns");
+            System.Diagnostics.Debug.WriteLine($"Found {transactions.Count} transactions");
+            System.Diagnostics.Debug.WriteLine($"Found {allDispenserNozzles.Count} dispenser nozzles");
 
             var viewModel = new TransactionIndexViewModel
             {
-                Transactions = filteredTransactions,
+                Transactions = transactions,
                 Products = products
             };
 
-            // Pass all transactions to view for dropdown options
-            ViewData["AllTransactions"] = allTransactions;
+            ViewData["AllDispenserNozzles"] = allDispenserNozzles;
 
             return View(viewModel);
         }

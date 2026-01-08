@@ -18,7 +18,10 @@ builder.Services.AddScoped<IDispenserService, DispenserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ISiteService, SiteService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IFuelAnalyticsService, FuelAnalyticsService>();
+builder.Services.AddScoped<IPDFGenerationService, PDFGenerationService>();
 builder.Services.AddTransient<FileUploadHelper>();
+builder.Services.AddTransient<FuelPumpManagementSystem.Web.Services.PDFService>();
 
 // Add HttpClient for API calls
 builder.Services.AddHttpClient();

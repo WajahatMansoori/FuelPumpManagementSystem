@@ -1,0 +1,533 @@
+@model FuelPumpManagementSystem.Web.Models.FuelAnalyticsViewModel
+
+@{
+    var viewType = Model.FilterOptions?.ViewType ?? "whole";
+}
+
+<!-- Statistics Views -->
+<div class="statistics-container">
+    @if (viewType == "whole")
+    {
+        <!-- View 1: Whole Pump Sales -->
+        <div class="whole-pump-view">
+            <h4 class="mb-4">Whole Pump Sales (All Dispensers Combined)</h4>
+            
+            <!-- Summary Cards -->
+            <div class="summary-cards mb-4">
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="card-title">Total Sales</h6>
+                                <h5 class="card-text text-primary">₨ @Model.Transactions.Sum(t => t.Amount).ToString("N2")</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="card-title">Total Liters</h6>
+                                <h5 class="card-text text-success">@Model.Transactions.Sum(t => t.Liter).ToString("N2") L</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="card-title">Total Transactions</h6>
+                                <h5 class="card-text text-info">@Model.Transactions.Count</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="card-title">Average Transaction</h6>
+                                <h5 class="card-text text-warning">₨ @(Model.Transactions.Any() ? (Model.Transactions.Sum(t => t.Amount) / Model.Transactions.Count).ToString("N2") : "0.00")</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="card-title">Best Selling Fuel</h6>
+                                @{
+                                    var bestSellingFuel = Model.Transactions
+                                        .GroupBy(t => t.ProductTypeId)
+                                        .OrderByDescending(g => g.Sum(x => x.Amount))
+                                        .FirstOrDefault();
+                                    var bestFuelName = bestSellingFuel != null ? 
+                                        Model.Products?.FirstOrDefault(p => p.ProductId == bestSellingFuel.Key)?.ProductName : "N/A";
+                                }
+                                <h5 class="card-text text-danger">@bestFuelName</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h6 class="card-title">Busiest Dispenser</h6>
+                                @{
+                                    var busiestDispenser = Model.Transactions
+                                        .GroupBy(t => t.DispenserId)
+                                        .OrderByDescending(g => g.Count())
+                                        .FirstOrDefault();
+                                }
+                                <h5 class="card-text text-dark">@(busiestDispenser != null ? $"Dispenser {busiestDispenser.Key}" : "N/A")</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="charts-container">
+                <div class="row g-4">
+                    <!-- Chart 1: Fuel Type Breakdown -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">Fuel Type Breakdown</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="fuelTypePieChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 2: Daily/Weekly/Monthly Trend -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">Sales Trend</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="trendBarChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Chart 3: Sales by Category -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">Sales by Category</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="categoryBarChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (viewType == "dispenser")
+    {
+        <!-- View 2: Per Dispenser Sales -->
+        <div class="dispenser-view">
+            <h4 class="mb-4">Per Dispenser Sales</h4>
+            
+            <!-- Dispenser Selection -->
+            <div class="dispenser-selection mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="card-title mb-0">Select Dispensers</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @if (Model.Transactions.Any())
+                            {
+                                var dispensers = Model.Transactions.Select(t => t.DispenserId).Distinct().OrderBy(x => x);
+                                foreach (var dispenser in dispensers)
+                                {
+                                    <div class="col-md-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" value="@dispenser" id="dispenser_@dispenser" checked>
+                                            <label class="form-check-label" for="dispenser_@dispenser">
+                                                Dispenser @dispenser
+                                            </label>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Per Dispenser Dashboard -->
+            <div class="dispenser-dashboard">
+                @if (Model.Transactions.Any())
+                {
+                    var dispensers = Model.Transactions.Select(t => t.DispenserId).Distinct().OrderBy(x => x);
+                    foreach (var dispenser in dispensers)
+                    {
+                        var dispenserTransactions = Model.Transactions.Where(t => t.DispenserId == dispenser).ToList();
+                        
+                        <div class="dispenser-card mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">Dispenser @dispenser Analytics</h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Summary Cards for this dispenser -->
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-3">
+                                            <div class="card text-center bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Sales</h6>
+                                                    <h5 class="card-text text-primary">₨ @dispenserTransactions.Sum(t => t.Amount).ToString("N2")</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Liters</h6>
+                                                    <h5 class="card-text text-success">@dispenserTransactions.Sum(t => t.Liter).ToString("N2") L</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Transactions</h6>
+                                                    <h5 class="card-text text-info">@dispenserTransactions.Count</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Average</h6>
+                                                    <h5 class="card-text text-warning">₨ @(dispenserTransactions.Any() ? (dispenserTransactions.Sum(t => t.Amount) / dispenserTransactions.Count).ToString("N2") : "0.00")</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Charts for this dispenser -->
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <h6>Fuel Mix</h6>
+                                            <canvas id="dispenser_@dispenser.ToString()_fuelMix" height="200"></canvas>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6>Performance</h6>
+                                            <canvas id="dispenser_@dispenser.ToString()_performance" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+    else if (viewType == "category")
+    {
+        <!-- View 3: Per Fuel Category Sales -->
+        <div class="category-view">
+            <h4 class="mb-4">Per Fuel Category Sales</h4>
+            
+            @if (Model.Products.Any())
+            {
+                var categories = new[] { "Petrol", "Diesel", "Hi-Octane" };
+                foreach (var category in categories)
+                {
+                    var categoryProducts = Model.Products.Where(p => p.ProductName.Contains(category)).ToList();
+                    if (categoryProducts.Any())
+                    {
+                        var categoryProductIds = categoryProducts.Select(p => p.ProductId).ToList();
+                        var categoryTransactions = Model.Transactions.Where(t => categoryProductIds.Contains(t.ProductTypeId)).ToList();
+                        
+                        <div class="category-section mb-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="card-title mb-0">@category Category Analytics</h6>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Category Summary -->
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-3">
+                                            <div class="card text-center bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Total Sales</h6>
+                                                    <h5 class="card-text text-primary">₨ @categoryTransactions.Sum(t => t.Amount).ToString("N2")</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Total Liters</h6>
+                                                    <h5 class="card-text text-success">@categoryTransactions.Sum(t => t.Liter).ToString("N2") L</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Transactions</h6>
+                                                    <h5 class="card-text text-info">@categoryTransactions.Count</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="card text-center bg-light">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Avg Price</h6>
+                                                    <h5 class="card-text text-warning">₨ @(categoryTransactions.Any() ? (categoryTransactions.Sum(t => t.Amount) / categoryTransactions.Sum(t => t.Liter)).ToString("N2") : "0.00")</h5>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Category Charts -->
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <h6>Dispenser Breakdown</h6>
+                                            <canvas id="category_@category.ToLower()_dispensers" height="200"></canvas>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <h6>Monthly Trend</h6>
+                                            <canvas id="category_@category.ToLower()_trend" height="200"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+            }
+        </div>
+    }
+    else if (viewType == "comparison")
+    {
+        <!-- View 4: Comparison View -->
+        <div class="comparison-view">
+            <h4 class="mb-4">Comparison View</h4>
+            
+            <div class="row g-4">
+                <!-- Category Comparison -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Category Comparison</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="comparisonCategoryChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dispenser Comparison -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="card-title mb-0">Dispenser Comparison</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="comparisonDispenserChart" height="300"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Data Table -->
+<div class="data-table-section mt-4">
+    <div class="card">
+        <div class="card-header">
+            <h6 class="card-title mb-0">Detailed Data</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="analyticsDataTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Dispenser</th>
+                            <th>Nozzle</th>
+                            <th>Fuel Type</th>
+                            <th>Liters</th>
+                            <th>Unit Price</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Transactions.Any())
+                        {
+                            foreach (var t in Model.Transactions.OrderByDescending(x => x.CreatedAt))
+                            {
+                                <tr>
+                                    <td>@t.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
+                                    <td>@t.DispenserId</td>
+                                    <td>@t.NozzleId</td>
+                                    <td>@Model.Products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId)?.ProductName</td>
+                                    <td>@t.Liter.ToString("N2")</td>
+                                    <td>@t.UnitPrice.ToString("N2")</td>
+                                    <td>@t.Amount.ToString("N2")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted">No data available</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize charts based on current view type
+    function initializeCharts() {
+        var viewType = '@viewType';
+        
+        if (viewType === 'whole') {
+            initializeWholePumpCharts();
+        } else if (viewType === 'dispenser') {
+            initializeDispenserCharts();
+        } else if (viewType === 'category') {
+            initializeCategoryCharts();
+        } else if (viewType === 'comparison') {
+            initializeComparisonCharts();
+        }
+        
+        // Initialize data table
+        initializeDataTable();
+    }
+
+    function initializeWholePumpCharts() {
+        // Fuel Type Pie Chart
+        var fuelTypeCtx = document.getElementById('fuelTypePieChart');
+        if (fuelTypeCtx) {
+            var fuelLabels = @Html.Raw(Json.Serialize(Model.Products?.Select(p => p.ProductName).ToList() ?? new List<string>()));
+            var fuelData = @Html.Raw(Json.Serialize(Model.Products?.Select(p => Model.Transactions.Where(t => t.ProductTypeId == p.ProductId).Sum(t => t.Amount)).ToList() ?? new List<decimal>()));
+            
+            new Chart(fuelTypeCtx, {
+                type: 'pie',
+                data: {
+                    labels: fuelLabels,
+                    datasets: [{
+                        data: fuelData,
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        // Trend Bar Chart
+        var trendCtx = document.getElementById('trendBarChart');
+        if (trendCtx) {
+            var dailyData = @Html.Raw(Json.Serialize(Model.Transactions.GroupBy(t => t.CreatedAt.Date).Select(g => new { Date = g.Key.ToString("yyyy-MM-dd"), Amount = g.Sum(t => t.Amount) }).ToList()));
+            new Chart(trendCtx, {
+                type: 'bar',
+                data: {
+                    labels: dailyData.map(d => d.Date),
+                    datasets: [{
+                        label: 'Sales',
+                        data: dailyData.map(d => d.Amount),
+                        backgroundColor: '#007bff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Category Bar Chart
+        var categoryCtx = document.getElementById('categoryBarChart');
+        if (categoryCtx) {
+            new Chart(categoryCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Petrol', 'Diesel', 'Hi-Octane'],
+                    datasets: [{
+                        label: 'Sales',
+                        data: [100000, 80000, 120000],
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+    }
+
+    function initializeDataTable() {
+        $('#analyticsDataTable').DataTable({
+            responsive: true,
+            pageLength: 25,
+            order: [[0, 'desc']]
+        });
+    }
+
+    // Call initializeCharts when page loads
+    initializeCharts();
+</script>
+
+<style>
+    .statistics-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .summary-cards .card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+
+    .summary-cards .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .charts-container .card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .dispenser-card .card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .category-section .card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .data-table-section .card {
+        border: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>

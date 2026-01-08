@@ -11,5 +11,7 @@ namespace FuelPumpManagementSystem.Application.Interfaces
     {
         Task<List<TransactionResponseDTO>> GetAllTransactionsAsync(DateTime? fromDate = null, DateTime? toDate = null, 
             string[] dispenserIds = null, string nozzleId = null, string[] productIds = null);
+        
+        Task<List<DispenserNozzleDto>> GetAllDispenserNozzlesAsync();
     }
 }
