@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
@@ -17,11 +18,24 @@ namespace FuelPumpManagementSystem.Application.Services
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<DispenserMonitoringSyncService> _logger;
+        private readonly string _logFilePath;
+        private static readonly object _logLock = new object();
 
         public DispenserMonitoringSyncService(IServiceScopeFactory scopeFactory,ILogger<DispenserMonitoringSyncService> logger)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
+            
+            // Create logs directory if it doesn't exist
+            var logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+            if (!Directory.Exists(logDirectory))
+            {
+                Directory.CreateDirectory(logDirectory);
+            }
+            
+            // Create daily log file
+            var logFileName = $"DispenserSync_{DateTime.Now:yyyy-MM-dd}.log";
+            _logFilePath = Path.Combine(logDirectory, logFileName);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,6 +51,7 @@ namespace FuelPumpManagementSystem.Application.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Dispenser sync cycle failed");
+                    LogErrorToFile("SYNC_CYCLE", null, null, ex, "Dispenser sync cycle failed");
                 }
             }
         }
@@ -89,6 +104,8 @@ namespace FuelPumpManagementSystem.Application.Services
                 // log but DO NOT throw
                 // failure of one dispenser should not affect others
                 _logger.LogError(ex, $"Error syncing dispenser {dispenser.DispenserId}");
+                LogErrorToFile("API_CALL", dispenser.DispenserId, null, ex, 
+                    $"Failed to call status API for Dispenser {dispenser.DispenserId} at {dispenser.ApiEndPoint}");
             }
         }
         private async Task ProcessDispenserStatusAsync(Dispenser dispenser, string json)
@@ -119,10 +136,12 @@ namespace FuelPumpManagementSystem.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error processing dispenser {dispenser.DispenserId} status");
+                LogErrorToFile("PROCESSING", dispenser.DispenserId, null, ex, 
+                    $"Error processing status data for Dispenser {dispenser.DispenserId}");
             }
         }
 
-        private async Task ProcessNozzleTransaction(
+        private void ProcessNozzleTransaction(
             FPMSDbContext db, 
             Dispenser dispenser, 
             Dictionary<string, JsonElement> statusData, 
@@ -186,8 +205,6 @@ namespace FuelPumpManagementSystem.Application.Services
                     nozzle.LastTotalCash = totalCash;
                     nozzle.UpdatedAt = DateTime.Now;
 
-                    await db.SaveChangesAsync();
-
                     _logger.LogInformation(
                         $"Transaction recorded: Dispenser {dispenser.DispenserId}, Nozzle {nozzleNum}, " +
                         $"Amount: {amount}, Liter: {liter}, UnitPrice: {unitPrice}");
@@ -196,6 +213,8 @@ namespace FuelPumpManagementSystem.Application.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error processing nozzle {nozzleNum} for dispenser {dispenser.DispenserId}");
+                LogErrorToFile("NOZZLE_PROCESSING", dispenser.DispenserId, nozzleNum, ex, 
+                    $"Error processing Nozzle {nozzleNum} for Dispenser {dispenser.DispenserId}");
             }
         }
 
@@ -237,6 +256,53 @@ namespace FuelPumpManagementSystem.Application.Services
             catch
             {
                 return false;
+            }
+        }
+
+        private void LogErrorToFile(string errorType, int? dispenserId, int? nozzleId, Exception ex, string customMessage)
+        {
+            try
+            {
+                var logEntry = new StringBuilder();
+                logEntry.AppendLine("=".PadRight(80, '='));
+                logEntry.AppendLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] ERROR OCCURRED");
+                logEntry.AppendLine("=".PadRight(80, '='));
+                logEntry.AppendLine($"Error Type     : {errorType}");
+                
+                if (dispenserId.HasValue)
+                {
+                    logEntry.AppendLine($"Dispenser ID   : {dispenserId.Value}");
+                }
+                
+                if (nozzleId.HasValue)
+                {
+                    logEntry.AppendLine($"Nozzle Number  : {nozzleId.Value}");
+                }
+                
+                logEntry.AppendLine($"Message        : {customMessage}");
+                logEntry.AppendLine($"Exception Type : {ex.GetType().Name}");
+                logEntry.AppendLine($"Exception Msg  : {ex.Message}");
+                
+                if (ex.InnerException != null)
+                {
+                    logEntry.AppendLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+                
+                logEntry.AppendLine($"Stack Trace    :");
+                logEntry.AppendLine(ex.StackTrace);
+                logEntry.AppendLine("=".PadRight(80, '='));
+                logEntry.AppendLine();
+
+                // Thread-safe file writing
+                lock (_logLock)
+                {
+                    File.AppendAllText(_logFilePath, logEntry.ToString());
+                }
+            }
+            catch (Exception logEx)
+            {
+                // If file logging fails, at least log to console
+                _logger.LogError(logEx, "Failed to write error to log file");
             }
         }
 
