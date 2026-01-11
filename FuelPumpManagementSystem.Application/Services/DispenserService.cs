@@ -187,7 +187,10 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 throw new InvalidOperationException($"Dispenser with id {request.DispenserId.Value} not found.");
             }
-
+            if(request.ApiEndPoint!=null && !string.IsNullOrEmpty(request.ApiEndPoint))
+            {
+                dispenser.ApiEndPoint = request.ApiEndPoint;
+            }
             var nozzle1 = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 1);
             var nozzle2 = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 2);
 
