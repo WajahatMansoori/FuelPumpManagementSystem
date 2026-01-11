@@ -135,8 +135,30 @@ namespace FuelPumpManagementSystem.Application.Services
 
         private async Task<List<TransactionResponseDTO>> GetFilteredTransactionsAsync(FilterOptions filters)
         {
-            var fromDate = filters.FromDate ?? DateTime.Now.AddMonths(-1);
-            var toDate = filters.ToDate ?? DateTime.Now;
+            // Only use default dates if no dates are provided at all
+            // If dates are provided, use them exactly as specified
+            DateTime fromDate, toDate;
+            
+            if (filters.FromDate.HasValue)
+            {
+                fromDate = filters.FromDate.Value;
+            }
+            else
+            {
+                fromDate = DateTime.Now.AddMonths(-1); // Only fallback if no date provided
+            }
+            
+            if (filters.ToDate.HasValue)
+            {
+                toDate = filters.ToDate.Value;
+            }
+            else
+            {
+                toDate = DateTime.Now; // Only fallback if no date provided
+            }
+            
+            // Ensure toDate includes the entire day (end of day)
+            toDate = toDate.Date.AddDays(1).AddTicks(-1);
             
             var dispenserIds = filters.DispenserIds?.Contains("ALL") == true ? null : filters.DispenserIds;
             var productIds = filters.ProductIds?.Contains("ALL") == true ? null : filters.ProductIds;
