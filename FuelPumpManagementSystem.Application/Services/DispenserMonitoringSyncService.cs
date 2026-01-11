@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,11 +19,31 @@ namespace FuelPumpManagementSystem.Application.Services
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<DispenserMonitoringSyncService> _logger;
+        private readonly string _logFilePath;
+        private static readonly object _logLock = new object();
 
-        public DispenserMonitoringSyncService(IServiceScopeFactory scopeFactory,ILogger<DispenserMonitoringSyncService> logger)
+        // 🔐 Prevent overlapping cycles
+        private static readonly SemaphoreSlim _cycleLock = new(1, 1);
+
+        // 🔐 Prevent same dispenser running in parallel
+        private static readonly ConcurrentDictionary<int, SemaphoreSlim> _dispenserLocks = new();
+
+        public DispenserMonitoringSyncService(
+            IServiceScopeFactory scopeFactory,
+            ILogger<DispenserMonitoringSyncService> logger)
         {
             _scopeFactory = scopeFactory;
             _logger = logger;
+
+            var logDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+            if (!Directory.Exists(logDirectory))
+            {
+                Directory.CreateDirectory(logDirectory);
+            }
+
+            // Create daily log file
+            var logFileName = $"DispenserSync_{DateTime.Now:yyyy-MM-dd}.log";
+            _logFilePath = Path.Combine(logDirectory, logFileName);
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -30,6 +52,9 @@ namespace FuelPumpManagementSystem.Application.Services
 
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
+                if (!await _cycleLock.WaitAsync(0, stoppingToken))
+                    continue;
+
                 try
                 {
                     await SyncAllDispensersAsync(stoppingToken);
@@ -37,6 +62,11 @@ namespace FuelPumpManagementSystem.Application.Services
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Dispenser sync cycle failed");
+                    LogErrorToFile("SYNC_CYCLE", null, null, ex, "Dispenser sync cycle failed");
+                }
+                finally
+                {
+                    _cycleLock.Release();
                 }
             }
         }
@@ -47,21 +77,28 @@ namespace FuelPumpManagementSystem.Application.Services
             var db = scope.ServiceProvider.GetRequiredService<FPMSDbContext>();
 
             var dispensers = await db.Dispenser
-                .AsNoTracking()
                 .Include(d => d.Nozzles)
                 .Where(d => d.IsActive)
                 .ToListAsync(token);
 
-            // Fire and forget - don't wait for all to complete
-            var tasks = dispensers.Select(d =>
-                Task.Run(async () => await SyncSingleDispenserAsync(d, token), token));
+            foreach (var dispenser in dispensers)
+            {
+                var hasEnabledNozzle = dispenser.Nozzles.Any(n => n.IsActive && n.IsEnable);
+                if (!hasEnabledNozzle)
+                    continue;
 
-            // Don't await - let them run in background
-            _ = Task.WhenAll(tasks);
+                await SyncSingleDispenserAsync(dispenser, token);
+            }
         }
 
         private async Task SyncSingleDispenserAsync(Dispenser dispenser, CancellationToken token)
         {
+            var dispenserLock = _dispenserLocks.GetOrAdd(
+                dispenser.DispenserId,
+                _ => new SemaphoreSlim(1, 1));
+
+            await dispenserLock.WaitAsync(token);
+
             try
             {
                 using var httpClient = new HttpClient
@@ -70,27 +107,31 @@ namespace FuelPumpManagementSystem.Application.Services
                 };
 
                 var url = $"{dispenser.ApiEndPoint}/status";
-
                 var response = await httpClient.GetAsync(url, token);
-                
-                if (response.IsSuccessStatusCode)
-                {
-                    var json = await response.Content.ReadAsStringAsync(token);
-                    // Pass dispenser object directly to avoid extra DB query
-                    await ProcessDispenserStatusAsync(dispenser, json);
-                }
+
+                if (!response.IsSuccessStatusCode)
+                    return;
+
+                var json = await response.Content.ReadAsStringAsync(token);
+                await ProcessDispenserStatusAsync(dispenser, json);
             }
             catch (TaskCanceledException)
             {
-                // timeout – very common in hardware APIs
+                // hardware timeout – normal
             }
             catch (Exception ex)
             {
-                // log but DO NOT throw
-                // failure of one dispenser should not affect others
                 _logger.LogError(ex, $"Error syncing dispenser {dispenser.DispenserId}");
+
+                LogErrorToFile("API_CALL", dispenser.DispenserId, null, ex,
+                 $"Failed to call status API for Dispenser {dispenser.DispenserId} at {dispenser.ApiEndPoint}");
+            }
+            finally
+            {
+                dispenserLock.Release();
             }
         }
+
         private async Task ProcessDispenserStatusAsync(Dispenser dispenser, string json)
         {
             using var scope = _scopeFactory.CreateScope();
@@ -98,140 +139,131 @@ namespace FuelPumpManagementSystem.Application.Services
 
             try
             {
-                // Parse hardware API response
                 var statusData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(json);
-                if (statusData == null) return;
+                if (statusData == null || dispenser.IsLocked)
+                    return;
 
-                if (dispenser.IsLocked) return;
-
-                // Process each nozzle (N1 and N2) synchronously to avoid async overhead
                 for (int nozzleNum = 1; nozzleNum <= 2; nozzleNum++)
                 {
-                    ProcessNozzleTransaction(db, dispenser, statusData, nozzleNum);
-                }
-
-                // Only save if there are changes
-                if (db.ChangeTracker.HasChanges())
-                {
-                    await db.SaveChangesAsync();
+                    await ProcessNozzleTransaction(db, dispenser, statusData, nozzleNum);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, $"Error processing dispenser {dispenser.DispenserId} status");
+                _logger.LogError(ex, $"Error processing dispenser {dispenser.DispenserId}");
+
+                LogErrorToFile("PROCESSING", dispenser.DispenserId, null, ex,
+                    $"Error processing status data for Dispenser {dispenser.DispenserId}");
             }
         }
 
         private async Task ProcessNozzleTransaction(
-            FPMSDbContext db, 
-            Dispenser dispenser, 
-            Dictionary<string, JsonElement> statusData, 
+            FPMSDbContext db,
+            Dispenser dispenser,
+            Dictionary<string, JsonElement> statusData,
             int nozzleNum)
         {
             try
             {
-                // Extract nozzle data from API response
-                var nozzlePrefix = $"N{nozzleNum}";
-                
-                if (!TryGetDecimal(statusData, $"{nozzlePrefix}_L", out decimal liter)) return;
-                if (!TryGetDecimal(statusData, $"{nozzlePrefix}_A", out decimal amount)) return;
-                if (!TryGetDecimal(statusData, $"{nozzlePrefix}_TL", out decimal totalLiter)) return;
-                if (!TryGetDecimal(statusData, $"{nozzlePrefix}_TC", out decimal totalCash)) return;
-                if (!TryGetDecimal(statusData, $"{nozzlePrefix}_UP", out decimal unitPrice)) return;
-                if (!TryGetString(statusData, $"{nozzlePrefix}_S", out string status)) return;
+                var prefix = $"N{nozzleNum}";
 
-                // Get nozzle configuration from already loaded nozzles
+                if (!TryGetDecimal(statusData, $"{prefix}_L", out var liter)) return;
+                if (!TryGetDecimal(statusData, $"{prefix}_A", out var amount)) return;
+                if (!TryGetDecimal(statusData, $"{prefix}_TL", out var machineTotalLiter)) return;
+                if (!TryGetDecimal(statusData, $"{prefix}_TC", out var machineTotalCash)) return;
+                if (!TryGetDecimal(statusData, $"{prefix}_UP", out var unitPrice)) return;
+                if (!TryGetString(statusData, $"{prefix}_S", out var status)) return;
+
                 var nozzle = dispenser.Nozzles
-                    .FirstOrDefault(n => n.NozzleId == nozzleNum && n.IsActive);
+                    .FirstOrDefault(n => n.NozzleId == nozzleNum && n.IsActive && n.IsEnable);
 
-                if (nozzle == null || !nozzle.IsEnable) return;
+                if (nozzle == null)
+                    return;
 
-                // Initialize LastTotalLiter if null
-                decimal lastSavedTotalLiter = nozzle.LastTotalLiter ?? 0;
-                decimal lastSavedTotalCash = nozzle.LastTotalCash ?? 0;
+                if (status != "I" || liter <= 0 || amount <= 0)
+                    return;
 
-                // Check all conditions for valid transaction:
-                // 1. Nozzle status is "I" (nozzle returned to holster)
-                // 2. Current TotalLiter > LastSavedTotalLiter (totalizer increased)
-                // 3. Liter > 0 AND Amount > 0 (valid transaction)
-                // 4. Nozzle is enabled (already checked above)
-                // 5. Dispenser is not locked (already checked above)
-                
-                bool isNozzleReturned = status == "I";
-                bool totalizerIncreased = totalLiter > lastSavedTotalLiter;
-                bool validTransaction = liter > 0 && amount > 0;
+                var lastHardwareLiter = nozzle.LastHardwareTotalLiter ?? 0;
+                var lastHardwareCash = nozzle.LastHardwareTotalCash ?? 0;
 
-                if (isNozzleReturned && totalizerIncreased && validTransaction)
+                var deltaLiter = machineTotalLiter - lastHardwareLiter;
+                var deltaCash = machineTotalCash - lastHardwareCash;
+
+                // Machine reset
+                if (deltaLiter < 0 || deltaCash < 0)
                 {
-                    // Attach nozzle to context for tracking
-                    db.Attach(nozzle);
-
-                    // Create transaction record
-                    var transaction = new Transaction
-                    {
-                        DispenserId = dispenser.DispenserId,
-                        NozzleId = nozzleNum,
-                        Amount = amount,
-                        Liter = liter,
-                        UnitPrice = unitPrice,
-                        ProductTypeId = nozzle.ProductId ?? 0,
-                        CreatedAt = DateTime.Now,
-                        IsActive = true
-                    };
-
-                    db.Transaction.Add(transaction);
-
-                    // Update nozzle totalizers
-                    nozzle.LastTotalLiter = totalLiter;
-                    nozzle.LastTotalCash = totalCash;
-                    nozzle.UpdatedAt = DateTime.Now;
-
-                    await db.SaveChangesAsync();
-
-                    _logger.LogInformation(
-                        $"Transaction recorded: Dispenser {dispenser.DispenserId}, Nozzle {nozzleNum}, " +
-                        $"Amount: {amount}, Liter: {liter}, UnitPrice: {unitPrice}");
+                    deltaLiter = machineTotalLiter;
+                    deltaCash = machineTotalCash;
                 }
+
+                if (deltaLiter <= 0 || deltaCash <= 0)
+                    return;
+
+                db.Attach(nozzle);
+
+                var transaction = new Transaction
+                {
+                    DispenserId = dispenser.DispenserId,
+                    NozzleId = nozzleNum,
+                    Liter = liter,
+                    Amount = amount,
+                    UnitPrice = unitPrice,
+                    ProductTypeId = nozzle.ProductId ?? 0,
+                    CreatedAt = DateTime.Now,
+                    IsActive = true
+                };
+
+                db.Transaction.Add(transaction);
+
+                nozzle.LastTotalLiter = (nozzle.LastTotalLiter ?? 0) + deltaLiter;
+                nozzle.LastTotalCash = (nozzle.LastTotalCash ?? 0) + deltaCash;
+                nozzle.LastHardwareTotalLiter = machineTotalLiter;
+                nozzle.LastHardwareTotalCash = machineTotalCash;
+                nozzle.UpdatedAt = DateTime.Now;
+
+                await db.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    $"Transaction saved | Dispenser:{dispenser.DispenserId} Nozzle:{nozzleNum} Liter:{liter} Amount:{amount}");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"Error processing nozzle {nozzleNum} for dispenser {dispenser.DispenserId}");
+                
+                LogErrorToFile("NOZZLE_PROCESSING", dispenser.DispenserId, nozzleNum, ex,
+                    $"Error processing Nozzle {nozzleNum} for Dispenser {dispenser.DispenserId}");
             }
+            
         }
 
         private bool TryGetDecimal(Dictionary<string, JsonElement> data, string key, out decimal value)
         {
             value = 0;
-            if (!data.ContainsKey(key)) return false;
-            
+            if (!data.TryGetValue(key, out var element)) return false;
+
             try
             {
-                if (data[key].ValueKind == JsonValueKind.Number)
+                return element.ValueKind switch
                 {
-                    value = data[key].GetDecimal();
-                    return true;
-                }
-                else if (data[key].ValueKind == JsonValueKind.String)
-                {
-                    return decimal.TryParse(data[key].GetString(), out value);
-                }
+                    JsonValueKind.Number => element.TryGetDecimal(out value),
+                    JsonValueKind.String => decimal.TryParse(element.GetString(), out value),
+                    _ => false
+                };
             }
             catch
             {
                 return false;
             }
-            
-            return false;
         }
 
         private bool TryGetString(Dictionary<string, JsonElement> data, string key, out string value)
         {
             value = string.Empty;
-            if (!data.ContainsKey(key)) return false;
-            
+            if (!data.TryGetValue(key, out var element)) return false;
+
             try
             {
-                value = data[key].GetString() ?? string.Empty;
+                value = element.GetString() ?? string.Empty;
                 return true;
             }
             catch
@@ -240,8 +272,52 @@ namespace FuelPumpManagementSystem.Application.Services
             }
         }
 
+        private void LogErrorToFile(string errorType, int? dispenserId, int? nozzleId, Exception ex, string customMessage)
+        {
+            try
+            {
+                var logEntry = new StringBuilder();
+                logEntry.AppendLine("=".PadRight(80, '='));
+                logEntry.AppendLine($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff}] ERROR OCCURRED");
+                logEntry.AppendLine("=".PadRight(80, '='));
+                logEntry.AppendLine($"Error Type     : {errorType}");
 
+                if (dispenserId.HasValue)
+                {
+                    logEntry.AppendLine($"Dispenser ID   : {dispenserId.Value}");
+                }
 
+                if (nozzleId.HasValue)
+                {
+                    logEntry.AppendLine($"Nozzle Number  : {nozzleId.Value}");
+                }
+
+                logEntry.AppendLine($"Message        : {customMessage}");
+                logEntry.AppendLine($"Exception Type : {ex.GetType().Name}");
+                logEntry.AppendLine($"Exception Msg  : {ex.Message}");
+
+                if (ex.InnerException != null)
+                {
+                    logEntry.AppendLine($"Inner Exception: {ex.InnerException.Message}");
+                }
+
+                logEntry.AppendLine($"Stack Trace    :");
+                logEntry.AppendLine(ex.StackTrace);
+                logEntry.AppendLine("=".PadRight(80, '='));
+                logEntry.AppendLine();
+
+                // Thread-safe file writing
+                lock (_logLock)
+                {
+                    File.AppendAllText(_logFilePath, logEntry.ToString());
+                }
+            }
+            catch (Exception logEx)
+            {
+                // If file logging fails, at least log to console
+                _logger.LogError(logEx, "Failed to write error to log file");
+            }
+        }
 
 
     }
