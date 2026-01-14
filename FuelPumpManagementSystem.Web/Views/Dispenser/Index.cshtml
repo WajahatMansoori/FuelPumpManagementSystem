@@ -383,8 +383,36 @@
 }
 
 @section Scripts {
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            document.querySelectorAll('a[href]').forEach(link => {
+
+                link.addEventListener('click', function () {
+
+                    const href = this.getAttribute('href');
+
+                    if (!href) return;
+
+                    // Ignore same controller (Dispenser)
+                    if (href.startsWith('/Dispenser')) {
+                        return;
+                    }
+
+                    // Leaving Dispenser → clear access
+                    navigator.sendBeacon('/Dispenser/ClearDispenserAccess');
+                });
+
+            });
+
+        });
+    </script>
+
     <script>
         // Toast notification system
+
+       
         function showToast(type, title, message) {
             const toastContainer = document.getElementById('toastContainer');
             const toast = document.createElement('div');
