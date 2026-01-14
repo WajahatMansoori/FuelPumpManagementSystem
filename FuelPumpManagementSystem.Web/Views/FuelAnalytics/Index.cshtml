@@ -3,128 +3,312 @@
     ViewData["Title"] = "Fuel Sales Analytics";
 }
 
-<div class="fuel-analytics-dashboard">
-    <!-- Header Section -->
-    <div class="analytics-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 class="mb-0">Fuel Sales Analytics</h1>
-            <div class="export-buttons">
-                <button type="button" class="btn btn-danger" onclick="exportToPDF()">
-                    <i class="fas fa-file-pdf"></i> Export PDF
-                </button>
-                <button class="btn btn-success" onclick="exportToCSV()">
-                    <i class="fas fa-file-csv"></i> Export CSV
-                </button>
-            </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuel Analytics Dashboard</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #6c757d;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .dashboard-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .dashboard-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #667eea 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px 20px 0 0;
+            position: relative;
+        }
+
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .dashboard-subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin: 10px 0 0 0;
+        }
+
+        .filter-section {
+            background: var(--light-color);
+            border-radius: 15px;
+            padding: 15px; /* Reduced padding */
+            margin: 15px; /* Reduced margin */
+            border: 1px solid #e9ecef;
+        }
+
+        .filter-card {
+            background: white;
+            border-radius: 8px; /* Even smaller radius */
+            padding: 8px; /* Even smaller padding */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08); /* Even smaller shadow */
+            border: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            height: 100%;
+            margin-bottom: 1px; /* Minimal margin */
+        }
+
+        .filter-title {
+            font-size: 0.9rem; /* Even smaller font */
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 8px; /* Even smaller margin */
+            display: flex;
+            align-items: center;
+        }
+
+        .filter-title i {
+            margin-right: 6px; /* Even smaller margin */
+            font-size: 1rem; /* Even smaller icon */
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px; /* Smaller radius */
+            border: 2px solid #e9ecef;
+            padding: 8px 12px; /* Smaller padding */
+            font-size: 0.9rem; /* Smaller font */
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #667eea 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #20c997 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color) 0%, #c82333 100%);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+        }
+
+        .btn-success:hover, .btn-danger:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .export-section {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .export-btn {
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            margin-left: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+
+        .export-btn.pdf { color: var(--danger-color); }
+        .export-btn.csv { color: var(--success-color); }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--light-color);
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+    </style>
+    
+    <style>
+        @@keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1 class="dashboard-title">
+                <i class="fas fa-gas-pump"></i> Fuel Analytics Dashboard
+            </h1>
+            <p class="dashboard-subtitle">Real-time fuel sales monitoring and insights</p>
         </div>
-    </div>
 
-    <!-- Filter Panel -->
-    <div class="filter-panel card shadow-sm">
-        <div class="card-body">
-            <h5 class="card-title mb-4">Filter & Selection Panel</h5>
+        <!-- Export Buttons -->
+        <div class="export-section">
+            <button class="export-btn pdf" onclick="exportToPDF()" title="Export PDF">
+                <i class="fas fa-file-pdf fa-lg"></i>
+            </button>
+            <button class="export-btn csv" onclick="exportToCSV()" title="Export CSV">
+                <i class="fas fa-file-csv fa-lg"></i>
+            </button>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <!-- Apply/Reset Buttons -->
+            <div class="row mb-3">
+                <div class="col-12 text-center">
+                    <button type="button" class="btn btn-primary btn-lg me-3" onclick="applyFilters()">
+                        <i class="fas fa-search"></i> Apply Filters
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-lg" onclick="resetFilters()">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                </div>
+            </div>
             
-            <!-- Time Period Selection -->
-            <div class="time-period-section mb-4">
-                <h6 class="section-title">Time Period Selection</h6>
-                
-                <!-- Preset Periods -->
-                <div class="preset-periods mb-3">
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-primary preset-btn" data-period="today">Today</button>
-                        <button type="button" class="btn btn-outline-primary preset-btn" data-period="yesterday">Yesterday</button>
-                        <button type="button" class="btn btn-outline-primary preset-btn" data-period="last7days">Last 7 Days</button>
-                        <button type="button" class="btn btn-outline-primary preset-btn" data-period="last30days">Last 30 Days</button>
-                        <button type="button" class="btn btn-outline-primary preset-btn" data-period="thisweek">This Week</button>
-                        <button type="button" class="btn btn-outline-primary preset-btn" data-period="thismonth">This Month</button>
-                        <button type="button" class="btn btn-outline-primary preset-btn" data-period="lastmonth">Last Month</button>
-                    </div>
-                </div>
-                
-                <!-- Custom Date Range -->
-                <div class="custom-range mb-3">
-                    <div class="row g-2">
-                        <div class="col-md-4">
-                            <label class="form-label">From Date:</label>
-                            <input type="date" id="fromDate" class="form-control form-control-sm">
+            <div class="row">
+                <!-- Time Period Filter -->
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <div class="filter-card">
+                        <div class="filter-title">
+                            <i class="fas fa-calendar-alt"></i>
+                            Time Period
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label">To Date:</label>
-                            <input type="date" id="toDate" class="form-control form-control-sm">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="button" class="btn btn-primary btn-sm d-block w-100" onclick="applyCustomRange()">
-                                Apply Range
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Monthly Selection -->
-                <div class="monthly-selection">
-                    <div class="row g-2">
-                        <div class="col-md-4">
-                            <label class="form-label">Month:</label>
-                            <select id="monthSelect" class="form-select form-select-sm">
-                                <option value="1">January</option>
-                                <option value="2">February</option>
-                                <option value="3">March</option>
-                                <option value="4">April</option>
-                                <option value="5">May</option>
-                                <option value="6">June</option>
-                                <option value="7">July</option>
-                                <option value="8">August</option>
-                                <option value="9">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Year:</label>
-                            <select id="yearSelect" class="form-select form-select-sm">
-                                @for (int year = 2020; year <= DateTime.Now.Year; year++)
-                                {
-                                    <option value="@year">@year</option>
-                                }
-                            </select>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">&nbsp;</label>
-                            <button type="button" class="btn btn-primary btn-sm d-block w-100" onclick="viewMonthlyTrend()">
-                                View Monthly Trend
-                            </button>
+                        <select id="periodSelect" class="form-select form-select-lg mb-3">
+                            <option value="">Select Period...</option>
+                            <option value="today">Today</option>
+                            <option value="yesterday">Yesterday</option>
+                            <option value="last7days">Last 7 Days</option>
+                            <option value="last30days">Last 30 Days</option>
+                            <option value="thisweek">This Week</option>
+                            <option value="thismonth">This Month</option>
+                            <option value="lastmonth">Last Month</option>
+                            <option value="thisyear">This Year</option>
+                            <option value="lastyear">Last Year</option>
+                            <option value="custom">Custom Range</option>
+                        </select>
+                        
+                        <div id="customDateRange" style="display: none;">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <label class="form-label">From Date</label>
+                                    <input type="date" id="fromDate" class="form-control">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">To Date</label>
+                                    <input type="date" id="toDate" class="form-control">
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- View Type Selection -->
-            <div class="view-type-section mb-4">
-                <h6 class="section-title">View Type Selection</h6>
-                <div class="btn-group" role="group">
-                    <input type="radio" class="btn-check" name="viewType" id="viewWhole" value="whole" checked>
-                    <label class="btn btn-outline-primary" for="viewWhole">Whole Pump View</label>
-                    
-                    <input type="radio" class="btn-check" name="viewType" id="viewDispenser" value="dispenser">
-                    <label class="btn btn-outline-primary" for="viewDispenser">Per Dispenser View</label>
-                    
-                    <input type="radio" class="btn-check" name="viewType" id="viewCategory" value="category">
-                    <label class="btn btn-outline-primary" for="viewCategory">Per Fuel Category View</label>
-                    
-                    <input type="radio" class="btn-check" name="viewType" id="viewComparison" value="comparison">
-                    <label class="btn btn-outline-primary" for="viewComparison">Comparison View</label>
+                <!-- View Type Filter -->
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <div class="filter-card">
+                        <div class="filter-title">
+                            <i class="fas fa-eye"></i>
+                            View Type
+                        </div>
+                        <select id="viewTypeSelect" class="form-select form-select-lg">
+                            <option value="whole">Whole Pump View</option>
+                            <option value="dispenser">Per Dispenser View</option>
+                            <option value="category">Per Fuel Category View</option>
+                        </select>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Filter Options -->
-            <div class="filter-options-section">
-                <h6 class="section-title">Filter Options</h6>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <label class="form-label">Dispenser Filter:</label>
-                        <select id="dispenserSelect" class="form-select form-select-sm" multiple>
+                <!-- Dispenser Filter -->
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <div class="filter-card">
+                        <div class="filter-title">
+                            <i class="fas fa-oil-can"></i>
+                            Dispenser Filter
+                        </div>
+                        <select id="dispenserSelect" class="form-select form-select-lg">
                             <option value="ALL" selected>All Dispensers</option>
                             @if (Model?.Transactions != null)
                             {
@@ -134,22 +318,17 @@
                                 }
                             }
                         </select>
-                        <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                     </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label">Fuel Category Filter:</label>
-                        <select id="categorySelect" class="form-select form-select-sm">
-                            <option value="all" selected>All Categories</option>
-                            <option value="petrol">Petrol Only</option>
-                            <option value="diesel">Diesel Only</option>
-                            <option value="hi-octane">Hi-Octane Only</option>
-                        </select>
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label">Fuel Type Filter:</label>
-                        <select id="fuelTypeSelect" class="form-select form-select-sm" multiple>
+                </div>
+
+                <!-- Fuel Type Filter -->
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <div class="filter-card">
+                        <div class="filter-title">
+                            <i class="fas fa-gas-pump"></i>
+                            Fuel Type
+                        </div>
+                        <select id="fuelTypeSelect" class="form-select form-select-lg">
                             <option value="ALL" selected>All Fuel Types</option>
                             @if (Model?.Products != null)
                             {
@@ -159,242 +338,207 @@
                                 }
                             }
                         </select>
-                        <small class="text-muted">Hold Ctrl/Cmd to select multiple</small>
                     </div>
                 </div>
-                
-                <div class="row g-3 mt-2">
-                    <div class="col-md-12">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="combineCategories" checked>
-                            <label class="form-check-label" for="combineCategories">
-                                View categories separately or combined
-                            </label>
+
+                <!-- Nozzle Filter -->
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <div class="filter-card">
+                        <div class="filter-title">
+                            <i class="fas fa-tint"></i>
+                            Nozzle Filter
                         </div>
+                        <select id="nozzleSelect" class="form-select form-select-lg">
+                            <option value="ALL" selected>All Nozzles</option>
+                            @if (Model?.Transactions != null)
+                            {
+                                foreach (var n in Model.Transactions.Select(x => x.NozzleId).Distinct().OrderBy(x => x))
+                                {
+                                    <option value="@n">Nozzle @n</option>
+                                }
+                            }
+                        </select>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Analytics Content -->
+        <div id="analyticsContent">
+            <div class="loading-spinner">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        $(document).ready(function() {
+            setDefaultDates();
+            applyFilters();
+        });
+
+        function setDefaultDates() {
+            var today = new Date();
+            var lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
             
-            <div class="mt-4">
-                <button type="button" class="btn btn-primary" onclick="applyFilters()">
-                    <i class="fas fa-filter"></i> Apply Filters
-                </button>
-                <button type="button" class="btn btn-secondary" onclick="resetFilters()">
-                    <i class="fas fa-undo"></i> Reset
-                </button>
-            </div>
-        </div>
-    </div>
+            $('#toDate').val(formatDateForServer(today));
+            $('#fromDate').val(formatDateForServer(lastMonth));
+            $('#periodSelect').val('last30days');
+        }
 
-    <!-- Analytics Content -->
-    <div id="analyticsContent">
-        <!-- Content will be loaded here via AJAX -->
-        <div class="text-center">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-        </div>
-    </div>
-</div>
+        function formatDateForServer(date) {
+            var year = date.getFullYear();
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var day = String(date.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
 
-<!-- CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+        function getPresetDates(period) {
+            var today = new Date();
+            var from, to;
+            
+            switch(period) {
+                case 'today':
+                    from = to = today;
+                    break;
+                case 'yesterday':
+                    from = to = new Date(today.getTime() - 24 * 60 * 60 * 1000);
+                    break;
+                case 'last7days':
+                    from = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
+                    to = today;
+                    break;
+                case 'last30days':
+                    from = new Date(today.getTime() - 29 * 24 * 60 * 60 * 1000);
+                    to = today;
+                    break;
+                case 'thisweek':
+                    var dayOfWeek = today.getDay();
+                    var diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                    from = new Date(today.setDate(diff));
+                    to = new Date();
+                    break;
+                case 'thismonth':
+                    from = new Date(today.getFullYear(), today.getMonth(), 1);
+                    to = today;
+                    break;
+                case 'lastmonth':
+                    from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+                    to = new Date(today.getFullYear(), today.getMonth(), 0);
+                    break;
+                case 'thisyear':
+                    from = new Date(today.getFullYear(), 0, 1);
+                    to = today;
+                    break;
+                case 'lastyear':
+                    from = new Date(today.getFullYear() - 1, 0, 1);
+                    to = new Date(today.getFullYear() - 1, 11, 31);
+                    break;
+                case 'last3months':
+                    from = new Date(today.getFullYear(), today.getMonth() - 2, 1);
+                    to = today;
+                    break;
+                case 'last6months':
+                    from = new Date(today.getFullYear(), today.getMonth() - 5, 1);
+                    to = today;
+                    break;
+            }
+            
+            return {
+                from: formatDateForServer(from),
+                to: formatDateForServer(to)
+            };
+        }
 
-<!-- JS -->
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-    $(document).ready(function() {
-        // Initialize with default filters
-        applyFilters();
-        
-        // Set default dates
-        setDefaultDates();
-    });
-
-    function setDefaultDates() {
-        var today = new Date();
-        var lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, today.getDate());
-        
-        $('#toDate').val(today.toISOString().split('T')[0]);
-        $('#fromDate').val(lastMonth.toISOString().split('T')[0]);
-    }
-
-    function applyFilters() {
-        var filters = collectFilterData();
-        
-        $.ajax({
-            url: '/FuelAnalytics/UpdateAnalytics',
-            type: 'POST',
-            data: filters,
-            success: function(data) {
-                $('#analyticsContent').html(data);
-                initializeCharts();
-            },
-            error: function() {
-                $('#analyticsContent').html('<div class="alert alert-danger">Error loading analytics data</div>');
+        $('#periodSelect').change(function() {
+            var period = $(this).val();
+            
+            if (period === 'custom') {
+                $('#customDateRange').show();
+                return;
+            } else {
+                $('#customDateRange').hide();
+            }
+            
+            if (period) {
+                var dates = getPresetDates(period);
+                $('#fromDate').val(dates.from);
+                $('#toDate').val(dates.to);
+                applyFilters();
             }
         });
-    }
 
-    function collectFilterData() {
-        return {
-            FromDate: $('#fromDate').val(),
-            ToDate: $('#toDate').val(),
-            DispenserIds: $('#dispenserSelect').val() || [],
-            NozzleId: $('#nozzleSelect').val(),
-            ProductIds: $('#fuelTypeSelect').val() || [],
-            ViewType: $('input[name="viewType"]:checked').val(),
-            FuelCategory: $('#categorySelect').val(),
-            CombineCategories: $('#combineCategories').is(':checked')
-        };
-    }
+        // View Type dropdown change handler
+        $('#viewTypeSelect').change(function() {
+            applyFilters();
+        });
 
-    function resetFilters() {
-        $('input[name="viewType"][value="whole"]').prop('checked', true);
-        $('#dispenserSelect').val(['ALL']);
-        $('#categorySelect').val('all');
-        $('#fuelTypeSelect').val(['ALL']);
-        $('#combineCategories').prop('checked', true);
-        setDefaultDates();
-        applyFilters();
-    }
+        // Nozzle dropdown change handler
+        $('#nozzleSelect').change(function() {
+            applyFilters();
+        });
 
-    function exportToPDF() {
-        window.open('/FuelAnalytics/ExportToPDF', '_blank');
-    }
-
-    function exportToCSV() {
-        window.open('/FuelAnalytics/ExportToCSV', '_blank');
-    }
-
-    // Preset period buttons
-    $('.preset-btn').click(function() {
-        var period = $(this).data('period');
-        var dates = getPresetDates(period);
-        $('#fromDate').val(dates.from);
-        $('#toDate').val(dates.to);
-        applyFilters();
-    });
-
-    function getPresetDates(period) {
-        var today = new Date();
-        var from, to;
-        
-        switch(period) {
-            case 'today':
-                from = to = today;
-                break;
-            case 'yesterday':
-                from = to = new Date(today.getTime() - 24 * 60 * 60 * 1000);
-                break;
-            case 'last7days':
-                from = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                to = today;
-                break;
-            case 'last30days':
-                from = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-                to = today;
-                break;
-            case 'thisweek':
-                from = new Date(today.getTime() - (today.getDay() || 7) * 24 * 60 * 60 * 1000);
-                to = today;
-                break;
-            case 'thismonth':
-                from = new Date(today.getFullYear(), today.getMonth(), 1);
-                to = today;
-                break;
-            case 'lastmonth':
-                from = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-                to = new Date(today.getFullYear(), today.getMonth(), 0);
-                break;
+        function applyFilters() {
+            var filters = collectFilterData();
+            
+            $.ajax({
+                url: '/FuelAnalytics/UpdateAnalytics',
+                type: 'POST',
+                data: filters,
+                beforeSend: function() {
+                    $('#analyticsContent').html('<div class="loading-spinner"><div class="spinner"></div></div>');
+                },
+                success: function(data) {
+                    $('#analyticsContent').html(data).addClass('fade-in');
+                    initializeCharts();
+                },
+                error: function(xhr, status, error) {
+                    $('#analyticsContent').html('<div class="alert alert-danger">Error loading analytics data: ' + error + '</div>');
+                }
+            });
         }
-        
-        return {
-            from: from.toISOString().split('T')[0],
-            to: to.toISOString().split('T')[0]
-        };
-    }
 
-    function applyCustomRange() {
-        applyFilters();
-    }
+        function collectFilterData() {
+            return {
+                FromDate: $('#fromDate').val(),
+                ToDate: $('#toDate').val(),
+                DispenserIds: $('#dispenserSelect').val() || [],
+                NozzleId: $('#nozzleSelect').val(),
+                ProductIds: $('#fuelTypeSelect').val() || [],
+                ViewType: $('#viewTypeSelect').val(),
+                FuelCategory: $('#categorySelect').val(),
+                CombineCategories: $('#combineCategories').is(':checked')
+            };
+        }
 
-    function viewMonthlyTrend() {
-        var month = $('#monthSelect').val();
-        var year = $('#yearSelect').val();
-        
-        var from = new Date(year, month - 1, 1);
-        var to = new Date(year, month, 0);
-        
-        $('#fromDate').val(from.toISOString().split('T')[0]);
-        $('#toDate').val(to.toISOString().split('T')[0]);
-        
-        applyFilters();
-    }
+        function resetFilters() {
+            $('#viewTypeSelect').val('whole');
+            $('#dispenserSelect').val(['ALL']);
+            $('#categorySelect').val('all');
+            $('#fuelTypeSelect').val(['ALL']);
+            $('#nozzleSelect').val('ALL');
+            $('#combineCategories').prop('checked', true);
+            $('#periodSelect').val('last30days');
+            $('#customDateRange').hide();
+            setDefaultDates();
+            applyFilters();
+        }
 
-    // View type change handler
-    $('input[name="viewType"]').change(function() {
-        applyFilters();
-    });
+        function exportToPDF() {
+            window.open('/FuelAnalytics/ExportToPDF', '_blank');
+        }
 
-    function initializeCharts() {
-        // Charts will be initialized by individual view partials
-        console.log('Charts initialized');
-    }
-</script>
+        function exportToCSV() {
+            window.open('/FuelAnalytics/ExportToCSV', '_blank');
+        }
 
-<style>
-    .fuel-analytics-dashboard {
-        padding: 20px;
-        background: #f8f9fa;
-    }
-
-    .analytics-header {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-    }
-
-    .filter-panel {
-        margin-bottom: 20px;
-    }
-
-    .section-title {
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 15px;
-        border-bottom: 2px solid #007bff;
-        padding-bottom: 5px;
-    }
-
-    .preset-periods .btn-group {
-        flex-wrap: wrap;
-    }
-
-    .preset-periods .btn {
-        margin-bottom: 5px;
-    }
-
-    .export-buttons button {
-        margin-left: 10px;
-    }
-
-    .filter-options-section select[multiple] {
-        min-height: 80px;
-    }
-
-    .btn-check:checked + .btn {
-        background-color: #007bff;
-        border-color: #007bff;
-        color: white;
-    }
-
-    .spinner-border {
-        margin: 50px 0;
-    }
-</style>
+        function initializeCharts() {
+            console.log('Charts initialized');
+        }
+    </script>
+</body>
+</html>

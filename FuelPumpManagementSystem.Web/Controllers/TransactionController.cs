@@ -20,17 +20,21 @@ namespace FuelPumpManagementSystem.Web.Controllers
             _productService = productService;
         }
 
-        public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds)
+        public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds, int page = 1, int pageSize = 10, string search = "")
         {
             // Debug logging
             System.Diagnostics.Debug.WriteLine($"Received dispenserIds: {(dispenserIds != null ? string.Join(",", dispenserIds) : "null")}");
             System.Diagnostics.Debug.WriteLine($"Received nozzleId: {nozzleId}");
             System.Diagnostics.Debug.WriteLine($"Received productIds: {(productIds != null ? string.Join(",", productIds) : "null")}");
+            System.Diagnostics.Debug.WriteLine($"Received search: {search}");
 
             ViewData["FromDate"] = fromDate?.ToString("yyyy-MM-dd");
             ViewData["ToDate"] = toDate?.ToString("yyyy-MM-dd");
             ViewData["NozzleId"] = nozzleId;
             ViewData["ProductIds"] = productIds;
+            ViewData["CurrentPage"] = page;
+            ViewData["PageSize"] = pageSize;
+            ViewData["Search"] = search;
 
             // Handle checkbox logic for dispensers
             if (dispenserIds != null && dispenserIds.Contains("ALL"))
@@ -58,16 +62,42 @@ namespace FuelPumpManagementSystem.Web.Controllers
             var products = await _productService.GetAllAsync();
             var allDispenserNozzles = await _transactionService.GetAllDispenserNozzlesAsync();
 
-            System.Diagnostics.Debug.WriteLine($"Found {transactions.Count} transactions");
+            // Apply search filter
+            if (!string.IsNullOrEmpty(search))
+            {
+                transactions = transactions.Where(t => 
+                    t.TransactionId.ToString().Contains(search) ||
+                    t.CreatedAt.ToString("yyyy-MM-dd HH:mm").Contains(search) ||
+                    t.DispenserId.ToString().Contains(search) ||
+                    t.NozzleId.ToString().Contains(search) ||
+                    (products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId)?.ProductName ?? "").Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                    t.Liter.ToString().Contains(search) ||
+                    t.UnitPrice.ToString().Contains(search) ||
+                    t.Amount.ToString().Contains(search) ||
+                    t.LastTotalLitre.ToString().Contains(search) ||
+                    t.LastTotalCash.ToString().Contains(search)
+                ).ToList();
+            }
+
+            // Calculate pagination info
+            var totalRecords = transactions.Count;
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+            var skip = (page - 1) * pageSize;
+            var pagedTransactions = transactions.Skip(skip).Take(pageSize).ToList();
+
+            System.Diagnostics.Debug.WriteLine($"Found {transactions.Count} total transactions after search");
+            System.Diagnostics.Debug.WriteLine($"Showing page {page} of {totalPages} with {pagedTransactions.Count} records");
             System.Diagnostics.Debug.WriteLine($"Found {allDispenserNozzles.Count} dispenser nozzles");
 
             var viewModel = new TransactionIndexViewModel
             {
-                Transactions = transactions,
+                Transactions = pagedTransactions,
                 Products = products
             };
 
             ViewData["AllDispenserNozzles"] = allDispenserNozzles;
+            ViewData["TotalRecords"] = totalRecords;
+            ViewData["TotalPages"] = totalPages;
 
             return View(viewModel);
         }
