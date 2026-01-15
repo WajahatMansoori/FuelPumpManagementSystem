@@ -11,14 +11,21 @@
             <small class="text-muted">Manage dispenser API & nozzle setup</small>
         </div>
 
-        
+        <div class="d-flex gap-2">
+            <!-- Change Password Button -->
+            <button class="btn btn-change-password"
+                    data-bs-toggle="modal"
+                    data-bs-target="#changePasswordModal">
+                <i class="bi bi-key"></i> Change Password
+            </button>
 
-        <!-- Site Settings Button -->
-        <button class="btn btn-outline-secondary"
-                data-bs-toggle="modal"
-                data-bs-target="#siteConfigModal">
-            ⚙ Site Settings
-        </button>
+            <!-- Site Settings Button -->
+            <button class="btn btn-outline-secondary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#siteConfigModal">
+                ⚙ Site Settings
+            </button>
+        </div>
     </div>
 
     <!-- Configuration Card -->
@@ -374,6 +381,83 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content change-password-modal">
+            <div class="modal-header">
+                <div class="modal-header-content">
+                    <div class="modal-icon">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title" id="changePasswordModalLabel">Change Password</h5>
+                        <p class="modal-subtitle">Update your access password</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info d-flex align-items-center mb-4">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <small>Your new password will be used for future access to this page</small>
+                </div>
+
+                <div id="passwordAlert" class="alert alert-danger d-none" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    <span id="passwordAlertMessage"></span>
+                </div>
+
+                <form id="changePasswordForm">
+                    <div class="mb-4">
+                        <label for="newPassword" class="form-label">
+                            <i class="bi bi-key text-primary"></i> New Password
+                        </label>
+                        <div class="password-input-wrapper">
+                            <input type="password" class="form-control password-input" id="newPassword" placeholder="Enter new password" required>
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('newPassword', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback" id="newPasswordError">Please enter a new password</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="confirmPassword" class="form-label">
+                            <i class="bi bi-shield-check text-success"></i> Confirm Password
+                        </label>
+                        <div class="password-input-wrapper">
+                            <input type="password" class="form-control password-input" id="confirmPassword" placeholder="Re-enter new password" required>
+                            <button type="button" class="password-toggle" onclick="togglePasswordVisibility('confirmPassword', this)">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <div class="invalid-feedback" id="confirmPasswordError">Please confirm your password</div>
+                    </div>
+
+                    <div class="password-strength-indicator mb-3">
+                        <div class="strength-bar">
+                            <div class="strength-bar-fill" id="strengthBarFill"></div>
+                        </div>
+                        <small class="strength-text" id="strengthText">Password strength: <span id="strengthLevel">-</span></small>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="savePasswordBtn">
+                    <span class="btn-text">
+                        <i class="bi bi-check-circle"></i> Save Password
+                    </span>
+                    <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -852,6 +936,158 @@
             const alert = document.getElementById('validationAlert');
             alert.classList.add('d-none');
             alert.classList.remove('show');
+        }
+
+        // Change Password Modal Functionality
+        const changePasswordModal = document.getElementById('changePasswordModal');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const savePasswordBtn = document.getElementById('savePasswordBtn');
+        const passwordAlert = document.getElementById('passwordAlert');
+        const passwordAlertMessage = document.getElementById('passwordAlertMessage');
+        const strengthBarFill = document.getElementById('strengthBarFill');
+        const strengthLevel = document.getElementById('strengthLevel');
+
+        // Password strength checker
+        newPasswordInput?.addEventListener('input', function() {
+            const password = this.value;
+            const strength = calculatePasswordStrength(password);
+            updateStrengthIndicator(strength);
+        });
+
+        function calculatePasswordStrength(password) {
+            let strength = 0;
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 10) strength += 25;
+            if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 15;
+            if (/[^a-zA-Z0-9]/.test(password)) strength += 10;
+            return Math.min(strength, 100);
+        }
+
+        function updateStrengthIndicator(strength) {
+            strengthBarFill.style.width = strength + '%';
+            
+            if (strength < 40) {
+                strengthBarFill.style.backgroundColor = '#dc3545';
+                strengthLevel.textContent = 'Weak';
+                strengthLevel.style.color = '#dc3545';
+            } else if (strength < 70) {
+                strengthBarFill.style.backgroundColor = '#ffc107';
+                strengthLevel.textContent = 'Medium';
+                strengthLevel.style.color = '#ffc107';
+            } else {
+                strengthBarFill.style.backgroundColor = '#28a745';
+                strengthLevel.textContent = 'Strong';
+                strengthLevel.style.color = '#28a745';
+            }
+        }
+
+        // Toggle password visibility
+        window.togglePasswordVisibility = function(inputId, button) {
+            const input = document.getElementById(inputId);
+            const icon = button.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        };
+
+        // Reset modal on close
+        changePasswordModal?.addEventListener('hidden.bs.modal', function() {
+            document.getElementById('changePasswordForm').reset();
+            newPasswordInput.classList.remove('is-invalid', 'is-valid');
+            confirmPasswordInput.classList.remove('is-invalid', 'is-valid');
+            passwordAlert.classList.add('d-none');
+            strengthBarFill.style.width = '0%';
+            strengthLevel.textContent = '-';
+        });
+
+        // Save Password Button Click Handler
+        savePasswordBtn?.addEventListener('click', async function() {
+            const newPassword = newPasswordInput.value.trim();
+            const confirmPassword = confirmPasswordInput.value.trim();
+
+            // Hide previous alerts
+            passwordAlert.classList.add('d-none');
+            newPasswordInput.classList.remove('is-invalid');
+            confirmPasswordInput.classList.remove('is-invalid');
+
+            // Validation
+            if (!newPassword) {
+                newPasswordInput.classList.add('is-invalid');
+                showPasswordAlert('Please enter a new password');
+                return;
+            }
+
+            if (newPassword.length < 4) {
+                newPasswordInput.classList.add('is-invalid');
+                showPasswordAlert('Password must be at least 4 characters long');
+                return;
+            }
+
+            if (!confirmPassword) {
+                confirmPasswordInput.classList.add('is-invalid');
+                showPasswordAlert('Please confirm your password');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                confirmPasswordInput.classList.add('is-invalid');
+                showPasswordAlert('Passwords do not match. Please make sure both passwords are identical.');
+                return;
+            }
+
+            // Show loading state
+            const btnText = savePasswordBtn.querySelector('.btn-text');
+            const spinner = savePasswordBtn.querySelector('.spinner-border');
+            btnText.classList.add('d-none');
+            spinner.classList.remove('d-none');
+            savePasswordBtn.disabled = true;
+
+            try {
+                const response = await fetch('/Dispenser/ChangePassword', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ newPassword: newPassword })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Close modal
+                    const modal = bootstrap.Modal.getInstance(changePasswordModal);
+                    modal.hide();
+
+                    // Show success toast
+                    showToast('success', 'Password Changed Successfully!', 'Your password has been updated. Use the new password for future access.');
+                    
+                    // Reset form
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    showPasswordAlert(result.message || 'Failed to change password. Please try again.');
+                }
+            } catch (error) {
+                showPasswordAlert('An error occurred while changing password: ' + error.message);
+            } finally {
+                // Hide loading state
+                btnText.classList.remove('d-none');
+                spinner.classList.add('d-none');
+                savePasswordBtn.disabled = false;
+            }
+        });
+
+        function showPasswordAlert(message) {
+            passwordAlertMessage.textContent = message;
+            passwordAlert.classList.remove('d-none');
         }
     </script>
 }
