@@ -1,9 +1,9 @@
 /* Page Header Styling */
 .page-header-card {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    background: linear-gradient(135deg, #550000 0%, #330000 100%);
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(85, 0, 0, 0.4);
 }
 
 .page-title {
@@ -20,20 +20,21 @@
 
 .btn-update-prices {
     background: white;
-    color: #1a1a1a;
-    border: none;
+    color: #550000;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     padding: 0.75rem 1.5rem;
     font-weight: 600;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
 }
 
 .btn-update-prices:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
     background: #f8f9fa;
-    color: #1a1a1a;
+    color: #550000;
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .btn-update-prices:disabled {
@@ -49,12 +50,12 @@
 }
 
 .bg-gradient-primary {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    background: linear-gradient(135deg, #550000 0%, #330000 100%);
     padding: 1rem 1.5rem;
 }
 
 .bg-gradient-info {
-    background: linear-gradient(135deg, #2d2d2d 0%, #3a3a3a 100%);
+    background: linear-gradient(135deg, #550000 0%, #330000 100%);
     padding: 1rem 1.5rem;
 }
 
@@ -487,21 +488,22 @@
 
 /* Change Password Button */
 .btn-change-password {
-    background: linear-gradient(135deg, #550000 0%, #330000 100%);
-    color: white;
-    border: none;
+    background: white;
+    color: #550000;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     padding: 0.75rem 1.5rem;
     font-weight: 600;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(85, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
 }
 
 .btn-change-password:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(85, 0, 0, 0.4);
-    background: linear-gradient(135deg, #660000 0%, #440000 100%);
-    color: white;
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
+    background: #f8f9fa;
+    color: #550000;
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Change Password Modal */
