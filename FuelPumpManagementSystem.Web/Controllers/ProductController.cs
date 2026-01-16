@@ -34,9 +34,9 @@ namespace FuelPumpManagementSystem.Web.Controllers
             var products = await _productService.GetAllAsync();
             var dispensers = await _dispenserService.GetAllAsync();
 
-            // Get only products that are mapped to at least one active dispenser nozzle
+            // Get all active products regardless of dispenser mapping
             var productsWithPrices = await _db.Product
-                .Where(p => p.IsActive && _db.DispenserNozzle.Any(dn => dn.ProductId == p.ProductId && dn.IsActive))
+                .Where(p => p.IsActive)
                 .Select(p => new ProductPriceViewModel
                 {
                     ProductId = p.ProductId,
@@ -47,7 +47,8 @@ namespace FuelPumpManagementSystem.Web.Controllers
                         .Where(dn => dn.ProductId == p.ProductId && dn.IsActive && dn.CurrentProductPrice != null)
                         .Select(dn => dn.CurrentProductPrice!.Value)
                         .FirstOrDefault(),
-                    IsMapped = true
+                    // Check if product is mapped to any active dispenser nozzle
+                    IsMapped = _db.DispenserNozzle.Any(dn => dn.ProductId == p.ProductId && dn.IsActive)
                 })
                 .ToListAsync();
 
