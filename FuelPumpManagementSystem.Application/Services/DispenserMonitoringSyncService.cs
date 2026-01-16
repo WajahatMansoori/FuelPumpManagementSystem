@@ -209,6 +209,8 @@ namespace FuelPumpManagementSystem.Application.Services
                     Amount = amount,
                     UnitPrice = unitPrice,
                     ProductTypeId = nozzle.ProductId ?? 0,
+                    LastHardwareTotalCash= machineTotalCash,
+                    LastHardwareTotalLiter= machineTotalLiter,
                     CreatedAt = DateTime.Now,
                     IsActive = true
                 };

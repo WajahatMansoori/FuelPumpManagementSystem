@@ -46,6 +46,7 @@ namespace Shared.FPMS_DB
             ConfigureCommon<DispenserActionLog>();
             ConfigureCommon<Dispenser>();
             ConfigureCommon<User>();
+            ConfigureCommon<DispenserActionType>();
 
             // Configure Dispenser defaults
             modelBuilder.Entity<Dispenser>(entity =>

@@ -18,6 +18,8 @@ namespace Shared.FPMS_DB.Entities
         public DateTime CreatedAt { get; set; }
         public bool IsActive { get; set; } = true;
         public DateTime? UpdatedAt { get; set; }
+        public decimal? LastHardwareTotalCash { get; set; }
+        public decimal? LastHardwareTotalLiter { get; set; }
 
     }
 }
