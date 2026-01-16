@@ -81,7 +81,15 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <span class="product-name">@product.ProductName</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="product-name">@product.ProductName</span>
+                                                    @if (!product.IsMapped)
+                                                    {
+                                                        <span class="badge unmapped-badge" title="Not mapped to any dispenser">
+                                                            <i class="bi bi-exclamation-circle"></i> Not Mapped
+                                                        </span>
+                                                    }
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="current-price-badge">
