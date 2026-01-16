@@ -72,7 +72,8 @@
                                                     <input class="form-check-input product-checkbox" 
                                                            type="checkbox" 
                                                            id="product_@product.ProductId"
-                                                           data-product-id="@product.ProductId">
+                                                           data-product-id="@product.ProductId"
+                                                           @(!product.IsMapped ? "disabled" : "")>
                                                 </div>
                                             </td>
                                             <td>
