@@ -154,33 +154,50 @@
         }
 
         .export-section {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
+            text-align: right;
+            margin-bottom: 20px;
+            clear: both;
         }
 
         .export-btn {
             background: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 8px 16px;
             margin-left: 10px;
+            cursor: pointer;
             transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .export-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
 
-        .export-btn.pdf { color: var(--danger-color); }
-        .export-btn.csv { color: var(--success-color); }
+        .export-btn.pdf {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .export-btn.pdf:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .export-btn.csv {
+            color: #28a745;
+            border-color: #28a745;
+        }
+
+        .export-btn.csv:hover {
+            background: #28a745;
+            color: white;
+        }
 
         .loading-spinner {
             display: flex;
@@ -226,14 +243,16 @@
         </div>
 
         <!-- Export Buttons -->
-        <div class="export-section">
+       @*  <div class="export-section">
             <button class="export-btn pdf" onclick="exportToPDF()" title="Export PDF">
                 <i class="fas fa-file-pdf fa-lg"></i>
+                <span>Export to PDF</span>
             </button>
             <button class="export-btn csv" onclick="exportToCSV()" title="Export CSV">
                 <i class="fas fa-file-csv fa-lg"></i>
+                <span>Export to CSV</span>
             </button>
-        </div>
+        </div> *@
 
         <!-- Filter Section -->
         <div class="filter-section">
@@ -358,6 +377,24 @@
                                 }
                             }
                         </select>
+                    </div>
+                </div>
+
+                <!-- Export Buttons Section -->
+                <div class="col-lg-4 col-md-6 mb-2">
+                    <div class="filter-card">
+                        <div class="filter-title">
+                            <i class="fas fa-download"></i>
+                            Export Options
+                        </div>
+                        <div class="export-buttons-inline">
+                            <button class="btn btn-success me-2" onclick="exportToCSV()">
+                                <i class="fas fa-file-excel"></i> Export to Excel
+                            </button>
+                            <button class="btn btn-danger" onclick="exportToPDF()">
+                                <i class="fas fa-file-pdf"></i> Export to PDF
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -528,12 +565,69 @@
             applyFilters();
         }
 
-        function exportToPDF() {
-            window.open('/FuelAnalytics/ExportToPDF', '_blank');
+        function getCurrentFilters() {
+            // Get current filter values directly from form elements
+            var fromDate = $('#fromDate').val();
+            var toDate = $('#toDate').val();
+            var dispenserId = $('#dispenserSelect').val();
+            var nozzleId = $('#nozzleSelect').val();
+            var productId = $('#fuelTypeSelect').val();
+            var viewType = $('#viewTypeSelect').val();
+            
+            // Handle period selection
+            var period = $('#periodSelect').val();
+            if (period && period !== 'custom') {
+                var dates = getPresetDates(period);
+                fromDate = dates.from;
+                toDate = dates.to;
+            }
+            
+            return {
+                fromDate: fromDate,
+                toDate: toDate,
+                dispenserId: dispenserId,
+                nozzleId: nozzleId,
+                productId: productId,
+                viewType: viewType
+            };
         }
 
         function exportToCSV() {
-            window.open('/FuelAnalytics/ExportToCSV', '_blank');
+            // Get current filters
+            var filters = getCurrentFilters();
+            var params = new URLSearchParams();
+            
+            // Build URL parameters
+            if (filters.fromDate) params.append('fromDate', filters.fromDate);
+            if (filters.toDate) params.append('toDate', filters.toDate);
+            if (filters.dispenserId && filters.dispenserId !== 'ALL') params.append('dispenserIds', filters.dispenserId);
+            if (filters.nozzleId && filters.nozzleId !== 'ALL') params.append('nozzleId', filters.nozzleId);
+            if (filters.productId && filters.productId !== 'ALL') params.append('productIds', filters.productId);
+            if (filters.viewType) params.append('viewType', filters.viewType);
+            
+            console.log('Export URL:', '/FuelAnalytics/ExportToCSV?' + params.toString());
+            console.log('Current Filters:', filters);
+            
+            window.open('/FuelAnalytics/ExportToCSV?' + params.toString(), '_blank');
+        }
+
+        function exportToPDF() {
+            // Get current filters
+            var filters = getCurrentFilters();
+            var params = new URLSearchParams();
+            
+            // Build URL parameters
+            if (filters.fromDate) params.append('fromDate', filters.fromDate);
+            if (filters.toDate) params.append('toDate', filters.toDate);
+            if (filters.dispenserId && filters.dispenserId !== 'ALL') params.append('dispenserIds', filters.dispenserId);
+            if (filters.nozzleId && filters.nozzleId !== 'ALL') params.append('nozzleId', filters.nozzleId);
+            if (filters.productId && filters.productId !== 'ALL') params.append('productIds', filters.productId);
+            if (filters.viewType) params.append('viewType', filters.viewType);
+            
+            console.log('Export URL:', '/FuelAnalytics/ExportToPDF?' + params.toString());
+            console.log('Current Filters:', filters);
+            
+            window.open('/FuelAnalytics/ExportToPDF?' + params.toString(), '_blank');
         }
 
         function initializeCharts() {

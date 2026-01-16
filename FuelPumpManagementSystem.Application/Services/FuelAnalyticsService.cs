@@ -339,26 +339,6 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 csv.AppendLine($"\"{day.Date:yyyy-MM-dd}\",{day.TotalSales:F2},{day.TotalLiters:F2},{day.TransactionCount},{day.AverageSale:F2}");
             }
-            
-            csv.AppendLine("");
-            
-            // Detailed Transactions
-            csv.AppendLine("DETAILED TRANSACTIONS");
-            csv.AppendLine("Transaction ID,Date Time,Dispenser,Nozzle,Fuel Type,Liters,Unit Price,Amount,Product ID");
-            
-            foreach (var t in transactions.OrderByDescending(x => x.CreatedAt))
-            {
-                var productName = products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId)?.ProductName ?? "Unknown";
-                csv.AppendLine($"{t.TransactionId}," +
-                             $"\"{t.CreatedAt:yyyy-MM-dd HH:mm:ss}\"," +
-                             $"{t.DispenserId}," +
-                             $"{t.NozzleId}," +
-                             $"\"{productName}\"," +
-                             $"{t.Liter:F2}," +
-                             $"{t.UnitPrice:F2}," +
-                             $"{t.Amount:F2}," +
-                             $"{t.ProductTypeId}");
-            }
 
             return System.Text.Encoding.UTF8.GetBytes(csv.ToString());
         }

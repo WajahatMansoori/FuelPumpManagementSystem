@@ -396,43 +396,47 @@
                         </div>
                     </div>
 
-                    <!-- Action Buttons -->
-                    <div class="col-md-2">
-                        <div class="filter-title">
-                            <i class="fas fa-cog"></i>
-                            Actions
-                        </div>
-                        <div class="export-buttons">
-                            <a class="btn btn-danger"
-                               href="@Url.Action("ExportToPdf",
-                                    new {
-                                        fromDate = ViewData["FromDate"],
-                                        toDate = ViewData["ToDate"],
-                                        dispenserIds = ViewData["DispenserIds"],
-                                        nozzleId = ViewData["NozzleId"],
-                                        productIds = ViewData["ProductIds"],
-                                        search = ViewData["Search"]
-                                    })">
-                                <i class="fas fa-file-pdf"></i> PDF
-                            </a>
-                            <a class="btn btn-success"
-                               href="@Url.Action("ExportToExcel",
-                                    new {
-                                        fromDate = ViewData["FromDate"],
-                                        toDate = ViewData["ToDate"],
-                                        dispenserIds = ViewData["DispenserIds"],
-                                        nozzleId = ViewData["NozzleId"],
-                                        productIds = ViewData["ProductIds"],
-                                        search = ViewData["Search"]
-                                    })">
-                                <i class="fas fa-file-excel"></i> Excel
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-filter"></i> Filter
-                            </button>
-                            <a href="@Url.Action("Index")" class="btn btn-secondary">
-                                <i class="fas fa-undo"></i> Reset
-                            </a>
+                    <!-- All Buttons in Same Row -->
+                    <div class="col-md-12">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-filter"></i> Search
+                                </button>
+                                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                                    <i class="fas fa-undo"></i> Reset
+                                </a>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-danger"
+                                   href="@Url.Action("ExportToPdf",
+                                        new {
+                                            fromDate = ViewData["FromDate"],
+                                            toDate = ViewData["ToDate"],
+                                            dispenserIds = ViewData["DispenserIds"],
+                                            nozzleId = ViewData["NozzleId"],
+                                            productIds = ViewData["ProductIds"],
+                                            search = ViewData["Search"],
+                                            page = ViewData["CurrentPage"],
+                                            pageSize = ViewData["PageSize"]
+                                        })">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </a>
+                                <a class="btn btn-success"
+                                   href="@Url.Action("ExportToExcel",
+                                        new {
+                                            fromDate = ViewData["FromDate"],
+                                            toDate = ViewData["ToDate"],
+                                            dispenserIds = ViewData["DispenserIds"],
+                                            nozzleId = ViewData["NozzleId"],
+                                            productIds = ViewData["ProductIds"],
+                                            search = ViewData["Search"],
+                                            page = ViewData["CurrentPage"],
+                                            pageSize = ViewData["PageSize"]
+                                        })">
+                                    <i class="fas fa-file-excel"></i> Excel
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>

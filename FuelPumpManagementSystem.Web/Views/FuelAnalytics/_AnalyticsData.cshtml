@@ -11,24 +11,21 @@
         var dispenserTransactions = allTransactions.Where(t => t.DispenserId == dispenserId).ToList();
         var transactionCount = dispenserTransactions.Count;
         
-        // Performance based on transaction count
-        // More transactions = better performance
+        // Get the highest transaction count among all dispensers for relative performance
+        var maxTransactionCount = allTransactions
+            .GroupBy(t => t.DispenserId)
+            .Select(g => g.Count())
+            .Max();
+        
+        // Calculate relative performance (0-100%)
         double performance = 0;
         
-        if (transactionCount >= 50)
-            performance = 100;
-        else if (transactionCount >= 30)
-            performance = 80;
-        else if (transactionCount >= 20)
-            performance = 60;
-        else if (transactionCount >= 10)
-            performance = 40;
-        else if (transactionCount >= 5)
-            performance = 20;
-        else
-            performance = 10;
+        if (maxTransactionCount > 0)
+        {
+            performance = (double)transactionCount / maxTransactionCount * 100;
+        }
         
-        return performance;
+        return Math.Round(performance, 2);
     }
 
     // Force refresh data calculation
@@ -127,14 +124,26 @@
                         </div>
                     </div>
                     
-                    <!-- Chart 2: Sales by Category (Dynamic) -->
-                    <div class="col-md-6">
+                    <!-- Chart 2: Sales by Category (Original - Rs) -->
+                    <div class="col-md-4">
                         <div class="card">
                             <div class="card-header">
-                                <h6 class="card-title mb-0">Sales by Category</h6>
+                                <h6 class="card-title mb-0">Sales by Category(Cash)</h6>
                             </div>
                             <div class="card-body">
                                 <canvas id="categoryBarChart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chart 3: Volume by Category (New - Liters) -->
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h6 class="card-title mb-0">Volume by Category(Litres)</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="volumeBarChart" height="300"></canvas>
                             </div>
                         </div>
                     </div>
@@ -426,78 +435,20 @@
     </div>
 </div>
 
-<!-- Data Table -->
-<div class="data-table-section mt-4">
-    <div class="card">
-        <div class="card-header">
-            <h6 class="card-title mb-0">Detailed Data</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped table-hover" id="analyticsDataTable">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Transaction ID</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Dispenser</th>
-                            <th>Nozzle</th>
-                            <th>Fuel Type</th>
-                            <th>Liters</th>
-                            <th>Unit Price</th>
-                            <th>Total Amount</th>
-                            <th>Performance</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (currentTransactions.Any())
-                        {
-                            foreach (var t in currentTransactions.OrderByDescending(x => x.CreatedAt))
-                            {
-                                // Calculate performance based on dispenser transaction count
-                                var performancePercentage = CalculateDispenserPerformance(t.DispenserId, currentTransactions);
-                                var performanceColor = performancePercentage >= 80 ? "success" : 
-                                                   performancePercentage >= 60 ? "warning" : "danger";
-                                
-                                <tr>
-                                    <td>@t.TransactionId</td>
-                                    <td>@t.CreatedAt.ToString("yyyy-MM-dd")</td>
-                                    <td>@t.CreatedAt.ToString("HH:mm:ss")</td>
-                                    <td>@t.DispenserId</td>
-                                    <td>@t.NozzleId</td>
-                                    <td>@Model.Products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId)?.ProductName</td>
-                                    <td>@t.Liter.ToString("N2")</td>
-                                    <td>@t.UnitPrice.ToString("N2")</td>
-                                    <td>@t.Amount.ToString("N2")</td>
-                                    <td>
-                                        <div class="performance-container">
-                                            <div class="performance-bar">
-                                                <div class="performance-fill performance-@performanceColor" 
-                                                     style="width: @performancePercentage%">
-                                                </div>
-                                            </div>
-                                            <span class="performance-text">@performancePercentage.ToString("F0")%</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="9" class="text-center text-muted">No data available</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
 <script>
+    // Global variable to store chart instances
+    var chartInstances = {};
+
     // Initialize charts based on current view type
     function initializeCharts() {
+        // Destroy existing charts before creating new ones
+        Object.keys(chartInstances).forEach(key => {
+            if (chartInstances[key]) {
+                chartInstances[key].destroy();
+                delete chartInstances[key];
+            }
+        });
+        
         var viewType = '@viewType';
         
         if (viewType === 'whole') {
@@ -509,11 +460,9 @@
         } else if (viewType === 'comparison') {
             initializeComparisonCharts();
         }
-        
-        // Initialize data table
-        initializeDataTable();
     }
 
+    // Initialize charts based on current view type
     function initializeWholePumpCharts() {
         // Fuel Type Pie Chart
         var fuelTypeCtx = document.getElementById('fuelTypePieChart');
@@ -521,7 +470,7 @@
             var fuelLabels = @Html.Raw(Json.Serialize(Model.Products?.Select(p => p.ProductName).ToList() ?? new List<string>()));
             var fuelData = @Html.Raw(Json.Serialize(Model.Products?.Select(p => Model.Transactions.Where(t => t.ProductTypeId == p.ProductId).Sum(t => t.Amount)).ToList() ?? new List<decimal>()));
             
-            new Chart(fuelTypeCtx, {
+            chartInstances['fuelTypePieChart'] = new Chart(fuelTypeCtx, {
                 type: 'pie',
                 data: {
                     labels: fuelLabels,
@@ -540,10 +489,7 @@
             });
         }
 
-        // Trend Bar Chart (Removed)
-        // Sales Trend chart has been removed as requested
-
-        // Category Bar Chart (Dynamic)
+        // Category Bar Chart (Original - Rs)
         var categoryCtx = document.getElementById('categoryBarChart');
         if (categoryCtx) {
             // Get pre-calculated category data from server
@@ -562,7 +508,7 @@
                 }).Sum(t => t.Amount) ?? 0
             }));
             
-            new Chart(categoryCtx, {
+            chartInstances['categoryBarChart'] = new Chart(categoryCtx, {
                 type: 'bar',
                 data: {
                     labels: ['Petrol', 'Diesel', 'Hi-Octane'],
@@ -600,14 +546,77 @@
                 }
             });
         }
+
+        // Volume Bar Chart (New - Liters)
+        var volumeCtx = document.getElementById('volumeBarChart');
+        if (volumeCtx) {
+            // Get pre-calculated volume data from server
+            var volumeData = @Html.Raw(Json.Serialize(new {
+                petrol = Model.Transactions?.Where(t => {
+                    var product = Model.Products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId);
+                    return product != null && product.ProductName.ToLower().Contains("petrol");
+                }).Sum(t => t.Liter) ?? 0,
+                diesel = Model.Transactions?.Where(t => {
+                    var product = Model.Products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId);
+                    return product != null && product.ProductName.ToLower().Contains("diesel");
+                }).Sum(t => t.Liter) ?? 0,
+                hiOctane = Model.Transactions?.Where(t => {
+                    var product = Model.Products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId);
+                    return product != null && (product.ProductName.ToLower().Contains("octane") || product.ProductName.ToLower().Contains("super"));
+                }).Sum(t => t.Liter) ?? 0
+            }));
+            
+            chartInstances['volumeBarChart'] = new Chart(volumeCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Petrol', 'Diesel', 'Hi-Octane'],
+                    datasets: [{
+                        label: 'Total Liters',
+                        data: [volumeData.petrol, volumeData.diesel, volumeData.hiOctane],
+                        backgroundColor: ['#17a2b8', '#fd7e14', '#6f42c1']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString() + ' L';
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Liters: ' + context.parsed.y.toLocaleString() + ' L';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
     }
 
-    function initializeDataTable() {
-        $('#analyticsDataTable').DataTable({
-            responsive: true,
-            pageLength: 25,
-            order: [[0, 'desc']]
-        });
+    // Placeholder functions for other view types
+    function initializeDispenserCharts() {
+        // Implementation for dispenser charts
+    }
+
+    function initializeCategoryCharts() {
+        // Implementation for category charts
+    }
+
+    function initializeComparisonCharts() {
+        // Implementation for comparison charts
     }
 
     // Call initializeCharts when page loads

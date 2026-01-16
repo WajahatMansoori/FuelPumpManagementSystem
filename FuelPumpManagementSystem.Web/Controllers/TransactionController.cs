@@ -1,5 +1,6 @@
 using FuelPumpManagementSystem.Application.DTOs.Response;
 using FuelPumpManagementSystem.Application.Interfaces;
+using FuelPumpManagementSystem.Application.Services;
 using FuelPumpManagementSystem.Web.Models;
 using Microsoft.EntityFrameworkCore;
 using Shared.FPMS_DB;
@@ -13,14 +14,16 @@ namespace FuelPumpManagementSystem.Web.Controllers
     {
         private readonly ITransactionService _transactionService;
         private readonly IProductService _productService;
+        private readonly IPDFGenerationService _pdfGenerationService;
 
-        public TransactionController(ITransactionService transactionService, IProductService productService)
+        public TransactionController(ITransactionService transactionService, IProductService productService, IPDFGenerationService pdfGenerationService)
         {
             _transactionService = transactionService;
             _productService = productService;
+            _pdfGenerationService = pdfGenerationService;
         }
 
-        public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds, int page = 1, int pageSize = 10, string search = "")
+        public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds, int page = 1, int pageSize = 30, string search = "")
         {
             // Debug logging
             System.Diagnostics.Debug.WriteLine($"Received dispenserIds: {(dispenserIds != null ? string.Join(",", dispenserIds) : "null")}");
@@ -98,21 +101,43 @@ namespace FuelPumpManagementSystem.Web.Controllers
             ViewData["AllDispenserNozzles"] = allDispenserNozzles;
             ViewData["TotalRecords"] = totalRecords;
             ViewData["TotalPages"] = totalPages;
+            ViewData["CurrentPage"] = page;
+            ViewData["PageSize"] = pageSize;
 
             return View(viewModel);
         }
 
-        public async Task<IActionResult> ExportToExcel(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds)
+        public async Task<IActionResult> ExportToExcel(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds, string search, int page = 1, int pageSize = 30)
         {
-            var transactions = await _transactionService.GetAllTransactionsAsync(fromDate, toDate, dispenserIds, nozzleId, productIds);
+            // Get paginated transactions (same as grid)
+            var allTransactions = await _transactionService.GetAllTransactionsAsync(fromDate, toDate, dispenserIds, nozzleId, productIds);
             var products = await _productService.GetAllAsync();
+            
+            // Apply search filter if provided
+            if (!string.IsNullOrEmpty(search))
+            {
+                allTransactions = allTransactions.Where(t => 
+                    t.TransactionId.ToString().Contains(search) ||
+                    (products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId)?.ProductName?.Contains(search) ?? false) ||
+                    t.DispenserId.ToString().Contains(search) ||
+                    t.NozzleId.ToString().Contains(search)
+                ).ToList();
+            }
+            
+            // Apply pagination (same as grid)
+            var totalRecords = allTransactions.Count;
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+            var transactions = allTransactions
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
             var csv = new StringBuilder();
             
             // Header
             csv.AppendLine("Transaction ID,Date Time,Dispenser,Nozzle,Fuel Type,Litres,Unit Price,Amount,Total Liter,Total Cash");
             
-            // Data rows
+            // Data rows (only current page)
             foreach (var t in transactions)
             {
                 var product = products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId);
@@ -130,108 +155,41 @@ namespace FuelPumpManagementSystem.Web.Controllers
                              $"{t.LastTotalCash}");
             }
 
-            var fileName = $"Transactions_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            var fileName = $"Transactions_Page{page}_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
             var bytes = Encoding.UTF8.GetBytes(csv.ToString());
             
             return File(bytes, "text/csv", fileName);
         }
 
-        public async Task<IActionResult> ExportToPdf(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds)
+        public async Task<IActionResult> ExportToPdf(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds, string search, int page = 1, int pageSize = 30)
         {
-            var transactions = await _transactionService.GetAllTransactionsAsync(fromDate, toDate, dispenserIds, nozzleId, productIds);
+            // Get paginated transactions (same as grid)
+            var allTransactions = await _transactionService.GetAllTransactionsAsync(fromDate, toDate, dispenserIds, nozzleId, productIds);
             var products = await _productService.GetAllAsync();
-
-            // Create a simple PDF using basic PDF format
-            var pdfContent = new StringBuilder();
             
-            // PDF Header
-            pdfContent.AppendLine("%PDF-1.4");
-            pdfContent.AppendLine("1 0 obj");
-            pdfContent.AppendLine("<< /Type /Catalog /Pages 2 0 R >>");
-            pdfContent.AppendLine("endobj");
-            
-            // Pages object
-            pdfContent.AppendLine("2 0 obj");
-            pdfContent.AppendLine("<< /Type /Pages /Kids [3 0 R] /Count 1 >>");
-            pdfContent.AppendLine("endobj");
-            
-            // Page object
-            pdfContent.AppendLine("3 0 obj");
-            pdfContent.AppendLine("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>");
-            pdfContent.AppendLine("endobj");
-            
-            // Content stream
-            var content = new StringBuilder();
-            content.AppendLine("BT");
-            content.AppendLine("/F1 12 Tf");
-            content.AppendLine("50 700 Td");
-            content.AppendLine("(FUEL PUMP TRANSACTIONS REPORT) Tj");
-            content.AppendLine("0 -20 Td");
-            
-            // Date range
-            if (fromDate.HasValue || toDate.HasValue)
+            // Apply search filter if provided
+            if (!string.IsNullOrEmpty(search))
             {
-                content.AppendLine("(Date Range: ");
-                if (fromDate.HasValue) content.AppendLine($"({fromDate.Value:yyyy-MM-dd}) Tj");
-                if (fromDate.HasValue && toDate.HasValue) content.AppendLine("( to ) Tj");
-                if (toDate.HasValue) content.AppendLine($"({toDate.Value:yyyy-MM-dd}) Tj");
-                content.AppendLine(") Tj");
-                content.AppendLine("0 -15 Td");
+                allTransactions = allTransactions.Where(t => 
+                    t.TransactionId.ToString().Contains(search) ||
+                    (products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId)?.ProductName?.Contains(search) ?? false) ||
+                    t.DispenserId.ToString().Contains(search) ||
+                    t.NozzleId.ToString().Contains(search)
+                ).ToList();
             }
             
-            content.AppendLine("0 -30 Td");
-            content.AppendLine("(Transaction ID  Date Time        Dispenser  Nozzle  Fuel Type    Litres    Unit Price  Amount    Total Liter  Total Cash) Tj");
-            content.AppendLine("0 -15 Td");
-            
-            // Data rows
-            foreach (var t in transactions.Take(50)) // Limit to 50 rows for simplicity
-            {
-                var product = products?.FirstOrDefault(p => p.ProductId == t.ProductTypeId);
-                var fuelType = product?.ProductName ?? "Unknown";
-                
-                var line = $"{t.TransactionId,-15} {t.CreatedAt:yyyy-MM-dd HH:mm,-16} {t.DispenserId,-10} {t.NozzleId,-7} {fuelType,-12} {t.Liter,-10:F2} {t.UnitPrice,-11:F2} {t.Amount,-9:F2} {t.LastTotalLitre,-12:F2} {t.LastTotalCash,-11:F2}";
-                content.AppendLine($"({line}) Tj");
-                content.AppendLine("0 -12 Td");
-            }
-            
-            content.AppendLine("ET");
-            
-            // Add content stream
-            pdfContent.AppendLine("4 0 obj");
-            pdfContent.AppendLine($"<< /Length {content.Length} >>");
-            pdfContent.AppendLine("stream");
-            pdfContent.Append(content.ToString());
-            pdfContent.AppendLine("endstream");
-            pdfContent.AppendLine("endobj");
-            
-            // Font object
-            pdfContent.AppendLine("5 0 obj");
-            pdfContent.AppendLine("<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>");
-            pdfContent.AppendLine("endobj");
-            
-            // Cross-reference table
-            pdfContent.AppendLine("xref");
-            pdfContent.AppendLine("0 6");
-            pdfContent.AppendLine("0000000000 65535 f ");
-            pdfContent.AppendLine("0000000009 00000 n ");
-            pdfContent.AppendLine("0000000058 00000 n ");
-            pdfContent.AppendLine("0000000115 00000 n ");
-            var contentStart = pdfContent.Length + content.Length + 100; // Approximate
-            pdfContent.AppendLine($"{contentStart:D10} 00000 n ");
-            var fontStart = contentStart + content.Length + 50; // Approximate
-            pdfContent.AppendLine($"{fontStart:D10} 00000 n ");
-            
-            // Trailer
-            pdfContent.AppendLine("trailer");
-            pdfContent.AppendLine("<< /Size 6 /Root 1 0 R >>");
-            pdfContent.AppendLine("startxref");
-            pdfContent.AppendLine($"{pdfContent.Length}");
-            pdfContent.AppendLine("%%EOF");
+            // Apply pagination (same as grid)
+            var totalRecords = allTransactions.Count;
+            var totalPages = (int)Math.Ceiling((double)totalRecords / pageSize);
+            var transactions = allTransactions
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
-            var fileName = $"Transactions_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
-            var bytes = Encoding.ASCII.GetBytes(pdfContent.ToString());
+            var pdfBytes = await _pdfGenerationService.GenerateTransactionPDF(transactions, products);
+            var fileName = $"Transaction_Report_Page{page}_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
             
-            return File(bytes, "application/pdf", fileName);
+            return File(pdfBytes, "application/pdf", fileName);
         }
 
         public async Task<IActionResult> PrintTransaction(int transactionId)

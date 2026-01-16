@@ -242,10 +242,35 @@ namespace FuelPumpManagementSystem.Web.Controllers
         {
             try
             {
+                // Get current filter values from request
+                var fromDateStr = Request.Query["fromDate"].FirstOrDefault();
+                var toDateStr = Request.Query["toDate"].FirstOrDefault();
+                var dispenserIds = Request.Query["dispenserIds"].ToArray();
+                var nozzleId = Request.Query["nozzleId"].FirstOrDefault();
+                var productIds = Request.Query["productIds"].ToArray();
+                var viewType = Request.Query["viewType"].FirstOrDefault() ?? "whole";
+
+                // Parse dates
+                DateTime? fromDate = null, toDate = null;
+                if (DateTime.TryParse(fromDateStr, out var from))
+                    fromDate = from;
+                if (DateTime.TryParse(toDateStr, out var to))
+                    toDate = to;
+
+                // Set default dates if not provided
+                if (!fromDate.HasValue)
+                    fromDate = DateTime.Now.AddMonths(-1);
+                if (!toDate.HasValue)
+                    toDate = DateTime.Now;
+
                 var filters = new WebModels.FilterOptions
                 {
-                    FromDate = DateTime.Now.AddMonths(-1),
-                    ToDate = DateTime.Now
+                    FromDate = fromDate.Value,
+                    ToDate = toDate.Value,
+                    DispenserIds = dispenserIds,
+                    NozzleId = nozzleId,
+                    ProductIds = productIds,
+                    ViewType = viewType
                 };
                 
                 var pdfBytes = await _fuelAnalyticsService.GeneratePDFReportAsync(new AppInterfaces.FilterOptions
@@ -275,10 +300,35 @@ namespace FuelPumpManagementSystem.Web.Controllers
         {
             try
             {
+                // Get current filter values from the request
+                var fromDateStr = Request.Query["fromDate"].FirstOrDefault();
+                var toDateStr = Request.Query["toDate"].FirstOrDefault();
+                var dispenserIds = Request.Query["dispenserIds"].ToArray();
+                var nozzleId = Request.Query["nozzleId"].FirstOrDefault();
+                var productIds = Request.Query["productIds"].ToArray();
+                var viewType = Request.Query["viewType"].FirstOrDefault() ?? "whole";
+
+                // Parse dates
+                DateTime? fromDate = null, toDate = null;
+                if (DateTime.TryParse(fromDateStr, out var from))
+                    fromDate = from;
+                if (DateTime.TryParse(toDateStr, out var to))
+                    toDate = to;
+
+                // Set default dates if not provided
+                if (!fromDate.HasValue)
+                    fromDate = DateTime.Now.AddMonths(-1);
+                if (!toDate.HasValue)
+                    toDate = DateTime.Now;
+
                 var filters = new WebModels.FilterOptions
                 {
-                    FromDate = DateTime.Now.AddMonths(-1),
-                    ToDate = DateTime.Now
+                    FromDate = fromDate.Value,
+                    ToDate = toDate.Value,
+                    DispenserIds = dispenserIds,
+                    NozzleId = nozzleId,
+                    ProductIds = productIds,
+                    ViewType = viewType
                 };
                 
                 var csvBytes = await _fuelAnalyticsService.GenerateCSVReportAsync(new AppInterfaces.FilterOptions
