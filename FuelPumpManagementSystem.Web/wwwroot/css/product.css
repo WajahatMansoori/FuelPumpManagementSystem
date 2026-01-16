@@ -1,9 +1,9 @@
 /* Page Header Styling */
 .page-header-card {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    background: linear-gradient(135deg, #550000 0%, #330000 100%);
     padding: 2rem;
     border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(85, 0, 0, 0.4);
 }
 
 .page-title {
@@ -20,20 +20,21 @@
 
 .btn-update-prices {
     background: white;
-    color: #1a1a1a;
-    border: none;
+    color: #550000;
+    border: 2px solid rgba(255, 255, 255, 0.3);
     padding: 0.75rem 1.5rem;
     font-weight: 600;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
     transition: all 0.3s ease;
 }
 
 .btn-update-prices:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
     background: #f8f9fa;
-    color: #1a1a1a;
+    color: #550000;
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .btn-update-prices:disabled {
@@ -49,12 +50,12 @@
 }
 
 .bg-gradient-primary {
-    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+    background: linear-gradient(135deg, #550000 0%, #330000 100%);
     padding: 1rem 1.5rem;
 }
 
 .bg-gradient-info {
-    background: linear-gradient(135deg, #2d2d2d 0%, #3a3a3a 100%);
+    background: linear-gradient(135deg, #550000 0%, #330000 100%);
     padding: 1rem 1.5rem;
 }
 
@@ -95,6 +96,35 @@
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     border: 2px solid white;
+}
+
+/* Unmapped Product Badge */
+.unmapped-badge {
+    background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+    animation: pulse-warning 2s ease-in-out infinite;
+}
+
+.unmapped-badge i {
+    font-size: 0.85rem;
+}
+
+@keyframes pulse-warning {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
+    }
+    50% {
+        box-shadow: 0 4px 12px rgba(255, 152, 0, 0.5);
+    }
 }
 
 /* Product Name */
@@ -483,6 +513,189 @@
 @keyframes progressBar {
     from { width: 100%; }
     to { width: 0%; }
+}
+
+/* Change Password Button */
+.btn-change-password {
+    background: white;
+    color: #550000;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.btn-change-password:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(255, 255, 255, 0.3);
+    background: #f8f9fa;
+    color: #550000;
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Change Password Modal */
+.change-password-modal .modal-header {
+    background: linear-gradient(135deg, #550000 0%, #330000 100%);
+    color: white;
+    border-bottom: none;
+    padding: 1.5rem;
+}
+
+.change-password-modal .modal-header-content {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex: 1;
+}
+
+.change-password-modal .modal-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.change-password-modal .modal-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.change-password-modal .modal-subtitle {
+    font-size: 0.9rem;
+    margin: 0;
+    opacity: 0.9;
+}
+
+.change-password-modal .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.change-password-modal .modal-body {
+    padding: 2rem;
+}
+
+.change-password-modal .modal-footer {
+    padding: 1.5rem 2rem;
+    background: #f8f9fa;
+    border-top: 1px solid #dee2e6;
+}
+
+/* Password Input Wrapper */
+.password-input-wrapper {
+    position: relative;
+}
+
+.password-input-wrapper .password-input {
+    padding-right: 45px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.password-input-wrapper .password-input:focus {
+    border-color: #550000;
+    box-shadow: 0 0 0 0.2rem rgba(85, 0, 0, 0.15);
+}
+
+.password-input-wrapper .password-input.is-invalid {
+    border-color: #dc3545;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.2s ease;
+}
+
+.password-toggle:hover {
+    color: #550000;
+}
+
+/* Password Strength Indicator */
+.password-strength-indicator {
+    margin-top: 1rem;
+}
+
+.strength-bar {
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.strength-bar-fill {
+    height: 100%;
+    width: 0%;
+    transition: all 0.3s ease;
+    border-radius: 3px;
+}
+
+.strength-text {
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+#strengthLevel {
+    font-weight: 600;
+}
+
+/* Modal Buttons */
+.change-password-modal .btn-primary {
+    background: linear-gradient(135deg, #550000 0%, #330000 100%);
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.change-password-modal .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, #660000 0%, #440000 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(85, 0, 0, 0.3);
+}
+
+.change-password-modal .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.change-password-modal .btn-secondary {
+    background: #6c757d;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.change-password-modal .btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+}
+
+/* Status Indicators */
+.status-indicator.status-online {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+}
+
+.status-indicator.status-offline {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: white;
 }
 
 

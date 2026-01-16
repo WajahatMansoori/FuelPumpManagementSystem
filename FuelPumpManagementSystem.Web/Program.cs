@@ -20,6 +20,7 @@ builder.Services.AddScoped<ISiteService, SiteService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IFuelAnalyticsService, FuelAnalyticsService>();
 builder.Services.AddScoped<IPDFGenerationService, PDFGenerationService>();
+builder.Services.AddScoped<DatabaseHelperService>();
 builder.Services.AddTransient<FileUploadHelper>();
 builder.Services.AddTransient<FuelPumpManagementSystem.Web.Services.PDFService>();
 
@@ -140,6 +141,10 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<FPMSDbContext>();
     db.Database.EnsureCreated();
+
+    // Initialize database with default records
+    var dbHelper = scope.ServiceProvider.GetRequiredService<DatabaseHelperService>();
+    await dbHelper.InitializeDatabaseAsync();
 }
 
 

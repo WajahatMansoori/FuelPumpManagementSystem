@@ -34,9 +34,9 @@ namespace FuelPumpManagementSystem.Web.Controllers
             var products = await _productService.GetAllAsync();
             var dispensers = await _dispenserService.GetAllAsync();
 
-            // Get only products that are mapped to at least one active dispenser nozzle
+            // Get all active products regardless of dispenser mapping
             var productsWithPrices = await _db.Product
-                .Where(p => p.IsActive && _db.DispenserNozzle.Any(dn => dn.ProductId == p.ProductId && dn.IsActive))
+                .Where(p => p.IsActive)
                 .Select(p => new ProductPriceViewModel
                 {
                     ProductId = p.ProductId,
@@ -47,7 +47,8 @@ namespace FuelPumpManagementSystem.Web.Controllers
                         .Where(dn => dn.ProductId == p.ProductId && dn.IsActive && dn.CurrentProductPrice != null)
                         .Select(dn => dn.CurrentProductPrice!.Value)
                         .FirstOrDefault(),
-                    IsMapped = true
+                    // Check if product is mapped to any active dispenser nozzle
+                    IsMapped = _db.DispenserNozzle.Any(dn => dn.ProductId == p.ProductId && dn.IsActive)
                 })
                 .ToListAsync();
 
@@ -189,6 +190,43 @@ namespace FuelPumpManagementSystem.Web.Controllers
                 {
                     return Json(new { success = false, message = "Failed to update prices. Please check if dispensers are online." });
                 }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDTO request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request.NewPassword))
+                {
+                    return Json(new { success = false, message = "New password is required" });
+                }
+
+                if (request.NewPassword.Length < 4)
+                {
+                    return Json(new { success = false, message = "Password must be at least 4 characters long" });
+                }
+
+                // Get the first non-admin user (IsAdminLogin = false)
+                var nonAdminUser = await _db.User
+                    .FirstOrDefaultAsync(u => !u.IsAdminLogin);
+
+                if (nonAdminUser == null)
+                {
+                    return Json(new { success = false, message = "No user found to update password" });
+                }
+
+                // Update the password
+                nonAdminUser.Password = request.NewPassword;
+
+                await _db.SaveChangesAsync();
+
+                return Json(new { success = true, message = "Password changed successfully" });
             }
             catch (Exception ex)
             {

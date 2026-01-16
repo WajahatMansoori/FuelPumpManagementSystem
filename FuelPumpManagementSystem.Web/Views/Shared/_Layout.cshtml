@@ -22,17 +22,47 @@
 <body>
     <!-- ==================== LEFT SIDEBAR ==================== -->
     <div class="sidebar d-flex flex-column">
-        <div class="text-center py-4 border-bottom">
-            <h4 class="text-white mb-0">FuelPump System</h4>
+        <!-- Sidebar Header -->
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="bi bi-fuel-pump-fill"></i>
+            </div>
+            <div class="sidebar-title">
+                <span class="title-line-1">Fuel Pump</span>
+                <span class="title-line-2">Management System</span>
+            </div>
+            <button class="sidebar-toggle" id="sidebarToggle">
+                <i class="bi bi-chevron-left"></i>
+            </button>
         </div>
-        <nav class="flex-grow-1">
-            <a asp-area="" asp-controller="Dashboard" asp-action="Index" class="sidebar-link">📊 Dashboard</a>
-            <a asp-area="" asp-controller="FuelAnalytics" asp-action="Index" class="sidebar-link">📈 Fuel Analytics</a>
-            <a asp-area="" asp-controller="Dispenser" asp-action="Index" class="sidebar-link">⛽ Dispensers</a>
-            <a asp-area="" asp-controller="Product" asp-action="Index" class="sidebar-link">💰 Products</a>
-            <a asp-area="" asp-controller="Transaction" asp-action="Index" class="sidebar-link">📝 Transactions</a>
+
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar-nav flex-grow-1">
+            <a asp-area="" asp-controller="Dashboard" asp-action="Index" class="sidebar-link" data-page="Dashboard">
+                <i class="bi bi-grid-fill"></i>
+                <span class="link-text">Dashboard</span>
+            </a>
+            <a asp-area="" asp-controller="FuelAnalytics" asp-action="Index" class="sidebar-link" data-page="FuelAnalytics">
+                <i class="bi bi-file-earmark-text"></i>
+                <span class="link-text">Report</span>
+            </a>
+            <a asp-area="" asp-controller="Transaction" asp-action="Index" class="sidebar-link" data-page="Transaction">
+                <i class="bi bi-receipt"></i>
+                <span class="link-text">Transaction</span>
+            </a>
+            <a asp-area="" asp-controller="Product" asp-action="Index" class="sidebar-link" data-page="Product">
+                <i class="bi bi-currency-dollar"></i>
+                <span class="link-text">Price Update</span>
+            </a>
+            <a asp-area="" asp-controller="Dispenser" asp-action="Index" class="sidebar-link" data-page="Dispenser">
+                <i class="bi bi-gear-fill"></i>
+                <span class="link-text">Settings</span>
+            </a>
         </nav>
     </div>
+
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- ==================== MAIN CONTENT ==================== -->
     <div class="main-content">
@@ -45,6 +75,67 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            /* ================= ACTIVE MENU FIX ================= */
+            const currentPath = window.location.pathname.toLowerCase();
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+
+                const href = link.getAttribute('href');
+                if (!href) return;
+
+                const linkPath = new URL(href, window.location.origin)
+                    .pathname
+                    .toLowerCase();
+
+                // Dashboard root "/" fix + child routes
+                if (
+                    (currentPath === "/" && linkPath === "/dashboard") ||
+                    currentPath === linkPath ||
+                    currentPath.startsWith(linkPath + "/")
+                ) {
+                    link.classList.add('active');
+                }
+            });
+
+            /* ================= SIDEBAR TOGGLE ================= */
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.querySelector('.sidebar');
+            const sidebarOverlay = document.getElementById('sidebarOverlay');
+            const mainContent = document.querySelector('.main-content');
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('sidebar-collapsed');
+                });
+            }
+
+            /* ================= MOBILE BEHAVIOR ================= */
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function () {
+                    sidebar.classList.remove('mobile-open');
+                    sidebarOverlay.classList.remove('active');
+                });
+            }
+
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', function () {
+                    sidebar.classList.add('mobile-open');
+                    sidebarOverlay.classList.add('active');
+                });
+            }
+
+        });
+    </script>
+
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>
