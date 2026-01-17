@@ -28,6 +28,9 @@ namespace FuelPumpManagementSystem.Application.Services
         // 🔐 Prevent same dispenser running in parallel
         private static readonly ConcurrentDictionary<int, SemaphoreSlim> _dispenserLocks = new();
 
+        // 📊 Track consecutive failures for each dispenser
+        private static readonly ConcurrentDictionary<int, int> _dispenserFailureCount = new();
+
         public DispenserMonitoringSyncService(
             IServiceScopeFactory scopeFactory,
             ILogger<DispenserMonitoringSyncService> logger)
@@ -81,12 +84,15 @@ namespace FuelPumpManagementSystem.Application.Services
                 .Where(d => d.IsActive)
                 .ToListAsync(token);
 
+            _logger.LogInformation($"Found {dispensers.Count} active dispensers to sync. Online: {dispensers.Count(d => d.IsOnline)}, Offline: {dispensers.Count(d => !d.IsOnline)}");
+
             foreach (var dispenser in dispensers)
             {
                 var hasEnabledNozzle = dispenser.Nozzles.Any(n => n.IsActive && n.IsEnable);
                 if (!hasEnabledNozzle)
                     continue;
 
+                _logger.LogDebug($"Processing Dispenser {dispenser.DispenserId} - IsOnline: {dispenser.IsOnline}, Endpoint: {dispenser.ApiEndPoint}");
                 await SyncSingleDispenserAsync(dispenser, token);
             }
         }
@@ -99,6 +105,8 @@ namespace FuelPumpManagementSystem.Application.Services
 
             await dispenserLock.WaitAsync(token);
 
+            bool apiCallSuccessful = false;
+
             try
             {
                 using var httpClient = new HttpClient
@@ -110,14 +118,23 @@ namespace FuelPumpManagementSystem.Application.Services
                 var response = await httpClient.GetAsync(url, token);
 
                 if (!response.IsSuccessStatusCode)
+                {
+                    // API call failed - increment failure counter
+                    await HandleApiFailureAsync(dispenser);
                     return;
+                }
 
                 var json = await response.Content.ReadAsStringAsync(token);
                 await ProcessDispenserStatusAsync(dispenser, json);
+                
+                // API call successful - reset failure counter and mark online
+                apiCallSuccessful = true;
+                await HandleApiSuccessAsync(dispenser);
             }
             catch (TaskCanceledException)
             {
-                // hardware timeout – normal
+                // hardware timeout – normal, but still count as failure
+                await HandleApiFailureAsync(dispenser);
             }
             catch (Exception ex)
             {
@@ -125,6 +142,9 @@ namespace FuelPumpManagementSystem.Application.Services
 
                 LogErrorToFile("API_CALL", dispenser.DispenserId, null, ex,
                  $"Failed to call status API for Dispenser {dispenser.DispenserId} at {dispenser.ApiEndPoint}");
+                
+                // API call failed - increment failure counter
+                await HandleApiFailureAsync(dispenser);
             }
             finally
             {
@@ -271,6 +291,61 @@ namespace FuelPumpManagementSystem.Application.Services
             catch
             {
                 return false;
+            }
+        }
+
+        private async Task HandleApiFailureAsync(Dispenser dispenser)
+        {
+            // Increment failure counter
+            var failureCount = _dispenserFailureCount.AddOrUpdate(
+                dispenser.DispenserId,
+                1, // Initial value if not exists
+                (key, oldValue) => oldValue + 1); // Increment if exists
+
+            _logger.LogWarning($"Dispenser {dispenser.DispenserId} API failure count: {failureCount}");
+
+            // If 5 consecutive failures, mark dispenser as offline
+            if (failureCount >= 5)
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<FPMSDbContext>();
+
+                var dispenserEntity = await db.Dispenser
+                    .FirstOrDefaultAsync(d => d.DispenserId == dispenser.DispenserId);
+
+                if (dispenserEntity != null && dispenserEntity.IsOnline)
+                {
+                    dispenserEntity.IsOnline = false;
+                    dispenserEntity.UpdatedAt = DateTime.Now;
+                    await db.SaveChangesAsync();
+
+                    _logger.LogWarning($"Dispenser {dispenser.DispenserId} marked as OFFLINE after {failureCount} consecutive failures");
+                }
+            }
+        }
+
+        private async Task HandleApiSuccessAsync(Dispenser dispenser)
+        {
+            // Reset failure counter on success
+            _dispenserFailureCount.AddOrUpdate(
+                dispenser.DispenserId,
+                0, // Initial value if not exists
+                (key, oldValue) => 0); // Reset to 0
+
+            // Mark dispenser as online if it was offline
+            using var scope = _scopeFactory.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<FPMSDbContext>();
+
+            var dispenserEntity = await db.Dispenser
+                .FirstOrDefaultAsync(d => d.DispenserId == dispenser.DispenserId);
+
+            if (dispenserEntity != null && !dispenserEntity.IsOnline)
+            {
+                dispenserEntity.IsOnline = true;
+                dispenserEntity.UpdatedAt = DateTime.Now;
+                await db.SaveChangesAsync();
+
+                _logger.LogInformation($"Dispenser {dispenser.DispenserId} marked as ONLINE after successful API call");
             }
         }
 
