@@ -129,11 +129,17 @@ namespace FuelPumpManagementSystem.Application.Services
                         {
                             var nozzle = dispenser.Nozzles
                                 .FirstOrDefault(n => n.ProductId == priceUpdate.ProductId && n.IsActive);
-                            
+
                             if (nozzle != null)
                             {
                                 nozzle.CurrentProductPrice = priceUpdate.NewPrice;
                                 nozzle.UpdatedAt = DateTime.Now;
+                            }
+                            var product = _db.Product.FirstOrDefault(p => p.IsActive == true && p.ProductId == priceUpdate.ProductId);
+                            if (product != null)
+                            {
+                                product.LastUpdatedPrice = priceUpdate.NewPrice;
+                                _db.Product.Update(product);
                             }
                         }
                         
@@ -182,6 +188,7 @@ namespace FuelPumpManagementSystem.Application.Services
                 }
 
                 _db.PriceUpdateLog.Add(log);
+                
             }
 
             // Update batch with final counts

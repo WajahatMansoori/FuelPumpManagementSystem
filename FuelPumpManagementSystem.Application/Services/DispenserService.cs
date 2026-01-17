@@ -199,15 +199,16 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 if (nozzle1 == null)
                 {
-                    // Get current price from DispenserNozzle table for this product
+                    // Get current price from Product table LastUpdatePrice
                     decimal? currentPrice = null;
                     if (request.Nozzle1ProductTypeId.HasValue)
                     {
-                        currentPrice = await _db.DispenserNozzle
-                            .Where(dn => dn.ProductId == request.Nozzle1ProductTypeId.Value && dn.IsActive && dn.CurrentProductPrice != null)
-                            .OrderByDescending(dn => dn.UpdatedAt)
-                            .Select(dn => dn.CurrentProductPrice)
+                        var product = await _db.Product
+                            .Where(p => p.ProductId == request.Nozzle1ProductTypeId.Value)
+                            .Select(p => p.LastUpdatedPrice)
                             .FirstOrDefaultAsync();
+                        
+                        currentPrice = product; // Will be null if product not found or LastUpdatePrice is null
                     }
 
                     nozzle1 = new DispenserNozzle
@@ -228,14 +229,13 @@ namespace FuelPumpManagementSystem.Application.Services
                     {
                         nozzle1.ProductId = request.Nozzle1ProductTypeId.Value;
                         
-                        // Update current price from DispenserNozzle table for this product
-                        var currentPrice = await _db.DispenserNozzle
-                            .Where(dn => dn.ProductId == request.Nozzle1ProductTypeId.Value && dn.IsActive && dn.CurrentProductPrice != null)
-                            .OrderByDescending(dn => dn.UpdatedAt)
-                            .Select(dn => dn.CurrentProductPrice)
+                        // Update current price from Product table LastUpdatePrice
+                        var product = await _db.Product
+                            .Where(p => p.ProductId == request.Nozzle1ProductTypeId.Value)
+                            .Select(p => p.LastUpdatedPrice)
                             .FirstOrDefaultAsync();
                         
-                        nozzle1.CurrentProductPrice = currentPrice;
+                        nozzle1.CurrentProductPrice = product; // Will be null if product not found or LastUpdatePrice is null
                     }
                 }
             }
@@ -250,15 +250,16 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 if (nozzle2 == null)
                 {
-                    // Get current price from DispenserNozzle table for this product
+                    // Get current price from Product table LastUpdatePrice
                     decimal? currentPrice = null;
                     if (request.Nozzle2ProductTypeId.HasValue)
                     {
-                        currentPrice = await _db.DispenserNozzle
-                            .Where(dn => dn.ProductId == request.Nozzle2ProductTypeId.Value && dn.IsActive && dn.CurrentProductPrice != null)
-                            .OrderByDescending(dn => dn.UpdatedAt)
-                            .Select(dn => dn.CurrentProductPrice)
+                        var product = await _db.Product
+                            .Where(p => p.ProductId == request.Nozzle2ProductTypeId.Value)
+                            .Select(p => p.LastUpdatedPrice)
                             .FirstOrDefaultAsync();
+                        
+                        currentPrice = product; // Will be null if product not found or LastUpdatePrice is null
                     }
 
                     nozzle2 = new DispenserNozzle
@@ -279,14 +280,13 @@ namespace FuelPumpManagementSystem.Application.Services
                     {
                         nozzle2.ProductId = request.Nozzle2ProductTypeId.Value;
                         
-                        // Update current price from DispenserNozzle table for this product
-                        var currentPrice = await _db.DispenserNozzle
-                            .Where(dn => dn.ProductId == request.Nozzle2ProductTypeId.Value && dn.IsActive && dn.CurrentProductPrice != null)
-                            .OrderByDescending(dn => dn.UpdatedAt)
-                            .Select(dn => dn.CurrentProductPrice)
+                        // Update current price from Product table LastUpdatePrice
+                        var product = await _db.Product
+                            .Where(p => p.ProductId == request.Nozzle2ProductTypeId.Value)
+                            .Select(p => p.LastUpdatedPrice)
                             .FirstOrDefaultAsync();
                         
-                        nozzle2.CurrentProductPrice = currentPrice;
+                        nozzle2.CurrentProductPrice = product; // Will be null if product not found or LastUpdatePrice is null
                     }
                 }
             }
