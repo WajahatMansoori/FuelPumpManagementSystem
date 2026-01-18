@@ -201,7 +201,9 @@ namespace FuelPumpManagementSystem.Application.Services
             // Save all changes (batch, logs, and updated nozzle prices)
             await _db.SaveChangesAsync();
 
-            return successCount > 0;
+            // Return true to indicate processing completed (regardless of success/failure count)
+            // This ensures UI updates immediately even when all dispensers fail
+            return true;
         }
     }
 }
