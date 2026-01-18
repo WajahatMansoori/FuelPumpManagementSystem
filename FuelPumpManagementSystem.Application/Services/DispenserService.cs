@@ -108,30 +108,46 @@ namespace FuelPumpManagementSystem.Application.Services
 
         public async Task ConfigureDispenserAsync(ConfigureDispenserRequestDTO request)
         {
+            // Validate input before any database operations
+            var rawIp = request.ApiEndPoint?.Trim();
+            if (string.IsNullOrWhiteSpace(rawIp))
+            {
+                throw new InvalidOperationException("Please enter a valid dispenser IP address before saving.");
+            }
+
+            // Validate Nozzle 1: If enabled, ProductType must be selected
+            if (request.IsNozzle1Enabled && !request.Nozzle1ProductTypeId.HasValue)
+            {
+                throw new InvalidOperationException("Nozzle 1 is enabled. Please select a Product Type for Nozzle 1.");
+            }
+
+            // Validate Nozzle 2: If enabled, ProductType must be selected
+            if (request.IsNozzle2Enabled && !request.Nozzle2ProductTypeId.HasValue)
+            {
+                throw new InvalidOperationException("Nozzle 2 is enabled. Please select a Product Type for Nozzle 2.");
+            }
+
+            // Require at least one enabled nozzle with a selected product
+            bool hasNozzle1 = request.IsNozzle1Enabled && request.Nozzle1ProductTypeId.HasValue;
+            bool hasNozzle2 = request.IsNozzle2Enabled && request.Nozzle2ProductTypeId.HasValue;
+            if (!hasNozzle1 && !hasNozzle2)
+            {
+                throw new InvalidOperationException("Please configure at least one nozzle with an associated product before saving.");
+            }
+
+            string apiEndPoint = "http://" + rawIp + "/";
+
+            // Ensure ApiEndPoint is unique per dispenser
+            bool exists = await _db.Dispenser.AnyAsync(d => d.ApiEndPoint == apiEndPoint);
+            if (exists)
+            {
+                throw new InvalidOperationException("Dispenser IP already exists. Please use a unique IP address.");
+            }
+
+            // Use transaction to ensure all-or-nothing database operation
+            using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                var rawIp = request.ApiEndPoint?.Trim();
-                if (string.IsNullOrWhiteSpace(rawIp))
-                {
-                    throw new InvalidOperationException("Please enter a valid dispenser IP address before saving.");
-                }
-
-                // Require at least one enabled nozzle with a selected product
-                bool hasNozzle1 = request.IsNozzle1Enabled && request.Nozzle1ProductTypeId.HasValue;
-                bool hasNozzle2 = request.IsNozzle2Enabled && request.Nozzle2ProductTypeId.HasValue;
-                if (!hasNozzle1 && !hasNozzle2)
-                {
-                    throw new InvalidOperationException("Please configure at least one nozzle with an associated product before saving.");
-                }
-
-                string apiEndPoint = "http://" + rawIp + "/";
-
-                // Ensure ApiEndPoint is unique per dispenser
-                bool exists = await _db.Dispenser.AnyAsync(d => d.ApiEndPoint == apiEndPoint);
-                if (exists)
-                {
-                    throw new InvalidOperationException("Dispenser IP already exists. Please use a unique IP address.");
-                }
                 var dispenser = new Dispenser
                 {
                     ApiEndPoint = apiEndPoint,
@@ -141,7 +157,6 @@ namespace FuelPumpManagementSystem.Application.Services
 
                 _db.Dispenser.Add(dispenser);
                 await _db.SaveChangesAsync();
-
 
                 if (request.IsNozzle1Enabled)
                 {
@@ -164,10 +179,13 @@ namespace FuelPumpManagementSystem.Application.Services
                         IsEnable = true
                     });
                 }
+
                 await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
-            catch (Exception ex)
+            catch
             {
+                await transaction.RollbackAsync();
                 throw;
             }
         }

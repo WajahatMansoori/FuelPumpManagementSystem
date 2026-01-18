@@ -90,8 +90,27 @@ namespace FuelPumpManagementSystem.Web.Controllers
             }
             catch (InvalidOperationException ex)
             {
-                // Handle duplicate IP or other business rule violations
+                // Handle validation errors and business rule violations
                 ViewBag.ErrorMessage = ex.Message;
+
+                var dispensers = await _dispenserService.GetAllAsync();
+                var products = await _productService.GetAllAsync();
+                var siteDetail = await _siteService.GetAsync();
+
+                var vm = new DispenserIndexViewModel
+                {
+                    Configure = model.Configure,
+                    Dispensers = dispensers,
+                    Products = products,
+                    SiteDetail = siteDetail
+                };
+
+                return View("Index", vm);
+            }
+            catch (Exception ex)
+            {
+                // Handle any other unexpected errors
+                ViewBag.ErrorMessage = "An error occurred while saving the dispenser configuration. Please try again.";
 
                 var dispensers = await _dispenserService.GetAllAsync();
                 var products = await _productService.GetAllAsync();
