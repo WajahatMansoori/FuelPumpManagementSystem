@@ -197,6 +197,18 @@ namespace FuelPumpManagementSystem.Application.Services
                 throw new ArgumentException("DispenserId is required for update.");
             }
 
+            // Validate Nozzle 1: If enabled, ProductType must be selected
+            if (request.IsNozzle1Enabled && !request.Nozzle1ProductTypeId.HasValue)
+            {
+                throw new InvalidOperationException("Nozzle 1 is enabled. Please select a Product Type for Nozzle 1.");
+            }
+
+            // Validate Nozzle 2: If enabled, ProductType must be selected
+            if (request.IsNozzle2Enabled && !request.Nozzle2ProductTypeId.HasValue)
+            {
+                throw new InvalidOperationException("Nozzle 2 is enabled. Please select a Product Type for Nozzle 2.");
+            }
+
             var dispenser = await _db.Dispenser
                 .Include(d => d.Nozzles)
                 .FirstOrDefaultAsync(d => d.DispenserId == request.DispenserId.Value);

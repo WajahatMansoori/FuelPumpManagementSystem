@@ -141,9 +141,10 @@ namespace FuelPumpManagementSystem.Application.Services
                     // Success - Mark as resolved
                     log.IsRecallAndResolve = true;
                     log.UpdatedAt = DateTime.Now;
+                    log.IsErrorOccured = false;
                     log.ApiResponse = responseContent;
                     log.Message = "Price update resolved successfully on retry";
-
+                    log.CreatedAt = DateTime.Now;// due to in Product screen last updated are linked with this column
                     _logger.LogInformation($"Successfully reprocessed price update for Dispenser {dispenser.DispenserId}");
 
                     // Update CurrentProductPrice in DispenserNozzle table
