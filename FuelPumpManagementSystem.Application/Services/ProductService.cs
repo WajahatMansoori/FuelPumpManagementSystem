@@ -44,7 +44,7 @@ namespace FuelPumpManagementSystem.Application.Services
             var eligibleDispensers = await _db.Dispenser
                 .Include(d => d.Nozzles)
                     .ThenInclude(n => n.Product)
-                .Where(d => d.IsOnline && d.IsActive && d.Nozzles.Any(n => n.IsEnable && n.IsActive))
+                .Where(d => /*d.IsOnline && */d.IsActive && d.Nozzles.Any(n => n.IsEnable && n.IsActive))
                 .ToListAsync();
 
             if (!eligibleDispensers.Any())
