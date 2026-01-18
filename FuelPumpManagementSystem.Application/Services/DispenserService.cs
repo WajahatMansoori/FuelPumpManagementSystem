@@ -335,6 +335,7 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 DispenserId = request.DispenserId,
                 DispenserActionTypeId = request.IsLocked ? 1 : 2, // 1 = Lock, 2 = Unlock
+                IsRecallAndResolve=false,
                 CreatedAt = DateTime.Now,
                 IsActive = true
             };

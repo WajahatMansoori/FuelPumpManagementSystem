@@ -49,7 +49,9 @@ namespace FuelPumpManagementSystem.Application.Services
 
             if (!eligibleDispensers.Any())
             {
-                return false;
+                // No dispensers to process, but still return true to allow UI to refresh
+                // This handles fresh application scenario where no dispensers are configured yet
+                return true;
             }
 
             // Create price update batch
