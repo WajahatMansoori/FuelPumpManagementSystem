@@ -108,30 +108,46 @@ namespace FuelPumpManagementSystem.Application.Services
 
         public async Task ConfigureDispenserAsync(ConfigureDispenserRequestDTO request)
         {
+            // Validate input before any database operations
+            var rawIp = request.ApiEndPoint?.Trim();
+            if (string.IsNullOrWhiteSpace(rawIp))
+            {
+                throw new InvalidOperationException("Please enter a valid dispenser IP address before saving.");
+            }
+
+            // Validate Nozzle 1: If enabled, ProductType must be selected
+            if (request.IsNozzle1Enabled && !request.Nozzle1ProductTypeId.HasValue)
+            {
+                throw new InvalidOperationException("Nozzle 1 is enabled. Please select a Product Type for Nozzle 1.");
+            }
+
+            // Validate Nozzle 2: If enabled, ProductType must be selected
+            if (request.IsNozzle2Enabled && !request.Nozzle2ProductTypeId.HasValue)
+            {
+                throw new InvalidOperationException("Nozzle 2 is enabled. Please select a Product Type for Nozzle 2.");
+            }
+
+            // Require at least one enabled nozzle with a selected product
+            bool hasNozzle1 = request.IsNozzle1Enabled && request.Nozzle1ProductTypeId.HasValue;
+            bool hasNozzle2 = request.IsNozzle2Enabled && request.Nozzle2ProductTypeId.HasValue;
+            if (!hasNozzle1 && !hasNozzle2)
+            {
+                throw new InvalidOperationException("Please configure at least one nozzle with an associated product before saving.");
+            }
+
+            string apiEndPoint = "http://" + rawIp + "/";
+
+            // Ensure ApiEndPoint is unique per dispenser
+            bool exists = await _db.Dispenser.AnyAsync(d => d.ApiEndPoint == apiEndPoint);
+            if (exists)
+            {
+                throw new InvalidOperationException("Dispenser IP already exists. Please use a unique IP address.");
+            }
+
+            // Use transaction to ensure all-or-nothing database operation
+            using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                var rawIp = request.ApiEndPoint?.Trim();
-                if (string.IsNullOrWhiteSpace(rawIp))
-                {
-                    throw new InvalidOperationException("Please enter a valid dispenser IP address before saving.");
-                }
-
-                // Require at least one enabled nozzle with a selected product
-                bool hasNozzle1 = request.IsNozzle1Enabled && request.Nozzle1ProductTypeId.HasValue;
-                bool hasNozzle2 = request.IsNozzle2Enabled && request.Nozzle2ProductTypeId.HasValue;
-                if (!hasNozzle1 && !hasNozzle2)
-                {
-                    throw new InvalidOperationException("Please configure at least one nozzle with an associated product before saving.");
-                }
-
-                string apiEndPoint = "http://" + rawIp + "/";
-
-                // Ensure ApiEndPoint is unique per dispenser
-                bool exists = await _db.Dispenser.AnyAsync(d => d.ApiEndPoint == apiEndPoint);
-                if (exists)
-                {
-                    throw new InvalidOperationException("Dispenser IP already exists. Please use a unique IP address.");
-                }
                 var dispenser = new Dispenser
                 {
                     ApiEndPoint = apiEndPoint,
@@ -142,7 +158,6 @@ namespace FuelPumpManagementSystem.Application.Services
                 _db.Dispenser.Add(dispenser);
                 await _db.SaveChangesAsync();
 
-
                 if (request.IsNozzle1Enabled)
                 {
                     _db.DispenserNozzle.Add(new DispenserNozzle
@@ -151,6 +166,24 @@ namespace FuelPumpManagementSystem.Application.Services
                         NozzleId = 1,
                         ProductId = request.Nozzle1ProductTypeId.Value,
                         IsEnable = true
+                    });
+
+                    // Create DispenserLiveStatus for Nozzle 1
+                    _db.DispenserLiveStatus.Add(new DispenserLiveStatus
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 1,
+                        ProductTypeId = request.Nozzle1ProductTypeId.Value,
+                        NozzleStatus = "IDLE",
+                        CurrentLiter = 0,
+                        CurrentAmount = 0,
+                        HardwareTotalLiter = 0,
+                        HardwareTotalCash = 0,
+                        UnitPrice = 0,
+                        IsOnline = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now,
+                        LastUpdatedAt = DateTime.Now
                     });
                 }
 
@@ -163,11 +196,32 @@ namespace FuelPumpManagementSystem.Application.Services
                         ProductId = request.Nozzle2ProductTypeId.Value,
                         IsEnable = true
                     });
+
+                    // Create DispenserLiveStatus for Nozzle 2
+                    _db.DispenserLiveStatus.Add(new DispenserLiveStatus
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 2,
+                        ProductTypeId = request.Nozzle2ProductTypeId.Value,
+                        NozzleStatus = "IDLE",
+                        CurrentLiter = 0,
+                        CurrentAmount = 0,
+                        HardwareTotalLiter = 0,
+                        HardwareTotalCash = 0,
+                        UnitPrice = 0,
+                        IsOnline = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now,
+                        LastUpdatedAt = DateTime.Now
+                    });
                 }
+
                 await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
             }
-            catch (Exception ex)
+            catch
             {
+                await transaction.RollbackAsync();
                 throw;
             }
         }
@@ -177,6 +231,18 @@ namespace FuelPumpManagementSystem.Application.Services
             if (!request.DispenserId.HasValue)
             {
                 throw new ArgumentException("DispenserId is required for update.");
+            }
+
+            // Validate Nozzle 1: If enabled, ProductType must be selected
+            if (request.IsNozzle1Enabled && !request.Nozzle1ProductTypeId.HasValue)
+            {
+                throw new InvalidOperationException("Nozzle 1 is enabled. Please select a Product Type for Nozzle 1.");
+            }
+
+            // Validate Nozzle 2: If enabled, ProductType must be selected
+            if (request.IsNozzle2Enabled && !request.Nozzle2ProductTypeId.HasValue)
+            {
+                throw new InvalidOperationException("Nozzle 2 is enabled. Please select a Product Type for Nozzle 2.");
             }
 
             var dispenser = await _db.Dispenser
@@ -199,15 +265,16 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 if (nozzle1 == null)
                 {
-                    // Get current price from DispenserNozzle table for this product
+                    // Get current price from Product table LastUpdatePrice
                     decimal? currentPrice = null;
                     if (request.Nozzle1ProductTypeId.HasValue)
                     {
-                        currentPrice = await _db.DispenserNozzle
-                            .Where(dn => dn.ProductId == request.Nozzle1ProductTypeId.Value && dn.IsActive && dn.CurrentProductPrice != null)
-                            .OrderByDescending(dn => dn.UpdatedAt)
-                            .Select(dn => dn.CurrentProductPrice)
+                        var product = await _db.Product
+                            .Where(p => p.ProductId == request.Nozzle1ProductTypeId.Value)
+                            .Select(p => p.LastUpdatedPrice)
                             .FirstOrDefaultAsync();
+                        
+                        currentPrice = product; // Will be null if product not found or LastUpdatePrice is null
                     }
 
                     nozzle1 = new DispenserNozzle
@@ -219,6 +286,24 @@ namespace FuelPumpManagementSystem.Application.Services
                         CurrentProductPrice = currentPrice
                     };
                     _db.DispenserNozzle.Add(nozzle1);
+
+                    // Create DispenserLiveStatus for newly added Nozzle 1
+                    _db.DispenserLiveStatus.Add(new DispenserLiveStatus
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 1,
+                        ProductTypeId = request.Nozzle1ProductTypeId.Value,
+                        NozzleStatus = "IDLE",
+                        CurrentLiter = 0,
+                        CurrentAmount = 0,
+                        HardwareTotalLiter = 0,
+                        HardwareTotalCash = 0,
+                        UnitPrice = 0,
+                        IsOnline = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now,
+                        LastUpdatedAt = DateTime.Now
+                    });
                 }
                 else
                 {
@@ -228,14 +313,25 @@ namespace FuelPumpManagementSystem.Application.Services
                     {
                         nozzle1.ProductId = request.Nozzle1ProductTypeId.Value;
                         
-                        // Update current price from DispenserNozzle table for this product
-                        var currentPrice = await _db.DispenserNozzle
-                            .Where(dn => dn.ProductId == request.Nozzle1ProductTypeId.Value && dn.IsActive && dn.CurrentProductPrice != null)
-                            .OrderByDescending(dn => dn.UpdatedAt)
-                            .Select(dn => dn.CurrentProductPrice)
+                        // Update current price from Product table LastUpdatePrice
+                        var product = await _db.Product
+                            .Where(p => p.ProductId == request.Nozzle1ProductTypeId.Value)
+                            .Select(p => p.LastUpdatedPrice)
                             .FirstOrDefaultAsync();
                         
-                        nozzle1.CurrentProductPrice = currentPrice;
+                        nozzle1.CurrentProductPrice = product; // Will be null if product not found or LastUpdatePrice is null
+                    }
+
+                    // Update DispenserLiveStatus for re-enabled Nozzle 1
+                    var liveStatus1 = await _db.DispenserLiveStatus
+                        .FirstOrDefaultAsync(ls => ls.DispenserId == dispenser.DispenserId && ls.NozzleId == 1);
+                    
+                    if (liveStatus1 != null)
+                    {
+                        liveStatus1.IsActive = true;
+                        liveStatus1.ProductTypeId = request.Nozzle1ProductTypeId.Value;
+                        liveStatus1.NozzleStatus = "IDLE";
+                        liveStatus1.LastUpdatedAt = DateTime.Now;
                     }
                 }
             }
@@ -243,6 +339,17 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 nozzle1.IsEnable = false;
                 nozzle1.UpdatedAt = DateTime.Now;
+
+                // Disable DispenserLiveStatus for Nozzle 1 (do NOT delete)
+                var liveStatus1 = await _db.DispenserLiveStatus
+                    .FirstOrDefaultAsync(ls => ls.DispenserId == dispenser.DispenserId && ls.NozzleId == 1);
+                
+                if (liveStatus1 != null)
+                {
+                    liveStatus1.IsActive = false;
+                    liveStatus1.NozzleStatus = "DISABLED";
+                    liveStatus1.LastUpdatedAt = DateTime.Now;
+                }
             }
 
             // Update nozzle 2
@@ -250,15 +357,16 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 if (nozzle2 == null)
                 {
-                    // Get current price from DispenserNozzle table for this product
+                    // Get current price from Product table LastUpdatePrice
                     decimal? currentPrice = null;
                     if (request.Nozzle2ProductTypeId.HasValue)
                     {
-                        currentPrice = await _db.DispenserNozzle
-                            .Where(dn => dn.ProductId == request.Nozzle2ProductTypeId.Value && dn.IsActive && dn.CurrentProductPrice != null)
-                            .OrderByDescending(dn => dn.UpdatedAt)
-                            .Select(dn => dn.CurrentProductPrice)
+                        var product = await _db.Product
+                            .Where(p => p.ProductId == request.Nozzle2ProductTypeId.Value)
+                            .Select(p => p.LastUpdatedPrice)
                             .FirstOrDefaultAsync();
+                        
+                        currentPrice = product; // Will be null if product not found or LastUpdatePrice is null
                     }
 
                     nozzle2 = new DispenserNozzle
@@ -270,6 +378,24 @@ namespace FuelPumpManagementSystem.Application.Services
                         CurrentProductPrice = currentPrice
                     };
                     _db.DispenserNozzle.Add(nozzle2);
+
+                    // Create DispenserLiveStatus for newly added Nozzle 2
+                    _db.DispenserLiveStatus.Add(new DispenserLiveStatus
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 2,
+                        ProductTypeId = request.Nozzle2ProductTypeId.Value,
+                        NozzleStatus = "IDLE",
+                        CurrentLiter = 0,
+                        CurrentAmount = 0,
+                        HardwareTotalLiter = 0,
+                        HardwareTotalCash = 0,
+                        UnitPrice = 0,
+                        IsOnline = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now,
+                        LastUpdatedAt = DateTime.Now
+                    });
                 }
                 else
                 {
@@ -279,14 +405,25 @@ namespace FuelPumpManagementSystem.Application.Services
                     {
                         nozzle2.ProductId = request.Nozzle2ProductTypeId.Value;
                         
-                        // Update current price from DispenserNozzle table for this product
-                        var currentPrice = await _db.DispenserNozzle
-                            .Where(dn => dn.ProductId == request.Nozzle2ProductTypeId.Value && dn.IsActive && dn.CurrentProductPrice != null)
-                            .OrderByDescending(dn => dn.UpdatedAt)
-                            .Select(dn => dn.CurrentProductPrice)
+                        // Update current price from Product table LastUpdatePrice
+                        var product = await _db.Product
+                            .Where(p => p.ProductId == request.Nozzle2ProductTypeId.Value)
+                            .Select(p => p.LastUpdatedPrice)
                             .FirstOrDefaultAsync();
                         
-                        nozzle2.CurrentProductPrice = currentPrice;
+                        nozzle2.CurrentProductPrice = product; // Will be null if product not found or LastUpdatePrice is null
+                    }
+
+                    // Update DispenserLiveStatus for re-enabled Nozzle 2
+                    var liveStatus2 = await _db.DispenserLiveStatus
+                        .FirstOrDefaultAsync(ls => ls.DispenserId == dispenser.DispenserId && ls.NozzleId == 2);
+                    
+                    if (liveStatus2 != null)
+                    {
+                        liveStatus2.IsActive = true;
+                        liveStatus2.ProductTypeId = request.Nozzle2ProductTypeId.Value;
+                        liveStatus2.NozzleStatus = "IDLE";
+                        liveStatus2.LastUpdatedAt = DateTime.Now;
                     }
                 }
             }
@@ -294,6 +431,17 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 nozzle2.IsEnable = false;
                 nozzle2.UpdatedAt = DateTime.Now;
+
+                // Disable DispenserLiveStatus for Nozzle 2 (do NOT delete)
+                var liveStatus2 = await _db.DispenserLiveStatus
+                    .FirstOrDefaultAsync(ls => ls.DispenserId == dispenser.DispenserId && ls.NozzleId == 2);
+                
+                if (liveStatus2 != null)
+                {
+                    liveStatus2.IsActive = false;
+                    liveStatus2.NozzleStatus = "DISABLED";
+                    liveStatus2.LastUpdatedAt = DateTime.Now;
+                }
             }
 
             await _db.SaveChangesAsync();
@@ -305,6 +453,7 @@ namespace FuelPumpManagementSystem.Application.Services
             {
                 DispenserId = request.DispenserId,
                 DispenserActionTypeId = request.IsLocked ? 1 : 2, // 1 = Lock, 2 = Unlock
+                IsRecallAndResolve=false,
                 CreatedAt = DateTime.Now,
                 IsActive = true
             };

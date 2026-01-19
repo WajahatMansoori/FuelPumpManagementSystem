@@ -1,0 +1,128 @@
+@model List<FuelPumpManagementSystem.Web.Models.DispenserModel>
+
+<!-- Dispensers Grid -->
+<div class="dispensers-grid" id="dispensersGrid">
+    @foreach (var dispenser in Model)
+    {
+        <div class="dispenser-card" data-dispenser-id="@dispenser.Id">
+            <div class="dispenser-header">
+                <div class="dispenser-title">
+                    <span class="status-dot @dispenser.Status.ToLower()"></span>
+                    <span class="dispenser-number">DISPENSER @dispenser.UnitNumber</span>
+                </div>
+                <div class="dispenser-actions">
+                    <span class="status-badge @dispenser.Status.ToLower()">@dispenser.Status</span>
+                    <button class="lock-btn @(dispenser.IsLocked ? "locked" : "unlocked")" 
+                            onclick="toggleLock(@dispenser.Id)">
+                        <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <svg class="unlock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="nozzles-container">
+                <!-- Nozzle 1 -->
+                <div class="nozzle-card">
+                    <div class="nozzle-header">
+                        <span class="nozzle-label">NOZZLE 1</span>
+                        <span class="nozzle-status @(dispenser.Status.ToLower() == "offline" ? "disabled" : (dispenser.Nozzle1.IsFueling ? "fueling" : "in"))" data-nozzle="1">
+                            @(dispenser.Status.ToLower() == "offline" ? "DISABLED" : (dispenser.Nozzle1.IsFueling ? "FUELING" : "IN"))
+                        </span>
+                    </div>
+                    <div class="nozzle-visual">
+                        <svg class="fuel-nozzle @dispenser.Nozzle1.Color" viewBox="0 0 60 80">
+                            <path d="M 20 15 L 22 10 L 38 10 L 40 15 Z" fill="#4B5563" stroke="#374151" stroke-width="0.5"/>
+                            <path d="M 18 15 Q 16 12 18 8 L 42 8 Q 44 12 42 15 Z" fill="#6B7280" stroke="#4B5563" stroke-width="0.5"/>
+                            <rect x="22" y="15" width="16" height="30" rx="2" fill="#9CA3AF" stroke="#6B7280" stroke-width="0.8"/>
+                            <path d="M 25 45 L 27 50 L 33 50 L 35 45 Z" fill="#D1D5DB" stroke="#9CA3AF" stroke-width="0.5"/>
+                            <ellipse cx="30" cy="50" rx="4" ry="2" fill="#E5E7EB" stroke="#D1D5DB" stroke-width="0.5"/>
+                            <path d="M 28 50 L 27 58 L 33 58 L 32 50" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="0.5"/>
+                            <ellipse cx="30" cy="58" rx="3" ry="1.5" fill="#4B5563"/>
+                            <line x1="22" y1="25" x2="38" y2="25" stroke="#6B7280" stroke-width="0.3"/>
+                            <line x1="22" y1="35" x2="38" y2="35" stroke="#6B7280" stroke-width="0.3"/>
+                            <rect x="26" y="22" width="8" height="3" rx="1" fill="#374151" stroke="#1F2937" stroke-width="0.3"/>
+                            <rect class="color-indicator" x="24" y="17" width="12" height="4" rx="1" opacity="0.8"/>
+                        </svg>
+                        <div class="fuel-droplets" data-nozzle="1"></div>
+                    </div>
+                    <div class="nozzle-details">
+                        <div class="detail-row">
+                            <span>Type:</span>
+                            <span class="detail-value">@dispenser.Nozzle1.FuelType</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Amount:</span>
+                            <span class="detail-value amount">Rs. <span data-field="price">@dispenser.Nozzle1.Price.ToString("F2")</span></span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Liter:</span>
+                            <span class="detail-value"><span data-field="liters">@dispenser.Nozzle1.Liters.ToString("F3")</span> L</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Unit Price:</span>
+                            <span class="detail-value">Rs. @dispenser.Nozzle1.PricePerLiter.ToString("F2")</span>
+                        </div>
+                        <div class="detail-row total">
+                            <span>Total Lt:</span>
+                            <span class="detail-value total-value"><span data-field="totalLiters">@dispenser.Nozzle1.TotalLiters.ToString("F3")</span> L</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nozzle 2 -->
+                <div class="nozzle-card">
+                    <div class="nozzle-header">
+                        <span class="nozzle-label">NOZZLE 2</span>
+                        <span class="nozzle-status @(dispenser.Status.ToLower() == "offline" ? "disabled" : (dispenser.Nozzle2.IsFueling ? "fueling" : "in"))" data-nozzle="2">
+                            @(dispenser.Status.ToLower() == "offline" ? "DISABLED" : (dispenser.Nozzle2.IsFueling ? "FUELING" : "IN"))
+                        </span>
+                    </div>
+                    <div class="nozzle-visual">
+                        <svg class="fuel-nozzle @dispenser.Nozzle2.Color" viewBox="0 0 60 80">
+                            <path d="M 20 15 L 22 10 L 38 10 L 40 15 Z" fill="#4B5563" stroke="#374151" stroke-width="0.5"/>
+                            <path d="M 18 15 Q 16 12 18 8 L 42 8 Q 44 12 42 15 Z" fill="#6B7280" stroke="#4B5563" stroke-width="0.5"/>
+                            <rect x="22" y="15" width="16" height="30" rx="2" fill="#9CA3AF" stroke="#6B7280" stroke-width="0.8"/>
+                            <path d="M 25 45 L 27 50 L 33 50 L 35 45 Z" fill="#D1D5DB" stroke="#9CA3AF" stroke-width="0.5"/>
+                            <ellipse cx="30" cy="50" rx="4" ry="2" fill="#E5E7EB" stroke="#D1D5DB" stroke-width="0.5"/>
+                            <path d="M 28 50 L 27 58 L 33 58 L 32 50" fill="#F3F4F6" stroke="#D1D5DB" stroke-width="0.5"/>
+                            <ellipse cx="30" cy="58" rx="3" ry="1.5" fill="#4B5563"/>
+                            <line x1="22" y1="25" x2="38" y2="25" stroke="#6B7280" stroke-width="0.3"/>
+                            <line x1="22" y1="35" x2="38" y2="35" stroke="#6B7280" stroke-width="0.3"/>
+                            <rect x="26" y="22" width="8" height="3" rx="1" fill="#374151" stroke="#1F2937" stroke-width="0.3"/>
+                            <rect class="color-indicator" x="24" y="17" width="12" height="4" rx="1" opacity="0.8"/>
+                        </svg>
+                        <div class="fuel-droplets" data-nozzle="2"></div>
+                    </div>
+                    <div class="nozzle-details">
+                        <div class="detail-row">
+                            <span>Type:</span>
+                            <span class="detail-value">@dispenser.Nozzle2.FuelType</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Amount:</span>
+                            <span class="detail-value amount">Rs. <span data-field="price">@dispenser.Nozzle2.Price.ToString("F2")</span></span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Liter:</span>
+                            <span class="detail-value"><span data-field="liters">@dispenser.Nozzle2.Liters.ToString("F3")</span> L</span>
+                        </div>
+                        <div class="detail-row">
+                            <span>Unit Price:</span>
+                            <span class="detail-value">Rs. @dispenser.Nozzle2.PricePerLiter.ToString("F2")</span>
+                        </div>
+                        <div class="detail-row total">
+                            <span>Total Lt:</span>
+                            <span class="detail-value total-value"><span data-field="totalLiters">@dispenser.Nozzle2.TotalLiters.ToString("F3")</span> L</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

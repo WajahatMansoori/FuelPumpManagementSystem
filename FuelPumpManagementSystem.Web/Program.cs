@@ -25,6 +25,8 @@ builder.Services.AddTransient<FileUploadHelper>();
 builder.Services.AddTransient<FuelPumpManagementSystem.Web.Services.PDFService>();
 
 builder.Services.AddHostedService<DispenserMonitoringSyncService>();
+builder.Services.AddHostedService<PriceUpdateReprocessingService>();
+builder.Services.AddHostedService<LockDispenserReprocessingService>();
 // Add HttpClient for API calls
 builder.Services.AddHttpClient();
 

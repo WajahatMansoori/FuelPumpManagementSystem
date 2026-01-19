@@ -1,229 +1,129 @@
-﻿@{
-    ViewData["Title"] = "Dashboard";
+@model FuelPumpManagementSystem.Web.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";  
 }
 
-<!DOCTYPE html>
-<html lang="en">
+@section Styles {
+    <link href="~/css/dashboard.css" rel="stylesheet"  asp-append-version="true" />
+}
 
-<head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link href="~/css/dashboard.css" rel="stylesheet" />
-	<title>Fuel Station Dashboard</title>
-</head>
 
-<body>
-    <div class="dashboard-container">
-
-        <!-- ================= TOP STATS ================= -->
-        <div class="stats-row">
-
-            <div class="stat-card">
-                <div class="stat-icon blue">
-                    <svg width="22" height="22" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12 2C12 2 5 9 5 14a7 7 0 0 0 14 0c0-5-7-12-7-12Z" />
-                    </svg>
-                </div>
-                <div>
-                    <small>Total Sales (Ltr)</small>
-                    <h3>1,842.4 L</h3>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon green">$</div>
-                <div>
-                    <small>Revenue Today</small>
-                    <h3 class="green-text">Rs. 472,180</h3>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon purple">∿</div>
-                <div>
-                    <small>Active Dispenser</small>
-                    <h3>8 / 10</h3>
-                </div>
-            </div>
-
-            <div class="stat-card">
-                <div class="stat-icon orange">⟳</div>
-                <div>
-                    <small>Sync Status</small>
-                    <h3 class="orange-text">Active</h3>
-                </div>
-            </div>
-
+ 
+    <!-- HEADER -->
+    <div class="header-card">
+      <button class="mobile-menu-btn" id="mobileMenuBtn">
+        <i class="bi bi-list"></i>
+      </button>
+      <div class="station-info">
+        <div class="station-logo">
+          <img src="./assets/programmer.png" />
         </div>
-
-        <!-- ================= UNITS GRID ================= -->
-        <div class="units-grid">
-
-            <!-- ================= UNIT #1 ================= -->
-            <div class="unit-card active">
-
-                <div class="unit-header">
-                    <span class="status-dot green"></span>
-                    <strong>UNIT #1</strong>
-                    <span class="badge">ACTIVE</span>
-                </div>
-
-                <div class="unit-body">
-
-                    <!-- ============ DISPENSER ROW (2 DISPENSERS) ============ -->
-                    <div class="dispensers-row">
-
-                        <!-- DISPENSER A -->
-                        <div class="dispenser-ui active ">
-
-                            <svg class="dispenser-svg" width="100" height="80" viewBox="0 0 100 80">
-                                <rect x="6" y="2" width="40" height="76" rx="6" fill="#0F172A" />
-                                <rect x="10" y="10" width="20" height="16" rx="2" fill="#020617" />
-                                <text x="23" y="22" font-size="7" text-anchor="middle" fill="#38BDF8">
-                                    DISPENSE
-                                </text>
-                            </svg>
-
-                            <svg class="fuel-line" width="35" height="60" viewBox="0 0 35 60">
-                                <path d="M10 10 C 50 10, 60 50, 110 50" stroke="#38BDF8" stroke-width="2"
-                                      stroke-dasharray="4 6" fill="none" />
-                            </svg>
-
-                            <svg class="car-svg" width="72" height="36" viewBox="0 0 72 36">
-                                <rect x="10" y="14" width="44" height="12" rx="4" fill="#1E40AF" />
-                                <rect x="20" y="8" width="22" height="8" rx="3" fill="#2563EB" />
-                                <circle cx="20" cy="30" r="4" fill="#020617" />
-                                <circle cx="46" cy="30" r="4" fill="#020617" />
-                            </svg>
-
-                        </div>
-
-                        <!-- DISPENSER B -->
-                        <div class="dispenser-ui idle">
-
-                            <svg class="dispenser-svg" width="100" height="80" viewBox="0 0 100 80">
-                                <rect x="6" y="2" width="40" height="76" rx="6" fill="#0F172A" />
-                                <rect x="10" y="10" width="20" height="16" rx="2" fill="#020617" />
-                                <text x="23" y="22" font-size="7" text-anchor="middle" fill="#38BDF8">
-                                    DISPENSE
-                                </text>
-                            </svg>
-
-                            <svg class="fuel-line" width="35" height="60" viewBox="0 0 35 60">
-                                <path d="M10 10 C 50 10, 60 50, 110 50" stroke="#38BDF8" stroke-width="2"
-                                      stroke-dasharray="4 6" fill="none" />
-                            </svg>
-
-                            <svg class="car-svg" width="72" height="36" viewBox="0 0 72 36">
-                                <rect x="10" y="14" width="44" height="12" rx="4" fill="#1E40AF" />
-                                <rect x="20" y="8" width="22" height="8" rx="3" fill="#2563EB" />
-                                <circle cx="20" cy="30" r="4" fill="#020617" />
-                                <circle cx="46" cy="30" r="4" fill="#020617" />
-                            </svg>
-
-                        </div>
-                    </div>
-                </div>
-
-                <div class="unit-footer">
-                    <div>
-                        <small>PETROL (N1)</small><br />
-                        <strong>5.63 L</strong><br />
-                        <small>Rs. 256 / L</small><br />
-                        <strong>Rs. 1,441</strong>
-                    </div>
-
-                    <div class="green-text">
-                        <small>DIESEL (N2)</small><br />
-                        <strong>14.82 L</strong><br />
-                        <small>Rs. 278 / L</small><br />
-                        <strong>Rs. 4,121</strong>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- ================= UNIT #2 ================= -->
-            <div class="unit-card">
-
-                <div class="unit-header">
-                    <span class="status-dot red"></span>
-                    <strong>UNIT #2</strong>
-                </div>
-
-                <div class="unit-body">
-
-                    <!-- ============ DISPENSER ROW (2 DISPENSERS) ============ -->
-                    <div class="dispensers-row">
-
-                        <!-- DISPENSER A -->
-                        <div class="dispenser-ui idle">
-
-                            <svg class="dispenser-svg" width="100" height="80" viewBox="0 0 100 80">
-                                <rect x="6" y="2" width="40" height="76" rx="6" fill="#0F172A" />
-                                <rect x="10" y="10" width="20" height="16" rx="2" fill="#020617" />
-                                <text x="23" y="22" font-size="7" text-anchor="middle" fill="#38BDF8">
-                                    DISPENSE
-                                </text>
-                            </svg>
-
-                            <svg class="fuel-line" width="35" height="60" viewBox="0 0 35 60">
-                                <path d="M10 10 C 50 10, 60 50, 110 50" stroke="#38BDF8" stroke-width="2"
-                                      stroke-dasharray="4 6" fill="none" />
-                            </svg>
-
-                            <svg class="car-svg" width="72" height="36" viewBox="0 0 72 36">
-                                <rect x="10" y="14" width="44" height="12" rx="4" fill="#1E40AF" />
-                                <rect x="20" y="8" width="22" height="8" rx="3" fill="#2563EB" />
-                                <circle cx="20" cy="30" r="4" fill="#020617" />
-                                <circle cx="46" cy="30" r="4" fill="#020617" />
-                            </svg>
-
-                        </div>
-
-                        <!-- DISPENSER B -->
-                        <div class="dispenser-ui idle">
-
-                            <svg class="dispenser-svg" width="100" height="80" viewBox="0 0 100 80">
-                                <rect x="6" y="2" width="40" height="76" rx="6" fill="#0F172A" />
-                                <rect x="10" y="10" width="20" height="16" rx="2" fill="#020617" />
-                                <text x="23" y="22" font-size="7" text-anchor="middle" fill="#38BDF8">
-                                    DISPENSE
-                                </text>
-                            </svg>
-
-                            <svg class="fuel-line" width="35" height="60" viewBox="0 0 35 60">
-                                <path d="M10 10 C 50 10, 60 50, 110 50" stroke="#38BDF8" stroke-width="2"
-                                      stroke-dasharray="4 6" fill="none" />
-                            </svg>
-
-                            <svg class="car-svg" width="72" height="36" viewBox="0 0 72 36">
-                                <rect x="10" y="14" width="44" height="12" rx="4" fill="#1E40AF" />
-                                <rect x="20" y="8" width="22" height="8" rx="3" fill="#2563EB" />
-                                <circle cx="20" cy="30" r="4" fill="#020617" />
-                                <circle cx="46" cy="30" r="4" fill="#020617" />
-                            </svg>
-
-                        </div>
-                    </div>
-                </div>
-
-                <div class="unit-footer">
-                    <div>
-                        <small>PETROL (N1)</small><br />
-                        <strong>7.92 L</strong>
-                    </div>
-
-                    <div>
-                        <small>DIESEL (N2)</small><br />
-                        <strong>3.67 L</strong>
-                    </div>
-                </div>
-
-            </div>
-
+        <div class="station-details">
+          <h1>RES FUELING STATION</h1>
+          <div class="station-meta">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+            </span>
+            P80, Gulshan e Shamim, Karachi
+          </div>
+          <div class="station-meta">
+            <span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path
+                  d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+                />
+              </svg>
+            </span>
+            +92-330-8530186
+          </div>
         </div>
+      </div>
+      <div class="theme-toggle-container">
+        <div class="datetime-display" id="currentDateTime"></div>
+        <!-- THEME BUTTONS -->
+        <!-- <span class="theme-label" id="themeLabel">Dark Mode</span> -->
+        <!-- <button class="theme-toggle">
+          <svg
+            class="sun-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+          >
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg
+            class="moon-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            style="display: none"
+          >
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+          Light
+        </button> -->
+      </div>
     </div>
-</body>
 
-</html>
+    <!-- DASHBOARD -->
+    <div class="dashboard-content">
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon petrol-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+            </svg>
+          </div>
+          <div class="stat-content">
+            <small>Today Sales Petrol</small>
+            <p class="stat-value" id="petrolSales">0 L</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon hioctane-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+            </svg>
+          </div>
+          <div class="stat-content">
+            <small>Today Sales Hi-Octane</small>
+            <p class="stat-value" id="hioctaneSales">0 L</p>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon diesel-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
+            </svg>
+          </div>
+          <div class="stat-content">
+            <small>Today Sales Diesel</small>
+            <p class="stat-value" id="dieselSales">0 L</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dispensers Grid -->
+      @await Html.PartialAsync("_DispenserGrid", Model.Dispensers)
+    </div>
+ 
+
+@section Scripts {
+    <script src="/js/dashboard.js"></script>
+}
+

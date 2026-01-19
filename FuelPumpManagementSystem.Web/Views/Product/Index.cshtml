@@ -549,6 +549,9 @@
                             });
                             statusTableBody.innerHTML = html;
                         }
+                    } else if (result.success && !result.hasPriceUpdateLogs) {
+                        // First time price update - reload page to show status section
+                        window.location.reload();
                     }
                 } catch (error) {
                     console.error('Error refreshing dispenser statuses:', error);

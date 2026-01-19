@@ -44,12 +44,14 @@ namespace FuelPumpManagementSystem.Application.Services
             var eligibleDispensers = await _db.Dispenser
                 .Include(d => d.Nozzles)
                     .ThenInclude(n => n.Product)
-                .Where(d => d.IsOnline && d.IsActive && d.Nozzles.Any(n => n.IsEnable && n.IsActive))
+                .Where(d => /*d.IsOnline && */d.IsActive && d.Nozzles.Any(n => n.IsEnable && n.IsActive))
                 .ToListAsync();
 
             if (!eligibleDispensers.Any())
             {
-                return false;
+                // No dispensers to process, but still return true to allow UI to refresh
+                // This handles fresh application scenario where no dispensers are configured yet
+                return true;
             }
 
             // Create price update batch
@@ -129,11 +131,17 @@ namespace FuelPumpManagementSystem.Application.Services
                         {
                             var nozzle = dispenser.Nozzles
                                 .FirstOrDefault(n => n.ProductId == priceUpdate.ProductId && n.IsActive);
-                            
+
                             if (nozzle != null)
                             {
                                 nozzle.CurrentProductPrice = priceUpdate.NewPrice;
                                 nozzle.UpdatedAt = DateTime.Now;
+                            }
+                            var product = _db.Product.FirstOrDefault(p => p.IsActive == true && p.ProductId == priceUpdate.ProductId);
+                            if (product != null)
+                            {
+                                product.LastUpdatedPrice = priceUpdate.NewPrice;
+                                _db.Product.Update(product);
                             }
                         }
                         
@@ -182,6 +190,7 @@ namespace FuelPumpManagementSystem.Application.Services
                 }
 
                 _db.PriceUpdateLog.Add(log);
+                
             }
 
             // Update batch with final counts
@@ -194,7 +203,9 @@ namespace FuelPumpManagementSystem.Application.Services
             // Save all changes (batch, logs, and updated nozzle prices)
             await _db.SaveChangesAsync();
 
-            return successCount > 0;
+            // Return true to indicate processing completed (regardless of success/failure count)
+            // This ensures UI updates immediately even when all dispensers fail
+            return true;
         }
     }
 }
