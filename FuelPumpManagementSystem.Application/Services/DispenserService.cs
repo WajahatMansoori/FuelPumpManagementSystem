@@ -167,6 +167,24 @@ namespace FuelPumpManagementSystem.Application.Services
                         ProductId = request.Nozzle1ProductTypeId.Value,
                         IsEnable = true
                     });
+
+                    // Create DispenserLiveStatus for Nozzle 1
+                    _db.DispenserLiveStatus.Add(new DispenserLiveStatus
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 1,
+                        ProductTypeId = request.Nozzle1ProductTypeId.Value,
+                        NozzleStatus = "IDLE",
+                        CurrentLiter = 0,
+                        CurrentAmount = 0,
+                        HardwareTotalLiter = 0,
+                        HardwareTotalCash = 0,
+                        UnitPrice = 0,
+                        IsOnline = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now,
+                        LastUpdatedAt = DateTime.Now
+                    });
                 }
 
                 if (request.IsNozzle2Enabled)
@@ -177,6 +195,24 @@ namespace FuelPumpManagementSystem.Application.Services
                         NozzleId = 2,
                         ProductId = request.Nozzle2ProductTypeId.Value,
                         IsEnable = true
+                    });
+
+                    // Create DispenserLiveStatus for Nozzle 2
+                    _db.DispenserLiveStatus.Add(new DispenserLiveStatus
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 2,
+                        ProductTypeId = request.Nozzle2ProductTypeId.Value,
+                        NozzleStatus = "IDLE",
+                        CurrentLiter = 0,
+                        CurrentAmount = 0,
+                        HardwareTotalLiter = 0,
+                        HardwareTotalCash = 0,
+                        UnitPrice = 0,
+                        IsOnline = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now,
+                        LastUpdatedAt = DateTime.Now
                     });
                 }
 
@@ -250,6 +286,24 @@ namespace FuelPumpManagementSystem.Application.Services
                         CurrentProductPrice = currentPrice
                     };
                     _db.DispenserNozzle.Add(nozzle1);
+
+                    // Create DispenserLiveStatus for newly added Nozzle 1
+                    _db.DispenserLiveStatus.Add(new DispenserLiveStatus
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 1,
+                        ProductTypeId = request.Nozzle1ProductTypeId.Value,
+                        NozzleStatus = "IDLE",
+                        CurrentLiter = 0,
+                        CurrentAmount = 0,
+                        HardwareTotalLiter = 0,
+                        HardwareTotalCash = 0,
+                        UnitPrice = 0,
+                        IsOnline = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now,
+                        LastUpdatedAt = DateTime.Now
+                    });
                 }
                 else
                 {
@@ -267,12 +321,35 @@ namespace FuelPumpManagementSystem.Application.Services
                         
                         nozzle1.CurrentProductPrice = product; // Will be null if product not found or LastUpdatePrice is null
                     }
+
+                    // Update DispenserLiveStatus for re-enabled Nozzle 1
+                    var liveStatus1 = await _db.DispenserLiveStatus
+                        .FirstOrDefaultAsync(ls => ls.DispenserId == dispenser.DispenserId && ls.NozzleId == 1);
+                    
+                    if (liveStatus1 != null)
+                    {
+                        liveStatus1.IsActive = true;
+                        liveStatus1.ProductTypeId = request.Nozzle1ProductTypeId.Value;
+                        liveStatus1.NozzleStatus = "IDLE";
+                        liveStatus1.LastUpdatedAt = DateTime.Now;
+                    }
                 }
             }
             else if (nozzle1 != null)
             {
                 nozzle1.IsEnable = false;
                 nozzle1.UpdatedAt = DateTime.Now;
+
+                // Disable DispenserLiveStatus for Nozzle 1 (do NOT delete)
+                var liveStatus1 = await _db.DispenserLiveStatus
+                    .FirstOrDefaultAsync(ls => ls.DispenserId == dispenser.DispenserId && ls.NozzleId == 1);
+                
+                if (liveStatus1 != null)
+                {
+                    liveStatus1.IsActive = false;
+                    liveStatus1.NozzleStatus = "DISABLED";
+                    liveStatus1.LastUpdatedAt = DateTime.Now;
+                }
             }
 
             // Update nozzle 2
@@ -301,6 +378,24 @@ namespace FuelPumpManagementSystem.Application.Services
                         CurrentProductPrice = currentPrice
                     };
                     _db.DispenserNozzle.Add(nozzle2);
+
+                    // Create DispenserLiveStatus for newly added Nozzle 2
+                    _db.DispenserLiveStatus.Add(new DispenserLiveStatus
+                    {
+                        DispenserId = dispenser.DispenserId,
+                        NozzleId = 2,
+                        ProductTypeId = request.Nozzle2ProductTypeId.Value,
+                        NozzleStatus = "IDLE",
+                        CurrentLiter = 0,
+                        CurrentAmount = 0,
+                        HardwareTotalLiter = 0,
+                        HardwareTotalCash = 0,
+                        UnitPrice = 0,
+                        IsOnline = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.Now,
+                        LastUpdatedAt = DateTime.Now
+                    });
                 }
                 else
                 {
@@ -318,12 +413,35 @@ namespace FuelPumpManagementSystem.Application.Services
                         
                         nozzle2.CurrentProductPrice = product; // Will be null if product not found or LastUpdatePrice is null
                     }
+
+                    // Update DispenserLiveStatus for re-enabled Nozzle 2
+                    var liveStatus2 = await _db.DispenserLiveStatus
+                        .FirstOrDefaultAsync(ls => ls.DispenserId == dispenser.DispenserId && ls.NozzleId == 2);
+                    
+                    if (liveStatus2 != null)
+                    {
+                        liveStatus2.IsActive = true;
+                        liveStatus2.ProductTypeId = request.Nozzle2ProductTypeId.Value;
+                        liveStatus2.NozzleStatus = "IDLE";
+                        liveStatus2.LastUpdatedAt = DateTime.Now;
+                    }
                 }
             }
             else if (nozzle2 != null)
             {
                 nozzle2.IsEnable = false;
                 nozzle2.UpdatedAt = DateTime.Now;
+
+                // Disable DispenserLiveStatus for Nozzle 2 (do NOT delete)
+                var liveStatus2 = await _db.DispenserLiveStatus
+                    .FirstOrDefaultAsync(ls => ls.DispenserId == dispenser.DispenserId && ls.NozzleId == 2);
+                
+                if (liveStatus2 != null)
+                {
+                    liveStatus2.IsActive = false;
+                    liveStatus2.NozzleStatus = "DISABLED";
+                    liveStatus2.LastUpdatedAt = DateTime.Now;
+                }
             }
 
             await _db.SaveChangesAsync();

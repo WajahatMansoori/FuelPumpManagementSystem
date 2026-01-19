@@ -22,6 +22,7 @@ namespace Shared.FPMS_DB
         public DbSet<DispenserActionType> DispenserActionType { get; set; }
         public DbSet<DispenserActionLog> DispenserActionLog { get; set; }
         public DbSet<User> User { get; set; }
+        public DbSet<DispenserLiveStatus> DispenserLiveStatus { get; set; }
         
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -47,6 +48,7 @@ namespace Shared.FPMS_DB
             ConfigureCommon<Dispenser>();
             ConfigureCommon<User>();
             ConfigureCommon<DispenserActionType>();
+            ConfigureCommon<DispenserLiveStatus>();
 
             // Configure Dispenser defaults
             modelBuilder.Entity<Dispenser>(entity =>
@@ -59,6 +61,11 @@ namespace Shared.FPMS_DB
                       .WithOne(n => n.Dispenser)
                       .HasForeignKey(n => n.DispenserId)
                       .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<DispenserLiveStatus>(entity =>
+            {
+                entity.Property(d => d.IsOnline).HasDefaultValue(true);
             });
 
             // Configure DispenserNozzle defaults
