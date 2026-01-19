@@ -19,6 +19,8 @@ namespace FuelPumpManagementSystem.Application.DTOs.Response
 
         public decimal? LastTotalCash { get; set; }
         public decimal? LastTotalLitre { get; set; }
+        public decimal? LastHardwareTotalCash { get; set; }
+        public decimal? LastHardwareTotalLiter { get; set; }
     }
 
 }

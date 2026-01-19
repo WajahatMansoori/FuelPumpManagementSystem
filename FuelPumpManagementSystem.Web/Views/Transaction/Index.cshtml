@@ -476,8 +476,8 @@
                                     <td>@string.Format("{0:0.00}", t.Liter) L</td>
                                     <td>₨ @string.Format("{0:0.00}", t.UnitPrice)</td>
                                     <td><strong>₨ @string.Format("{0:0.00}", t.Amount)</strong></td>
-                                    <td>@string.Format("{0:0.00}", t.LastTotalLitre) L</td>
-                                    <td>₨ @string.Format("{0:0.00}", t.LastTotalCash)</td>
+                                    <td>@string.Format("{0:0.00}", t.LastHardwareTotalLiter) L</td>
+                                    <td>₨ @string.Format("{0:0.00}", t.LastHardwareTotalCash)</td>
                                     <td>
                                         <button class="btn btn-sm btn-primary"
                                                 onclick="printTransaction(@t.TransactionId)">

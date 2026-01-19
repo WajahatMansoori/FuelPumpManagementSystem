@@ -69,14 +69,10 @@ namespace FuelPumpManagementSystem.Application.Services
                         UnitPrice = t.UnitPrice,
                         ProductTypeId = t.ProductTypeId,
                         CreatedAt = t.CreatedAt,
-                        LastTotalCash = _db.DispenserNozzle
-                            .Where(dn => dn.DispenserId == t.DispenserId && dn.NozzleId == t.NozzleId)
-                            .Select(dn => dn.LastTotalCash)
-                            .FirstOrDefault(),
-                        LastTotalLitre = _db.DispenserNozzle
-                            .Where(dn => dn.DispenserId == t.DispenserId && dn.NozzleId == t.NozzleId)
-                            .Select(dn => dn.LastTotalLiter)
-                            .FirstOrDefault()
+                        LastTotalCash = t.LastHardwareTotalCash,
+                        LastTotalLitre = t.LastHardwareTotalLiter,
+                        LastHardwareTotalCash = t.LastHardwareTotalCash,
+                        LastHardwareTotalLiter = t.LastHardwareTotalLiter
                     })
                     .OrderByDescending(t => t.CreatedAt)
                     .ToListAsync();
