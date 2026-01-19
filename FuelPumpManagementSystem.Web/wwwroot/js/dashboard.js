@@ -21,6 +21,7 @@
         initializeDashboard();
         setupEventListeners();
         startRealtimeUpdates();
+        startDateTimeUpdates();
     });
 
     function initializeDashboard() {
@@ -152,6 +153,39 @@
             lockBtn.classList.add('unlocked');
         }
     };
+
+    // ============================================
+    // DATE/TIME UPDATES
+    // ============================================
+
+    function startDateTimeUpdates() {
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
+    }
+
+    function updateDateTime() {
+        const dateTimeElement = document.getElementById('currentDateTime');
+        if (!dateTimeElement) return;
+
+        const now = new Date();
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
+        const dayName = days[now.getDay()];
+        const day = now.getDate();
+        const month = months[now.getMonth()];
+        const year = now.getFullYear();
+        
+        let hours = now.getHours();
+        const minutes = now.getMinutes();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+        
+        const formattedDateTime = `${dayName}, ${day} ${month} ${year}, ${hours}:${minutesStr}${ampm}`;
+        dateTimeElement.textContent = formattedDateTime;
+    }
 
     // ============================================
     // REAL-TIME UPDATES
