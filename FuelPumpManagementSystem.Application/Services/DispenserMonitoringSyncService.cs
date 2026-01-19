@@ -165,6 +165,7 @@ namespace FuelPumpManagementSystem.Application.Services
 
                 for (int nozzleNum = 1; nozzleNum <= 2; nozzleNum++)
                 {
+                    await UpdateDispenserLiveStatusAsync(db, dispenser, statusData, nozzleNum);
                     await ProcessNozzleTransaction(db, dispenser, statusData, nozzleNum);
                 }
             }
@@ -174,6 +175,73 @@ namespace FuelPumpManagementSystem.Application.Services
 
                 LogErrorToFile("PROCESSING", dispenser.DispenserId, null, ex,
                     $"Error processing status data for Dispenser {dispenser.DispenserId}");
+            }
+        }
+
+        private async Task UpdateDispenserLiveStatusAsync(
+            FPMSDbContext db,
+            Dispenser dispenser,
+            Dictionary<string, JsonElement> statusData,
+            int nozzleNum)
+        {
+            try
+            {
+                var prefix = $"N{nozzleNum}";
+
+                // Extract hardware data
+                TryGetDecimal(statusData, $"{prefix}_L", out var currentLiter);
+                TryGetDecimal(statusData, $"{prefix}_A", out var currentAmount);
+                TryGetDecimal(statusData, $"{prefix}_TL", out var hardwareTotalLiter);
+                TryGetDecimal(statusData, $"{prefix}_TC", out var hardwareTotalCash);
+                TryGetDecimal(statusData, $"{prefix}_UP", out var unitPrice);
+                TryGetString(statusData, $"{prefix}_S", out var status);
+
+                // Get the nozzle to check if it's active and enabled
+                var nozzle = dispenser.Nozzles
+                    .FirstOrDefault(n => n.NozzleId == nozzleNum && n.IsActive && n.IsEnable);
+
+                if (nozzle == null)
+                    return;
+
+                // Get DispenserLiveStatus for this dispenser and nozzle where IsActive=1
+                var liveStatus = await db.DispenserLiveStatus
+                    .FirstOrDefaultAsync(ls => ls.DispenserId == dispenser.DispenserId 
+                                            && ls.NozzleId == nozzleNum 
+                                            && ls.IsActive);
+
+                if (liveStatus == null)
+                    return;
+
+                // Map status string to readable format
+                string nozzleStatus = status switch
+                {
+                    "I" => "IN",
+                    "O" => "Out",
+                    "F" => "FUELING",
+                    _ => "UNKNOWN"
+                };
+
+                // Update DispenserLiveStatus with hardware data
+                liveStatus.ProductTypeId = nozzle.ProductId;
+                liveStatus.NozzleStatus = nozzleStatus;
+                liveStatus.CurrentLiter = currentLiter;
+                liveStatus.CurrentAmount = currentAmount;
+                liveStatus.HardwareTotalLiter = hardwareTotalLiter;
+                liveStatus.HardwareTotalCash = hardwareTotalCash;
+                liveStatus.UnitPrice = unitPrice;
+                liveStatus.IsOnline = dispenser.IsOnline;
+                liveStatus.LastUpdatedAt = DateTime.Now;
+
+                await db.SaveChangesAsync();
+
+                _logger.LogDebug($"Updated LiveStatus | Dispenser:{dispenser.DispenserId} Nozzle:{nozzleNum} Status:{nozzleStatus} Liter:{currentLiter} Amount:{currentAmount}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Error updating live status for nozzle {nozzleNum} of dispenser {dispenser.DispenserId}");
+                
+                LogErrorToFile("LIVE_STATUS_UPDATE", dispenser.DispenserId, nozzleNum, ex,
+                    $"Error updating DispenserLiveStatus for Nozzle {nozzleNum} of Dispenser {dispenser.DispenserId}");
             }
         }
 
