@@ -1,5 +1,6 @@
 ﻿// ============================================
-// FUEL PUMP DASHBOARD - JavaScript
+// FUEL PUMP DASHBOARD - JavaScript (SignalR ONLY)
+// NO LOCAL DATA MANIPULATION - DISPLAY ONLY
 // ============================================
 
 (function () {
@@ -9,122 +10,130 @@
     // STATE MANAGEMENT
     // ============================================
 
-    let isDarkMode = true;
-    let dispensersData = [];
-    let updateInterval = null;
+    let connection = null;
+    let activeAnimations = new Map();
 
     // ============================================
     // INITIALIZATION
     // ============================================
 
     document.addEventListener('DOMContentLoaded', function () {
-        initializeDashboard();
-        setupEventListeners();
-        startRealtimeUpdates();
         startDateTimeUpdates();
+        initializeSignalR();
     });
 
-    function initializeDashboard() {
-        // Initialize dispensers data from DOM
-        const dispenserCards = document.querySelectorAll('.dispenser-card');
-        dispenserCards.forEach(card => {
-            const dispenserId = card.getAttribute('data-dispenser-id');
-            const nozzles = card.querySelectorAll('.nozzle-card');
 
-            const dispenserData = {
-                id: parseInt(dispenserId),
-                element: card,
-                status: card.querySelector('.status-badge').textContent.trim().toUpperCase(),
-                isLocked: card.querySelector('.lock-btn').classList.contains('locked'),
-                nozzles: []
-            };
+    // ============================================
+    // SIGNALR CONNECTION
+    // ============================================
 
-            nozzles.forEach((nozzle, index) => {
-                const nozzleData = {
-                    index: index + 1,
-                    element: nozzle,
-                    isFueling: false,
-                    fuelType: nozzle.querySelector('.detail-value').textContent.trim(),
-                    color: getNozzleColor(nozzle),
-                    liters: parseFloat(nozzle.querySelector('[data-field="liters"]').textContent),
-                    price: parseFloat(nozzle.querySelector('[data-field="price"]').textContent),
-                    totalLiters: parseFloat(nozzle.querySelector('[data-field="totalLiters"]').textContent),
-                    pricePerLiter: getPricePerLiter(nozzle)
-                };
-                dispenserData.nozzles.push(nozzleData);
-            });
+    function initializeSignalR() {
+        connection = new signalR.HubConnectionBuilder()
+            .withUrl("/dashboardHub")
+            .withAutomaticReconnect()
+            .build();
 
-            dispensersData.push(dispenserData);
+        connection.on("ReceiveDispenserUpdate", function (data) {
+            console.log("📡 SignalR Data Received:", data);
+            updateDispenserUI(data);
         });
 
-        // Update stats
-        updateStats();
+        connection.start()
+            .then(function () {
+                console.log("✅ SignalR Connected - Waiting for real-time updates...");
+            })
+            .catch(function (err) {
+                console.error("❌ SignalR Connection Error:", err);
+                setTimeout(initializeSignalR, 5000);
+            });
+
+        connection.onreconnected(function () {
+            console.log("SignalR Reconnected");
+        });
     }
 
-    function getNozzleColor(nozzleElement) {
-        const svg = nozzleElement.querySelector('.fuel-nozzle');
-        if (svg.classList.contains('green')) return 'green';
-        if (svg.classList.contains('blue')) return 'blue';
-        if (svg.classList.contains('gold')) return 'gold';
-        return 'green';
-    }
+    function updateDispenserUI(data) {
+        const dispenserCard = document.querySelector(`[data-dispenser-id="${data.dispenserId}"]`);
+        if (!dispenserCard) return;
 
-    function getPricePerLiter(nozzleElement) {
-        const rows = nozzleElement.querySelectorAll('.detail-row');
-        for (let row of rows) {
-            if (row.textContent.includes('Unit Price')) {
-                const text = row.querySelector('.detail-value').textContent;
-                return parseFloat(text.replace('Rs.', '').trim());
+        // Update dispenser status
+        const statusBadge = dispenserCard.querySelector('.status-badge');
+        const statusDot = dispenserCard.querySelector('.status-dot');
+        if (statusBadge && statusDot) {
+            const status = data.isOnline ? 'ONLINE' : 'OFFLINE';
+            statusBadge.textContent = status;
+            statusBadge.className = `status-badge ${status.toLowerCase()}`;
+            statusDot.className = `status-dot ${status.toLowerCase()}`;
+        }
+
+        // Update lock button
+        const lockBtn = dispenserCard.querySelector('.lock-btn');
+        if (lockBtn) {
+            if (data.isLocked) {
+                lockBtn.classList.remove('unlocked');
+                lockBtn.classList.add('locked');
+            } else {
+                lockBtn.classList.remove('locked');
+                lockBtn.classList.add('unlocked');
             }
         }
-        return 0;
-    }
 
-    // ============================================
-    // EVENT LISTENERS
-    // ============================================
-
-    function setupEventListeners() {
-        // Sidebar toggle
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-
-        if (sidebarToggle && sidebar) {
-            sidebarToggle.addEventListener('click', function () {
-                sidebar.classList.toggle('collapsed');
-            });
+        // Update nozzle 1
+        if (data.nozzle1) {
+            updateNozzleUI(dispenserCard, 1, data.nozzle1);
         }
 
-        // Theme toggle
-        const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('click', toggleTheme);
+        // Update nozzle 2
+        if (data.nozzle2) {
+            updateNozzleUI(dispenserCard, 2, data.nozzle2);
         }
     }
 
-    // ============================================
-    // THEME MANAGEMENT
-    // ============================================
+    function updateNozzleUI(dispenserCard, nozzleNumber, nozzleData) {
+        const nozzleCards = dispenserCard.querySelectorAll('.nozzle-card');
+        const nozzleCard = nozzleCards[nozzleNumber - 1];
+        if (!nozzleCard) return;
 
-    function toggleTheme() {
-        isDarkMode = !isDarkMode;
-        document.body.classList.toggle('light-theme');
+        // CRITICAL: ONLY UPDATE VALUES FROM SERVER - NO LOCAL MANIPULATION
+        const litersEl = nozzleCard.querySelector('[data-field="liters"]');
+        const priceEl = nozzleCard.querySelector('[data-field="price"]');
+        const totalLitersEl = nozzleCard.querySelector('[data-field="totalLiters"]');
 
-        const themeLabel = document.getElementById('themeLabel');
-        const sunIcon = document.querySelector('.sun-icon');
-        const moonIcon = document.querySelector('.moon-icon');
-        const toggleText = document.querySelector('.toggle-text');
+        // Display exact values from server without any modification
+        if (litersEl) {
+            litersEl.textContent = nozzleData.liters.toFixed(3);
+            console.log(`Nozzle ${nozzleNumber} - Liters: ${nozzleData.liters}`);
+        }
+        if (priceEl) {
+            priceEl.textContent = nozzleData.price.toFixed(2);
+            console.log(`Nozzle ${nozzleNumber} - Price: ${nozzleData.price}`);
+        }
+        if (totalLitersEl) {
+            totalLitersEl.textContent = nozzleData.totalLiters.toFixed(3);
+            console.log(`Nozzle ${nozzleNumber} - Total Liters: ${nozzleData.totalLiters}`);
+        }
 
-        if (isDarkMode) {
-            themeLabel.textContent = 'Dark Mode';
-            sunIcon.style.display = 'block';
-            moonIcon.style.display = 'none';
-            toggleText.textContent = 'Light';
-        } else {
-            themeLabel.textContent = 'Light Mode';
-            sunIcon.style.display = 'none';
-            moonIcon.style.display = 'block';
-            toggleText.textContent = 'Dark';
+        // Update nozzle status
+        const statusEl = nozzleCard.querySelector('.nozzle-status');
+        if (statusEl) {
+            const currentStatus = statusEl.textContent.trim().toUpperCase();
+            const newStatus = nozzleData.status.toUpperCase();
+            
+            statusEl.textContent = newStatus;
+            statusEl.className = `nozzle-status ${newStatus.toLowerCase()}`;
+
+            // Handle animations ONLY on status change
+            const dropletsContainer = nozzleCard.querySelector('.fuel-droplets');
+            if (!dropletsContainer) return;
+            
+            const color = dropletsContainer.getAttribute('data-color') || 'green';
+            const nozzleKey = `${dispenserCard.getAttribute('data-dispenser-id')}-nozzle-${nozzleNumber}`;
+
+            if (newStatus === 'FUELING' && currentStatus !== 'FUELING') {
+                startFuelingAnimation(dropletsContainer, color, nozzleKey);
+            } else if (newStatus !== 'FUELING' && currentStatus === 'FUELING') {
+                stopFuelingAnimation(nozzleKey);
+            }
         }
     }
 
@@ -132,25 +141,44 @@
     // LOCK/UNLOCK FUNCTIONALITY
     // ============================================
 
-    window.toggleLock = function (dispenserId) {
-        const dispenser = dispensersData.find(d => d.id === dispenserId);
-        if (!dispenser) return;
+    window.toggleLock = async function (dispenserId) {
+        const dispenserCard = document.querySelector(`[data-dispenser-id="${dispenserId}"]`);
+        if (!dispenserCard) return;
 
-        dispenser.isLocked = !dispenser.isLocked;
+        const lockBtn = dispenserCard.querySelector('.lock-btn');
+        const isCurrentlyLocked = lockBtn.classList.contains('locked');
+        const newLockState = !isCurrentlyLocked;
 
-        const lockBtn = dispenser.element.querySelector('.lock-btn');
-        if (dispenser.isLocked) {
-            lockBtn.classList.remove('unlocked');
-            lockBtn.classList.add('locked');
-
-            // Stop fueling when locked
-            dispenser.nozzles.forEach(nozzle => {
-                nozzle.isFueling = false;
-                updateNozzleDisplay(nozzle);
+        try {
+            const response = await fetch(`/Dispenser/LockUnlockDispenser`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    DispenserId: dispenserId,
+                    IsLocked: newLockState
+                })
             });
-        } else {
-            lockBtn.classList.remove('locked');
-            lockBtn.classList.add('unlocked');
+
+            const result = await response.json();
+
+            if (result.success) {
+                if (newLockState) {
+                    lockBtn.classList.remove('unlocked');
+                    lockBtn.classList.add('locked');
+                } else {
+                    lockBtn.classList.remove('locked');
+                    lockBtn.classList.add('unlocked');
+                }
+                console.log(`Dispenser ${dispenserId} ${newLockState ? 'locked' : 'unlocked'} successfully`);
+            } else {
+                console.error('Failed to toggle lock:', result.message);
+                alert(result.message || 'Failed to toggle lock');
+            }
+        } catch (error) {
+            console.error('Error toggling lock:', error);
+            alert('Error communicating with server');
         }
     };
 
@@ -187,121 +215,35 @@
         dateTimeElement.textContent = formattedDateTime;
     }
 
-    // ============================================
-    // REAL-TIME UPDATES
-    // ============================================
-
-    function startRealtimeUpdates() {
-        updateInterval = setInterval(function () {
-            dispensersData.forEach(dispenser => {
-                if (dispenser.status === 'OFFLINE' || dispenser.isLocked) {
-                    // Stop fueling for offline or locked dispensers
-                    dispenser.nozzles.forEach(nozzle => {
-                        if (nozzle.isFueling) {
-                            nozzle.isFueling = false;
-                            updateNozzleDisplay(nozzle);
-                        }
-                    });
-                    return;
-                }
-
-                dispenser.nozzles.forEach(nozzle => {
-                    if (nozzle.isFueling) {
-                        // Update values while fueling
-                        const literIncrement = Math.random() * 2;
-                        nozzle.liters += literIncrement;
-                        nozzle.price = Math.round(nozzle.liters * nozzle.pricePerLiter);
-                        nozzle.totalLiters += literIncrement;
-
-                        // May stop fueling (30% chance)
-                        if (Math.random() > 0.7) {
-                            nozzle.isFueling = false;
-                        }
-                    } else {
-                        // May start fueling (20% chance)
-                        if (Math.random() > 0.8) {
-                            nozzle.isFueling = true;
-                            nozzle.liters = 0;
-                            nozzle.price = 0;
-                        }
-                    }
-
-                    updateNozzleDisplay(nozzle);
-                });
-            });
-
-            updateStats();
-        }, 2000);
-    }
-
-    function updateNozzleDisplay(nozzle) {
-        // Update values
-        const litersEl = nozzle.element.querySelector('[data-field="liters"]');
-        const priceEl = nozzle.element.querySelector('[data-field="price"]');
-        const totalLitersEl = nozzle.element.querySelector('[data-field="totalLiters"]');
-
-        if (litersEl) litersEl.textContent = nozzle.liters.toFixed(3);
-        if (priceEl) priceEl.textContent = nozzle.price.toFixed(2);
-        if (totalLitersEl) totalLitersEl.textContent = nozzle.totalLiters.toFixed(3);
-
-        // Update status
-        const statusEl = nozzle.element.querySelector('.nozzle-status');
-        if (statusEl) {
-            if (nozzle.isFueling) {
-                statusEl.textContent = 'FUELING';
-                statusEl.className = 'nozzle-status fueling';
-                startFuelingAnimation(nozzle);
-            } else {
-                statusEl.textContent = 'IN';
-                statusEl.className = 'nozzle-status in';
-                stopFuelingAnimation(nozzle);
-                showStaticDrop(nozzle);
-            }
-        }
-    }
 
     // ============================================
-    // ANIMATIONS
+    // ANIMATIONS (Status-Based: ONLY FUELING)
     // ============================================
 
-    function startFuelingAnimation(nozzle) {
-        const dropletsContainer = nozzle.element.querySelector('.fuel-droplets');
+    function startFuelingAnimation(dropletsContainer, color, nozzleKey) {
         if (!dropletsContainer) return;
 
-        // Clear existing animation
+        // Stop existing animation if any
+        stopFuelingAnimation(nozzleKey);
+
+        // Clear existing droplets
         dropletsContainer.innerHTML = '';
 
-        // Add fueling class to nozzle SVG
-        const nozzleSvg = nozzle.element.querySelector('.fuel-nozzle');
-        if (nozzleSvg) {
-            nozzleSvg.classList.add('fueling-animation');
-        }
-
-        // Create droplet interval
-        nozzle.dropletInterval = setInterval(() => {
-            createDroplet(dropletsContainer, nozzle.color);
+        // Create droplet interval - ONLY for FUELING status
+        const intervalId = setInterval(() => {
+            createDroplet(dropletsContainer, color);
         }, 200);
+
+        // Store interval ID for cleanup
+        activeAnimations.set(nozzleKey, intervalId);
     }
 
-    function stopFuelingAnimation(nozzle) {
+    function stopFuelingAnimation(nozzleKey) {
         // Clear droplet interval
-        if (nozzle.dropletInterval) {
-            clearInterval(nozzle.dropletInterval);
-            nozzle.dropletInterval = null;
-        }
-
-        // Remove fueling class
-        const nozzleSvg = nozzle.element.querySelector('.fuel-nozzle');
-        if (nozzleSvg) {
-            nozzleSvg.classList.remove('fueling-animation');
-        }
-
-        // Clear droplets
-        const dropletsContainer = nozzle.element.querySelector('.fuel-droplets');
-        if (dropletsContainer) {
-            setTimeout(() => {
-                dropletsContainer.innerHTML = '';
-            }, 700);
+        const intervalId = activeAnimations.get(nozzleKey);
+        if (intervalId) {
+            clearInterval(intervalId);
+            activeAnimations.delete(nozzleKey);
         }
     }
 
@@ -320,105 +262,22 @@
         }, 700);
     }
 
-    function showStaticDrop(nozzle) {
-        const dropletsContainer = nozzle.element.querySelector('.fuel-droplets');
-        if (!dropletsContainer) return;
-
-        dropletsContainer.innerHTML = `<div class="static-drop ${nozzle.color}"></div>`;
-    }
-
-    // ============================================
-    // STATS CALCULATION
-    // ============================================
-
-    function updateStats() {
-        let petrolTotal = 0;
-        let dieselTotal = 0;
-        let hioctaneTotal = 0;
-
-        dispensersData.forEach(dispenser => {
-            dispenser.nozzles.forEach(nozzle => {
-                const fuelType = nozzle.fuelType.toUpperCase();
-                if (fuelType.includes('PETROL')) {
-                    petrolTotal += nozzle.totalLiters;
-                } else if (fuelType.includes('DIESEL')) {
-                    dieselTotal += nozzle.totalLiters;
-                } else if (fuelType.includes('OCTANE')) {
-                    hioctaneTotal += nozzle.totalLiters;
-                }
-            });
-        });
-
-        // Update stat cards
-        const petrolEl = document.getElementById('petrolSales');
-        const dieselEl = document.getElementById('dieselSales');
-        const hioctaneEl = document.getElementById('hioctaneSales');
-
-        if (petrolEl) petrolEl.textContent = petrolTotal.toFixed(1) + ' L';
-        if (dieselEl) dieselEl.textContent = dieselTotal.toFixed(1) + ' L';
-        if (hioctaneEl) hioctaneEl.textContent = hioctaneTotal.toFixed(1) + ' L';
-    }
-
-    // ============================================
-    // UTILITY FUNCTIONS
-    // ============================================
-
-    function randomBetween(min, max) {
-        return Math.random() * (max - min) + min;
-    }
-
-    // ============================================
-    // API CALLS (For ASP.NET Integration)
-    // ============================================
-
-    // Function to fetch real data from ASP.NET API
-    window.fetchDispenserData = function () {
-        fetch('/api/dispensers')
-            .then(response => response.json())
-            .then(data => {
-                // Update local state with server data
-                console.log('Received dispenser data:', data);
-                // Process and update UI
-            })
-            .catch(error => {
-                console.error('Error fetching dispenser data:', error);
-            });
-    };
-
-    // Function to send lock/unlock command to server
-    window.sendLockCommand = function (dispenserId, isLocked) {
-        fetch('/api/dispensers/' + dispenserId + '/lock', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ isLocked: isLocked })
-        })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Lock command sent:', data);
-            })
-            .catch(error => {
-                console.error('Error sending lock command:', error);
-            });
-    };
 
     // ============================================
     // CLEANUP
     // ============================================
 
     window.addEventListener('beforeunload', function () {
-        if (updateInterval) {
-            clearInterval(updateInterval);
-        }
-
-        dispensersData.forEach(dispenser => {
-            dispenser.nozzles.forEach(nozzle => {
-                if (nozzle.dropletInterval) {
-                    clearInterval(nozzle.dropletInterval);
-                }
-            });
+        // Clear all active animations
+        activeAnimations.forEach((intervalId) => {
+            clearInterval(intervalId);
         });
+        activeAnimations.clear();
+
+        // Stop SignalR connection
+        if (connection) {
+            connection.stop();
+        }
     });
 
 })();

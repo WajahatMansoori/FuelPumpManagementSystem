@@ -44,7 +44,8 @@
         public decimal Price { get; set; }
         public decimal PricePerLiter { get; set; }
         public decimal TotalLiters { get; set; }
-        public bool IsFueling { get; set; }
+        public string Status { get; set; } // "IN", "FUELING", "OUT"
+        public bool IsEnabled { get; set; }
         public string Color { get; set; } // "green", "blue", "gold"
 
         public NozzleModel()
@@ -54,7 +55,8 @@
             Price = 0;
             PricePerLiter = 263;
             TotalLiters = 0;
-            IsFueling = false;
+            Status = "IN";
+            IsEnabled = true;
             Color = "green";
         }
     }
@@ -75,25 +77,5 @@
         {
             LastUpdated = DateTime.Now;
         }
-    }
-
-    /// <summary>
-    /// DTO for API responses
-    /// </summary>
-    public class DispenserUpdateDto
-    {
-        public int DispenserId { get; set; }
-        public string Status { get; set; }
-        public bool IsLocked { get; set; }
-        public List<NozzleUpdateDto> Nozzles { get; set; }
-    }
-
-    public class NozzleUpdateDto
-    {
-        public int NozzleId { get; set; }
-        public decimal Liters { get; set; }
-        public decimal Price { get; set; }
-        public decimal TotalLiters { get; set; }
-        public bool IsFueling { get; set; }
     }
 }

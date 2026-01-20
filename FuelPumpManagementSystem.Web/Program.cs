@@ -27,6 +27,7 @@ builder.Services.AddTransient<FuelPumpManagementSystem.Web.Services.PDFService>(
 builder.Services.AddHostedService<DispenserMonitoringSyncService>();
 builder.Services.AddHostedService<PriceUpdateReprocessingService>();
 builder.Services.AddHostedService<LockDispenserReprocessingService>();
+builder.Services.AddHostedService<FuelPumpManagementSystem.Web.Services.DashboardNotificationService>();
 // Add HttpClient for API calls
 builder.Services.AddHttpClient();
 
@@ -38,6 +39,9 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.IsEssential = true;
 });
+
+// Add SignalR
+builder.Services.AddSignalR();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -64,6 +68,8 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Dashboard}/{action=Index}/{id?}");
+
+app.MapHub<FuelPumpManagementSystem.Web.Hubs.DashboardHub>("/dashboardHub");
 
 var chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
 var url = "http://localhost:5000";

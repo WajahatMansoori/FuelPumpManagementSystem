@@ -1,118 +1,154 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using FuelPumpManagementSystem.Web.Models;
+using Shared.FPMS_DB;
 
 namespace FuelPumpManagementSystem.Web.Controllers
 {
     public class DashboardController : Controller
     {
-        public IActionResult Index()
+        private readonly FPMSDbContext _db;
+
+        public DashboardController(FPMSDbContext db)
         {
-            var model = new DashboardViewModel
+            _db = db;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var model = new DashboardViewModel();
+
+            // Fetch all dispensers with at least one enabled nozzle, ordered sequentially by DispenserId
+            var dispensersWithNozzles = await _db.Dispenser
+                .Include(d => d.Nozzles)
+                .Where(d => d.IsActive && d.Nozzles.Any(n => n.IsActive && n.IsEnable))
+                .OrderBy(d => d.DispenserId)
+                .ToListAsync();
+
+            int unitNumber = 1;
+            foreach (var dispenser in dispensersWithNozzles)
             {
-                Dispensers = new List<DispenserModel>
+                var dispenserModel = new DispenserModel
                 {
-                    new DispenserModel
-                    {
-                        Id = 1,
-                        UnitNumber = 1,
-                        Status = "ONLINE",
-                        IsLocked = false,
-                        Nozzle1 = new NozzleModel
-                        {
-                            Id = 1,
-                            FuelType = "PETROL",
-                            Liters = 19.456m,
-                            Price = 5116.00m,
-                            PricePerLiter = 263.00m,
-                            TotalLiters = 18560.723m,
-                            IsFueling = false,
-                            Color = "green"
-                        },
-                        Nozzle2 = new NozzleModel
-                        {
-                            Id = 2,
-                            FuelType = "DIESEL",
-                            Liters = 25.340m,
-                            Price = 6585.00m,
-                            PricePerLiter = 260.00m,
-                            TotalLiters = 22340.560m,
-                            IsFueling = true,
-                            Color = "blue"
-                        }
-                    },
-                    new DispenserModel
-                    {
-                        Id = 2,
-                        UnitNumber = 1,
-                        Status = "OFFLINE",
-                        IsLocked = true,
-                        Nozzle1 = new NozzleModel
-                        {
-                            Id = 3,
-                            FuelType = "PETROL",
-                            Liters = 21.892m,
-                            Price = 5369.00m,
-                            PricePerLiter = 279.00m,
-                            TotalLiters = 20870.723m,
-                            IsFueling = false,
-                            Color = "green"
-                        },
-                        Nozzle2 = new NozzleModel
-                        {
-                            Id = 4,
-                            FuelType = "HI-OCTANE",
-                            Liters = 18.234m,
-                            Price = 4890.00m,
-                            PricePerLiter = 268.00m,
-                            TotalLiters = 19456.890m,
-                            IsFueling = false,
-                            Color = "gold"
-                        }
-                    },
-                    new DispenserModel
-                    {
-                        Id = 3,
-                        UnitNumber = 2,
-                        Status = "ONLINE",
-                        IsLocked = false,
-                        Nozzle1 = new NozzleModel
-                        {
-                            Id = 5,
-                            FuelType = "DIESEL",
-                            Liters = 30.125m,
-                            Price = 7832.00m,
-                            PricePerLiter = 260.00m,
-                            TotalLiters = 25678.450m,
-                            IsFueling = false,
-                            Color = "blue"
-                        },
-                        Nozzle2 = new NozzleModel
-                        {
-                            Id = 6,
-                            FuelType = "PETROL",
-                            Liters = 22.567m,
-                            Price = 5935.00m,
-                            PricePerLiter = 263.00m,
-                            TotalLiters = 21234.890m,
-                            IsFueling = false,
-                            Color = "green"
-                        }
-                    }
-                },
-                Stats = new StatsModel
+                    Id = dispenser.DispenserId,
+                    UnitNumber = unitNumber++,
+                    Status = dispenser.IsOnline ? "ONLINE" : "OFFLINE",
+                    IsLocked = dispenser.IsLocked
+                };
+
+                // Get live status for both nozzles
+                var liveStatuses = await _db.DispenserLiveStatus
+                    .Where(ls => ls.DispenserId == dispenser.DispenserId)
+                    .ToListAsync();
+
+                // Process Nozzle 1
+                var nozzle1LiveStatus = liveStatuses.FirstOrDefault(ls => ls.NozzleId == 1);
+                var nozzle1Config = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 1 && n.IsActive);
+                
+                if (nozzle1Config != null)
                 {
-                    TotalPetrolSales = 125000.50m,
-                    TotalDieselSales = 98500.75m,
-                    TotalHiOctaneSales = 45600.25m,
-                    TotalRevenue = 269101.50m,
-                    ActiveDispensers = 2,
-                    LastUpdated = DateTime.Now
+                    dispenserModel.Nozzle1 = MapNozzleModel(nozzle1LiveStatus, nozzle1Config);
                 }
+
+                // Process Nozzle 2
+                var nozzle2LiveStatus = liveStatuses.FirstOrDefault(ls => ls.NozzleId == 2);
+                var nozzle2Config = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 2 && n.IsActive);
+                
+                if (nozzle2Config != null)
+                {
+                    dispenserModel.Nozzle2 = MapNozzleModel(nozzle2LiveStatus, nozzle2Config);
+                }
+
+                model.Dispensers.Add(dispenserModel);
+            }
+
+            // Calculate stats from transactions
+            var today = DateTime.Today;
+            var todayTransactions = await _db.Transaction
+                .Where(t => t.IsActive && t.CreatedAt >= today)
+                .ToListAsync();
+
+            model.Stats = new StatsModel
+            {
+                TotalPetrolSales = todayTransactions.Where(t => t.ProductTypeId == 1).Sum(t => t.Liter),
+                TotalDieselSales = todayTransactions.Where(t => t.ProductTypeId == 3).Sum(t => t.Liter),
+                TotalHiOctaneSales = todayTransactions.Where(t => t.ProductTypeId == 2).Sum(t => t.Liter),
+                TotalRevenue = todayTransactions.Sum(t => t.Amount),
+                ActiveDispensers = dispensersWithNozzles.Count(d => d.IsOnline),
+                LastUpdated = DateTime.Now
             };
 
-            // Data will be updated via JavaScript/SignalR in real-time
-            
             return View(model);
+        }
+
+        private NozzleModel MapNozzleModel(Shared.FPMS_DB.Entities.DispenserLiveStatus? liveStatus, Shared.FPMS_DB.Entities.DispenserNozzle? nozzleConfig)
+        {
+            var nozzleModel = new NozzleModel
+            {
+                Id = liveStatus?.DispenserLiveStatusId ?? 0,
+                Liters = liveStatus?.CurrentLiter ?? 0,
+                Price = liveStatus?.CurrentAmount ?? 0,
+                PricePerLiter = liveStatus?.UnitPrice ?? 0,
+                TotalLiters = liveStatus?.HardwareTotalLiter ?? 0,
+                IsEnabled = (liveStatus?.IsActive ?? true) && (nozzleConfig?.IsEnable ?? false)
+            };
+
+            // Map ProductTypeId to FuelType and Color
+            int productTypeId = liveStatus?.ProductTypeId ?? nozzleConfig?.ProductId ?? 0;
+            
+            switch (productTypeId)
+            {
+                case 1: // Petrol
+                    nozzleModel.FuelType = "PETROL";
+                    nozzleModel.Color = "green";
+                    break;
+                case 2: // Hi-Octane
+                    nozzleModel.FuelType = "HI-OCTANE";
+                    nozzleModel.Color = "gold";
+                    break;
+                case 3: // Diesel
+                    nozzleModel.FuelType = "DIESEL";
+                    nozzleModel.Color = "blue";
+                    break;
+                case 4: // Spare 1
+                    nozzleModel.FuelType = "SPARE 1";
+                    nozzleModel.Color = "gray";
+                    break;
+                case 5: // Spare 2
+                    nozzleModel.FuelType = "SPARE 2";
+                    nozzleModel.Color = "gray";
+                    break;
+                case 6: // Spare 3
+                    nozzleModel.FuelType = "SPARE 3";
+                    nozzleModel.Color = "gray";
+                    break;
+                default:
+                    nozzleModel.FuelType = "UNKNOWN";
+                    nozzleModel.Color = "gray";
+                    break;
+            }
+
+            // Map NozzleStatus to Status (IN/FUELING/OUT)
+            if (!nozzleModel.IsEnabled)
+            {
+                nozzleModel.Status = "OUT";
+            }
+            else if (liveStatus == null)
+            {
+                nozzleModel.Status = "IN";
+            }
+            else
+            {
+                nozzleModel.Status = liveStatus.NozzleStatus switch
+                {
+                    "IDLE" => "IN",
+                    "FUELING" => "FUELING",
+                    "Out" => "OUT",
+                    _ => "IN"
+                };
+            }
+
+            return nozzleModel;
         }
     }
 }
