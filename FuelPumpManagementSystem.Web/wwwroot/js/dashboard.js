@@ -34,21 +34,20 @@
             .build();
 
         connection.on("ReceiveDispenserUpdate", function (data) {
-            console.log("📡 SignalR Data Received:", data);
             updateDispenserUI(data);
         });
 
         connection.start()
             .then(function () {
-                console.log("✅ SignalR Connected - Waiting for real-time updates...");
+                // SignalR Connected
             })
             .catch(function (err) {
-                console.error("❌ SignalR Connection Error:", err);
+                console.error("SignalR Connection Error:", err);
                 setTimeout(initializeSignalR, 5000);
             });
 
         connection.onreconnected(function () {
-            console.log("SignalR Reconnected");
+            // SignalR Reconnected
         });
     }
 
@@ -100,18 +99,9 @@
         const totalLitersEl = nozzleCard.querySelector('[data-field="totalLiters"]');
 
         // Display exact values from server without any modification
-        if (litersEl) {
-            litersEl.textContent = nozzleData.liters.toFixed(3);
-            console.log(`Nozzle ${nozzleNumber} - Liters: ${nozzleData.liters}`);
-        }
-        if (priceEl) {
-            priceEl.textContent = nozzleData.price.toFixed(2);
-            console.log(`Nozzle ${nozzleNumber} - Price: ${nozzleData.price}`);
-        }
-        if (totalLitersEl) {
-            totalLitersEl.textContent = nozzleData.totalLiters.toFixed(3);
-            console.log(`Nozzle ${nozzleNumber} - Total Liters: ${nozzleData.totalLiters}`);
-        }
+        if (litersEl) litersEl.textContent = nozzleData.liters.toFixed(3);
+        if (priceEl) priceEl.textContent = nozzleData.price.toFixed(2);
+        if (totalLitersEl) totalLitersEl.textContent = nozzleData.totalLiters.toFixed(3);
 
         // Update nozzle status
         const statusEl = nozzleCard.querySelector('.nozzle-status');
@@ -171,13 +161,10 @@
                     lockBtn.classList.remove('locked');
                     lockBtn.classList.add('unlocked');
                 }
-                console.log(`Dispenser ${dispenserId} ${newLockState ? 'locked' : 'unlocked'} successfully`);
             } else {
-                console.error('Failed to toggle lock:', result.message);
                 alert(result.message || 'Failed to toggle lock');
             }
         } catch (error) {
-            console.error('Error toggling lock:', error);
             alert('Error communicating with server');
         }
     };
