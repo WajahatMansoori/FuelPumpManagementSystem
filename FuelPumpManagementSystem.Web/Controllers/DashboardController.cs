@@ -25,13 +25,12 @@ namespace FuelPumpManagementSystem.Web.Controllers
                 .OrderBy(d => d.DispenserId)
                 .ToListAsync();
 
-            int unitNumber = 1;
             foreach (var dispenser in dispensersWithNozzles)
             {
                 var dispenserModel = new DispenserModel
                 {
                     Id = dispenser.DispenserId,
-                    UnitNumber = unitNumber++,
+                    UnitNumber = dispenser.DispenserId,
                     Status = dispenser.IsOnline ? "ONLINE" : "OFFLINE",
                     IsLocked = dispenser.IsLocked
                 };
