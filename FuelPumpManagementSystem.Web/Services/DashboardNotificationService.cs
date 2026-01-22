@@ -82,30 +82,66 @@ namespace FuelPumpManagementSystem.Web.Services
                 object? nozzle1Data = null;
                 object? nozzle2Data = null;
 
-                if (nozzle1Config != null && nozzle1Config.IsEnable)
+                if (nozzle1Config != null)
                 {
-                    nozzle1Data = new
+                    if (nozzle1Config.IsEnable)
                     {
-                        liters = nozzle1LiveStatus?.CurrentLiter ?? 0,
-                        price = nozzle1LiveStatus?.CurrentAmount ?? 0,
-                        totalLiters = nozzle1LiveStatus?.HardwareTotalLiter ?? 0,
-                        status = MapNozzleStatus(nozzle1LiveStatus?.NozzleStatus)
-                    };
-                    
-                    _logger.LogInformation($"[SignalR] Dispenser {dispenserId} Nozzle 1 - Liters: {nozzle1LiveStatus?.CurrentLiter}, Price: {nozzle1LiveStatus?.CurrentAmount}, TotalLiters: {nozzle1LiveStatus?.HardwareTotalLiter}, Status: {nozzle1LiveStatus?.NozzleStatus}");
+                        nozzle1Data = new
+                        {
+                            liters = nozzle1LiveStatus?.CurrentLiter ?? 0,
+                            price = nozzle1LiveStatus?.CurrentAmount ?? 0,
+                            totalLiters = nozzle1LiveStatus?.HardwareTotalLiter ?? 0,
+                            status = MapNozzleStatus(nozzle1LiveStatus?.NozzleStatus),
+                            isEnabled = true
+                        };
+                        
+                        _logger.LogInformation($"[SignalR] Dispenser {dispenserId} Nozzle 1 - Liters: {nozzle1LiveStatus?.CurrentLiter}, Price: {nozzle1LiveStatus?.CurrentAmount}, TotalLiters: {nozzle1LiveStatus?.HardwareTotalLiter}, Status: {nozzle1LiveStatus?.NozzleStatus}");
+                    }
+                    else
+                    {
+                        // Disabled nozzle
+                        nozzle1Data = new
+                        {
+                            liters = 0,
+                            price = 0,
+                            totalLiters = 0,
+                            status = "DISABLED",
+                            isEnabled = false
+                        };
+                        
+                        _logger.LogInformation($"[SignalR] Dispenser {dispenserId} Nozzle 1 - DISABLED");
+                    }
                 }
 
-                if (nozzle2Config != null && nozzle2Config.IsEnable)
+                if (nozzle2Config != null)
                 {
-                    nozzle2Data = new
+                    if (nozzle2Config.IsEnable)
                     {
-                        liters = nozzle2LiveStatus?.CurrentLiter ?? 0,
-                        price = nozzle2LiveStatus?.CurrentAmount ?? 0,
-                        totalLiters = nozzle2LiveStatus?.HardwareTotalLiter ?? 0,
-                        status = MapNozzleStatus(nozzle2LiveStatus?.NozzleStatus)
-                    };
-                    
-                    _logger.LogInformation($"[SignalR] Dispenser {dispenserId} Nozzle 2 - Liters: {nozzle2LiveStatus?.CurrentLiter}, Price: {nozzle2LiveStatus?.CurrentAmount}, TotalLiters: {nozzle2LiveStatus?.HardwareTotalLiter}, Status: {nozzle2LiveStatus?.NozzleStatus}");
+                        nozzle2Data = new
+                        {
+                            liters = nozzle2LiveStatus?.CurrentLiter ?? 0,
+                            price = nozzle2LiveStatus?.CurrentAmount ?? 0,
+                            totalLiters = nozzle2LiveStatus?.HardwareTotalLiter ?? 0,
+                            status = MapNozzleStatus(nozzle2LiveStatus?.NozzleStatus),
+                            isEnabled = true
+                        };
+                        
+                        _logger.LogInformation($"[SignalR] Dispenser {dispenserId} Nozzle 2 - Liters: {nozzle2LiveStatus?.CurrentLiter}, Price: {nozzle2LiveStatus?.CurrentAmount}, TotalLiters: {nozzle2LiveStatus?.HardwareTotalLiter}, Status: {nozzle2LiveStatus?.NozzleStatus}");
+                    }
+                    else
+                    {
+                        // Disabled nozzle
+                        nozzle2Data = new
+                        {
+                            liters = 0,
+                            price = 0,
+                            totalLiters = 0,
+                            status = "DISABLED",
+                            isEnabled = false
+                        };
+                        
+                        _logger.LogInformation($"[SignalR] Dispenser {dispenserId} Nozzle 2 - DISABLED");
+                    }
                 }
 
                 await _hubContext.Clients.All.SendAsync("ReceiveDispenserUpdate", new

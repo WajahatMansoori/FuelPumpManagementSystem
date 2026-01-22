@@ -54,23 +54,23 @@
                     <div class="nozzle-details">
                         <div class="detail-row">
                             <span>Type:</span>
-                            <span class="detail-value">@dispenser.Nozzle1.FuelType</span>
+                            <span class="detail-value">@(dispenser.Nozzle1.IsEnabled ? dispenser.Nozzle1.FuelType : "N/A")</span>
                         </div>
                         <div class="detail-row">
                             <span>Amount:</span>
-                            <span class="detail-value amount">Rs. <span data-field="price">@dispenser.Nozzle1.Price.ToString("F2")</span></span>
+                            <span class="detail-value amount">Rs. <span data-field="price">@(dispenser.Nozzle1.IsEnabled ? dispenser.Nozzle1.Price.ToString("F2") : "N/A")</span></span>
                         </div>
                         <div class="detail-row">
                             <span>Liter:</span>
-                            <span class="detail-value"><span data-field="liters">@dispenser.Nozzle1.Liters.ToString("F3")</span> L</span>
+                            <span class="detail-value"><span data-field="liters">@(dispenser.Nozzle1.IsEnabled ? dispenser.Nozzle1.Liters.ToString("F3") : "N/A")</span> L</span>
                         </div>
                         <div class="detail-row">
                             <span>Unit Price:</span>
-                            <span class="detail-value">Rs. @dispenser.Nozzle1.PricePerLiter.ToString("F2")</span>
+                            <span class="detail-value">Rs. @(dispenser.Nozzle1.IsEnabled ? dispenser.Nozzle1.PricePerLiter.ToString("F2") : "N/A")</span>
                         </div>
                         <div class="detail-row total">
                             <span>Total Lt:</span>
-                            <span class="detail-value total-value"><span data-field="totalLiters">@dispenser.Nozzle1.TotalLiters.ToString("F3")</span> L</span>
+                            <span class="detail-value total-value"><span data-field="totalLiters">@(dispenser.Nozzle1.IsEnabled ? dispenser.Nozzle1.TotalLiters.ToString("F3") : "N/A")</span> L</span>
                         </div>
                     </div>
                 </div>
@@ -102,23 +102,23 @@
                     <div class="nozzle-details">
                         <div class="detail-row">
                             <span>Type:</span>
-                            <span class="detail-value">@dispenser.Nozzle2.FuelType</span>
+                            <span class="detail-value">@(dispenser.Nozzle2.IsEnabled ? dispenser.Nozzle2.FuelType : "N/A")</span>
                         </div>
                         <div class="detail-row">
                             <span>Amount:</span>
-                            <span class="detail-value amount">Rs. <span data-field="price">@dispenser.Nozzle2.Price.ToString("F2")</span></span>
+                            <span class="detail-value amount">Rs. <span data-field="price">@(dispenser.Nozzle2.IsEnabled ? dispenser.Nozzle2.Price.ToString("F2") : "N/A")</span></span>
                         </div>
                         <div class="detail-row">
                             <span>Liter:</span>
-                            <span class="detail-value"><span data-field="liters">@dispenser.Nozzle2.Liters.ToString("F3")</span> L</span>
+                            <span class="detail-value"><span data-field="liters">@(dispenser.Nozzle2.IsEnabled ? dispenser.Nozzle2.Liters.ToString("F3") : "N/A")</span> L</span>
                         </div>
                         <div class="detail-row">
                             <span>Unit Price:</span>
-                            <span class="detail-value">Rs. @dispenser.Nozzle2.PricePerLiter.ToString("F2")</span>
+                            <span class="detail-value">Rs. @(dispenser.Nozzle2.IsEnabled ? dispenser.Nozzle2.PricePerLiter.ToString("F2") : "N/A")</span>
                         </div>
                         <div class="detail-row total">
                             <span>Total Lt:</span>
-                            <span class="detail-value total-value"><span data-field="totalLiters">@dispenser.Nozzle2.TotalLiters.ToString("F3")</span> L</span>
+                            <span class="detail-value total-value"><span data-field="totalLiters">@(dispenser.Nozzle2.IsEnabled ? dispenser.Nozzle2.TotalLiters.ToString("F3") : "N/A")</span> L</span>
                         </div>
                     </div>
                 </div>

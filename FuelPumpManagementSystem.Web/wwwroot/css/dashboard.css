@@ -530,22 +530,26 @@ body {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     padding: 0.75rem;
+    transition: all 0.3s ease;
 }
 
-.nozzle-card:has(.nozzle-status.disabled) {
-    background-color: #4b5563;
+/* Disabled nozzle styling */
+.nozzle-card.disabled {
+    background-color: rgba(75, 85, 99, 0.3);
+    opacity: 0.6;
+    filter: grayscale(100%);
 }
 
-.nozzle-card:has(.nozzle-status.disabled) .nozzle-label,
-.nozzle-card:has(.nozzle-status.disabled) .detail-row span,
-.nozzle-card:has(.nozzle-status.disabled) .detail-value,
-.nozzle-card:has(.nozzle-status.disabled) .detail-value.amount,
-.nozzle-card:has(.nozzle-status.disabled) .total-value {
+.nozzle-card.disabled .nozzle-label,
+.nozzle-card.disabled .detail-row span,
+.nozzle-card.disabled .detail-value,
+.nozzle-card.disabled .detail-value.amount,
+.nozzle-card.disabled .total-value {
     color: #9ca3af !important;
 }
 
-body.light-theme .nozzle-card {
-    background-color: #f9fafb;
+.nozzle-card.disabled .fuel-nozzle {
+    opacity: 0.4;
 }
 
 body.light-theme .nozzle-card:has(.nozzle-status.disabled) {

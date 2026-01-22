@@ -93,6 +93,43 @@
         const nozzleCard = nozzleCards[nozzleNumber - 1];
         if (!nozzleCard) return;
 
+        // Check if nozzle is disabled
+        const isDisabled = nozzleData.isEnabled === false || nozzleData.status === 'DISABLED';
+
+        if (isDisabled) {
+            // Apply disabled styling
+            nozzleCard.classList.add('disabled');
+            
+            // Update status to DISABLED
+            const statusEl = nozzleCard.querySelector('.nozzle-status');
+            if (statusEl) {
+                statusEl.textContent = 'DISABLED';
+                statusEl.className = 'nozzle-status disabled';
+            }
+
+            // Set all values to N/A
+            const fuelTypeEl = nozzleCard.querySelector('.detail-value');
+            if (fuelTypeEl) fuelTypeEl.textContent = 'N/A';
+
+            const priceEl = nozzleCard.querySelector('[data-field="price"]');
+            if (priceEl) priceEl.parentElement.innerHTML = 'Rs. <span data-field="price">N/A</span>';
+
+            const litersEl = nozzleCard.querySelector('[data-field="liters"]');
+            if (litersEl) litersEl.parentElement.innerHTML = '<span data-field="liters">N/A</span> L';
+
+            const totalLitersEl = nozzleCard.querySelector('[data-field="totalLiters"]');
+            if (totalLitersEl) totalLitersEl.parentElement.innerHTML = '<span data-field="totalLiters">N/A</span> L';
+
+            // Stop any animations
+            const nozzleKey = `${dispenserCard.getAttribute('data-dispenser-id')}-nozzle-${nozzleNumber}`;
+            stopFuelingAnimation(nozzleKey);
+
+            return;
+        }
+
+        // Remove disabled class if previously disabled
+        nozzleCard.classList.remove('disabled');
+
         // CRITICAL: ONLY UPDATE VALUES FROM SERVER - NO LOCAL MANIPULATION
         const litersEl = nozzleCard.querySelector('[data-field="liters"]');
         const priceEl = nozzleCard.querySelector('[data-field="price"]');

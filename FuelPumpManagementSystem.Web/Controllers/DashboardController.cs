@@ -45,19 +45,15 @@ namespace FuelPumpManagementSystem.Web.Controllers
                 var nozzle1LiveStatus = liveStatuses.FirstOrDefault(ls => ls.NozzleId == 1);
                 var nozzle1Config = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 1 && n.IsActive);
                 
-                if (nozzle1Config != null)
-                {
-                    dispenserModel.Nozzle1 = MapNozzleModel(nozzle1LiveStatus, nozzle1Config);
-                }
+                // Always create nozzle model (enabled or disabled)
+                dispenserModel.Nozzle1 = MapNozzleModel(nozzle1LiveStatus, nozzle1Config);
 
                 // Process Nozzle 2
                 var nozzle2LiveStatus = liveStatuses.FirstOrDefault(ls => ls.NozzleId == 2);
                 var nozzle2Config = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 2 && n.IsActive);
                 
-                if (nozzle2Config != null)
-                {
-                    dispenserModel.Nozzle2 = MapNozzleModel(nozzle2LiveStatus, nozzle2Config);
-                }
+                // Always create nozzle model (enabled or disabled)
+                dispenserModel.Nozzle2 = MapNozzleModel(nozzle2LiveStatus, nozzle2Config);
 
                 model.Dispensers.Add(dispenserModel);
             }
@@ -83,15 +79,33 @@ namespace FuelPumpManagementSystem.Web.Controllers
 
         private NozzleModel MapNozzleModel(Shared.FPMS_DB.Entities.DispenserLiveStatus? liveStatus, Shared.FPMS_DB.Entities.DispenserNozzle? nozzleConfig)
         {
+            // Check if nozzle is enabled
+            bool isEnabled = nozzleConfig?.IsEnable ?? false;
+
             var nozzleModel = new NozzleModel
             {
                 Id = liveStatus?.DispenserLiveStatusId ?? 0,
-                Liters = liveStatus?.CurrentLiter ?? 0,
-                Price = liveStatus?.CurrentAmount ?? 0,
-                PricePerLiter = liveStatus?.UnitPrice ?? 0,
-                TotalLiters = liveStatus?.HardwareTotalLiter ?? 0,
-                IsEnabled = (liveStatus?.IsActive ?? true) && (nozzleConfig?.IsEnable ?? false)
+                IsEnabled = isEnabled
             };
+
+            // If disabled, set all values to defaults and status to DISABLED
+            if (!isEnabled)
+            {
+                nozzleModel.Liters = 0;
+                nozzleModel.Price = 0;
+                nozzleModel.PricePerLiter = 0;
+                nozzleModel.TotalLiters = 0;
+                nozzleModel.FuelType = "N/A";
+                nozzleModel.Color = "gray";
+                nozzleModel.Status = "DISABLED";
+                return nozzleModel;
+            }
+
+            // If enabled, populate with live data
+            nozzleModel.Liters = liveStatus?.CurrentLiter ?? 0;
+            nozzleModel.Price = liveStatus?.CurrentAmount ?? 0;
+            nozzleModel.PricePerLiter = liveStatus?.UnitPrice ?? 0;
+            nozzleModel.TotalLiters = liveStatus?.HardwareTotalLiter ?? 0;
 
             // Map ProductTypeId to FuelType and Color
             int productTypeId = liveStatus?.ProductTypeId ?? nozzleConfig?.ProductId ?? 0;
@@ -129,11 +143,7 @@ namespace FuelPumpManagementSystem.Web.Controllers
             }
 
             // Map NozzleStatus to Status (IN/FUELING/OUT)
-            if (!nozzleModel.IsEnabled)
-            {
-                nozzleModel.Status = "OUT";
-            }
-            else if (liveStatus == null)
+            if (liveStatus == null)
             {
                 nozzleModel.Status = "IN";
             }
