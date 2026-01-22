@@ -167,14 +167,6 @@
                                            data-tooltip="Edit Dispenser">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
-                                        <button type="button"
-                                                class="icon-action-btn lock-icon-btn @(d.IsLocked ? "locked" : "unlocked")"
-                                                data-dispenser-id="@d.DispenserId"
-                                                data-api-endpoint="@d.ApiEndPoint"
-                                                data-is-locked="@d.IsLocked.ToString().ToLower()"
-                                                data-tooltip="@(d.IsLocked ? "Unlock Dispenser" : "Lock Dispenser")">
-                                            <i class="bi @(d.IsLocked ? "bi-unlock-fill" : "bi-lock-fill")"></i>
-                                        </button>
                                     </div>
                                 </td>
                             </tr>
