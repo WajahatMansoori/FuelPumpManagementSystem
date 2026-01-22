@@ -4,6 +4,7 @@
     {
         public List<DispenserModel> Dispensers { get; set; }
         public StatsModel Stats { get; set; }
+        public SiteDetailModel? SiteDetail { get; set; }
 
         public DashboardViewModel()
         {
@@ -77,5 +78,16 @@
         {
             LastUpdated = DateTime.Now;
         }
+    }
+
+    /// <summary>
+    /// Model for site details
+    /// </summary>
+    public class SiteDetailModel
+    {
+        public string SiteName { get; set; } = string.Empty;
+        public string SiteAddress { get; set; } = string.Empty;
+        public string SitePhone { get; set; } = string.Empty;
+        public string SiteLogo { get; set; } = string.Empty;
     }
 }

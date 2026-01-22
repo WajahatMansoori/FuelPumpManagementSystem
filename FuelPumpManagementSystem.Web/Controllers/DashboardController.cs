@@ -73,6 +73,23 @@ namespace FuelPumpManagementSystem.Web.Controllers
                 LastUpdated = DateTime.Now
             };
 
+            // Fetch site details from database
+            var siteDetail = await _db.SiteDetail
+                .Where(s => s.IsActive)
+                .OrderByDescending(s => s.CreatedAt)
+                .FirstOrDefaultAsync();
+
+            if (siteDetail != null)
+            {
+                model.SiteDetail = new SiteDetailModel
+                {
+                    SiteName = siteDetail.SiteName ?? string.Empty,
+                    SiteAddress = siteDetail.SiteAddress ?? string.Empty,
+                    SitePhone = siteDetail.SitePhone ?? string.Empty,
+                    SiteLogo = siteDetail.SiteLogo ?? string.Empty
+                };
+            }
+
             return View(model);
         }
 

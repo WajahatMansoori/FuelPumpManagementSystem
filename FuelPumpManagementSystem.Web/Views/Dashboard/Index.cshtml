@@ -15,12 +15,12 @@
       <button class="mobile-menu-btn" id="mobileMenuBtn">
         <i class="bi bi-list"></i>
       </button>
-      <div class="station-info">
+	<div class="station-info">
         <div class="station-logo">
-          <img src="./assets/programmer.png" />
+            <img src="@(!string.IsNullOrEmpty(Model.SiteDetail?.SiteLogo) ? Url.Content(Model.SiteDetail.SiteLogo) : Url.Content("~/uploads/defaultlogo.png"))" />
         </div>
         <div class="station-details">
-          <h1>RES FUELING STATION</h1>
+          <h1>@(!string.IsNullOrEmpty(Model.SiteDetail?.SiteName) ? Model.SiteDetail.SiteName : "RES FUELING STATION")</h1>
           <div class="station-meta">
             <span>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -28,7 +28,7 @@
                 <circle cx="12" cy="10" r="3" />
               </svg>
             </span>
-            P80, Gulshan e Shamim, Karachi
+            @(!string.IsNullOrEmpty(Model.SiteDetail?.SiteAddress) ? Model.SiteDetail.SiteAddress : "P80, Gulshan e Shamim, Karachi")
           </div>
           <div class="station-meta">
             <span>
@@ -38,7 +38,7 @@
                 />
               </svg>
             </span>
-            +92-330-8530186
+            @(!string.IsNullOrEmpty(Model.SiteDetail?.SitePhone) ? Model.SiteDetail.SitePhone : "+92-330-8530186")
           </div>
         </div>
       </div>
