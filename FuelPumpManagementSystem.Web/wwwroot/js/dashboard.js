@@ -191,6 +191,7 @@
             const result = await response.json();
 
             if (result.success) {
+                // Update UI based on new lock state
                 if (newLockState) {
                     lockBtn.classList.remove('unlocked');
                     lockBtn.classList.add('locked');
@@ -198,11 +199,9 @@
                     lockBtn.classList.remove('locked');
                     lockBtn.classList.add('unlocked');
                 }
-            } else {
-                alert(result.message || 'Failed to toggle lock');
             }
         } catch (error) {
-            alert('Error communicating with server');
+            // Silently fail - no popup
         }
     };
 

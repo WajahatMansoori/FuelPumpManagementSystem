@@ -284,6 +284,18 @@ namespace FuelPumpManagementSystem.Web.Controllers
         {
             try
             {
+                // Fetch the dispenser's ApiEndPoint from database
+                var dispenser = await _db.Dispenser
+                    .FirstOrDefaultAsync(d => d.DispenserId == request.DispenserId && d.IsActive);
+
+                if (dispenser == null)
+                {
+                    return Json(new { success = false, message = "Dispenser not found" });
+                }
+
+                // Set the ApiEndPoint from database
+                request.ApiEndPoint = dispenser.ApiEndPoint;
+
                 var success = await _dispenserService.LockUnlockDispenserAsync(request);
 
                 if (success)
