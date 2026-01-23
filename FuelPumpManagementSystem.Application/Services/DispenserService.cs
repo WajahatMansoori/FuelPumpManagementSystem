@@ -255,7 +255,21 @@ namespace FuelPumpManagementSystem.Application.Services
             }
             if(request.ApiEndPoint!=null && !string.IsNullOrEmpty(request.ApiEndPoint))
             {
-                dispenser.ApiEndPoint = request.ApiEndPoint;
+                // Validate input before updating
+                var rawIp = request.ApiEndPoint.Trim();
+                if (string.IsNullOrWhiteSpace(rawIp))
+                {
+                    throw new InvalidOperationException("Please enter a valid dispenser IP address before saving.");
+                }
+
+                // Ensure ApiEndPoint is unique per dispenser (excluding current dispenser)
+                bool exists = await _db.Dispenser.AnyAsync(d => d.ApiEndPoint == rawIp && d.DispenserId != request.DispenserId.Value);
+                if (exists)
+                {
+                    throw new InvalidOperationException("Dispenser IP already exists. Please use a unique IP address.");
+                }
+
+                dispenser.ApiEndPoint = rawIp;
             }
             var nozzle1 = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 1);
             var nozzle2 = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 2);

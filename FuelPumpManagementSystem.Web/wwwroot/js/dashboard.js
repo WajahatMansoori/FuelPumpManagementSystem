@@ -20,6 +20,16 @@
     document.addEventListener('DOMContentLoaded', function () {
         startDateTimeUpdates();
         initializeSignalR();
+        
+        // Handle Enter key press in access key input
+        const accessKeyInput = document.getElementById('lockAccessKey');
+        if (accessKeyInput) {
+            accessKeyInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    submitLockAccessKey();
+                }
+            });
+        }
     });
 
 
@@ -168,7 +178,104 @@
     // LOCK/UNLOCK FUNCTIONALITY
     // ============================================
 
-    window.toggleLock = async function (dispenserId) {
+    let pendingLockDispenserId = null;
+
+    window.toggleLock = function (dispenserId) {
+        // Store the dispenser ID for later use
+        pendingLockDispenserId = dispenserId;
+        
+        // Show the access key modal
+        const modal = document.getElementById('lockAccessKeyModal');
+        const accessKeyInput = document.getElementById('lockAccessKey');
+        const errorDiv = document.getElementById('lockAccessKeyError');
+        
+        if (modal) {
+            modal.style.display = 'flex';
+            if (accessKeyInput) {
+                accessKeyInput.value = '';
+                accessKeyInput.focus();
+            }
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        }
+    };
+
+    window.closeLockAccessKeyModal = function () {
+        const modal = document.getElementById('lockAccessKeyModal');
+        const accessKeyInput = document.getElementById('lockAccessKey');
+        const errorDiv = document.getElementById('lockAccessKeyError');
+        
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        if (accessKeyInput) {
+            accessKeyInput.value = '';
+        }
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
+        
+        pendingLockDispenserId = null;
+    };
+
+    window.submitLockAccessKey = async function () {
+        const accessKeyInput = document.getElementById('lockAccessKey');
+        const errorDiv = document.getElementById('lockAccessKeyError');
+        const submitBtn = document.querySelector('.lock-btn-submit');
+        
+        if (!accessKeyInput || !errorDiv) return;
+        
+        const accessKey = accessKeyInput.value.trim();
+        
+        if (!accessKey) {
+            errorDiv.textContent = 'Please enter an access key';
+            errorDiv.style.display = 'flex';
+            return;
+        }
+        
+        // Disable submit button during validation
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verifying...';
+        }
+        
+        try {
+            // Validate access key
+            const validateResponse = await fetch('/Dashboard/ValidateLockAccessKey', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    AccessKey: accessKey
+                })
+            });
+            
+            const validateResult = await validateResponse.json();
+            
+            if (validateResult.success) {
+                // Access key is valid, proceed with lock/unlock
+                await performLockUnlock(pendingLockDispenserId);
+                closeLockAccessKeyModal();
+            } else {
+                // Show error message
+                errorDiv.textContent = validateResult.message || 'Invalid Access Key';
+                errorDiv.style.display = 'flex';
+            }
+        } catch (error) {
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.style.display = 'flex';
+        } finally {
+            // Re-enable submit button
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Verify & Proceed';
+            }
+        }
+    };
+
+    async function performLockUnlock(dispenserId) {
         const dispenserCard = document.querySelector(`[data-dispenser-id="${dispenserId}"]`);
         if (!dispenserCard) return;
 
@@ -202,6 +309,147 @@
             }
         } catch (error) {
             // Silently fail - no popup
+        }
+    }
+
+    // ============================================
+    // CHANGE PASSWORD FUNCTIONALITY
+    // ============================================
+
+    window.openChangePasswordModal = function () {
+        const modal = document.getElementById('changePasswordModal');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const errorDiv = document.getElementById('changePasswordError');
+        const successDiv = document.getElementById('changePasswordSuccess');
+        
+        if (modal) {
+            modal.style.display = 'flex';
+            if (newPasswordInput) {
+                newPasswordInput.value = '';
+                newPasswordInput.focus();
+            }
+            if (confirmPasswordInput) {
+                confirmPasswordInput.value = '';
+            }
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+            if (successDiv) {
+                successDiv.style.display = 'none';
+            }
+        }
+    };
+
+    window.closeChangePasswordModal = function () {
+        const modal = document.getElementById('changePasswordModal');
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const errorDiv = document.getElementById('changePasswordError');
+        const successDiv = document.getElementById('changePasswordSuccess');
+        
+        if (modal) {
+            modal.style.display = 'none';
+        }
+        if (newPasswordInput) {
+            newPasswordInput.value = '';
+        }
+        if (confirmPasswordInput) {
+            confirmPasswordInput.value = '';
+        }
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+        }
+        if (successDiv) {
+            successDiv.style.display = 'none';
+        }
+    };
+
+    window.submitChangePassword = async function () {
+        const newPasswordInput = document.getElementById('newPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const errorDiv = document.getElementById('changePasswordError');
+        const successDiv = document.getElementById('changePasswordSuccess');
+        const submitBtn = document.querySelector('#changePasswordModal .lock-btn-submit');
+        
+        if (!newPasswordInput || !confirmPasswordInput || !errorDiv || !successDiv) return;
+        
+        const newPassword = newPasswordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+        
+        // Hide previous messages
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+        
+        // Validation
+        if (!newPassword) {
+            errorDiv.textContent = 'Please enter a new password';
+            errorDiv.style.display = 'flex';
+            return;
+        }
+        
+        if (newPassword.length < 4) {
+            errorDiv.textContent = 'Password must be at least 4 characters long';
+            errorDiv.style.display = 'flex';
+            return;
+        }
+        
+        if (!confirmPassword) {
+            errorDiv.textContent = 'Please confirm your password';
+            errorDiv.style.display = 'flex';
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            errorDiv.textContent = 'Passwords do not match. Please try again.';
+            errorDiv.style.display = 'flex';
+            return;
+        }
+        
+        // Disable submit button during processing
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Saving...';
+        }
+        
+        try {
+            const response = await fetch('/Dashboard/ChangePassword', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    NewPassword: newPassword
+                })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                successDiv.textContent = result.message || 'Password changed successfully!';
+                successDiv.style.display = 'flex';
+                
+                // Clear inputs
+                newPasswordInput.value = '';
+                confirmPasswordInput.value = '';
+                
+                // Close modal after 2 seconds
+                setTimeout(() => {
+                    closeChangePasswordModal();
+                }, 2000);
+            } else {
+                errorDiv.textContent = result.message || 'Failed to change password';
+                errorDiv.style.display = 'flex';
+            }
+        } catch (error) {
+            errorDiv.textContent = 'An error occurred. Please try again.';
+            errorDiv.style.display = 'flex';
+        } finally {
+            // Re-enable submit button
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Save Password';
+            }
         }
     };
 

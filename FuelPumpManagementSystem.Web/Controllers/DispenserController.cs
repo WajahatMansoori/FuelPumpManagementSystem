@@ -184,7 +184,7 @@ namespace FuelPumpManagementSystem.Web.Controllers
 
                 // Check if access key matches any non-admin user password
                 var isValid = await _db.User
-                    .AnyAsync(u => u.Password == model.AccessKey && !u.IsAdminLogin);
+                    .AnyAsync(u => u.Password == model.AccessKey && u.IsAdminLogin);
 
                 if (isValid)
                 {
@@ -230,7 +230,7 @@ namespace FuelPumpManagementSystem.Web.Controllers
 
                 // Get the first non-admin user (IsAdminLogin = false)
                 var nonAdminUser = await _db.User
-                    .FirstOrDefaultAsync(u => !u.IsAdminLogin);
+                    .FirstOrDefaultAsync(u => u.IsAdminLogin);
 
                 if (nonAdminUser == null)
                 {
