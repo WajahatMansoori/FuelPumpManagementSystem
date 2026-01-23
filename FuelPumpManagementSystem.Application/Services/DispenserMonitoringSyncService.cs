@@ -114,7 +114,8 @@ namespace FuelPumpManagementSystem.Application.Services
                     Timeout = TimeSpan.FromMilliseconds(800)
                 };
 
-                var url = $"{dispenser.ApiEndPoint}/status";
+                //var url = $"{dispenser.ApiEndPoint}/status";
+                var url = $"{dispenser.ApiEndPoint}status";
                 var response = await httpClient.GetAsync(url, token);
 
                 if (!response.IsSuccessStatusCode)
