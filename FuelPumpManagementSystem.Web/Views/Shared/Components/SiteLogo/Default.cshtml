@@ -1,0 +1,10 @@
+@model string
+
+@if (!string.IsNullOrEmpty(Model))
+{
+    <img src="@Url.Content(Model)" alt="Site Logo" class="sidebar-logo-img" />
+}
+else
+{
+    <i class="bi bi-fuel-pump-fill"></i>
+}

@@ -111,7 +111,8 @@ namespace FuelPumpManagementSystem.Application.Services
 
                 try
                 {
-                    var apiUrl = $"{dispenser.ApiEndPoint}/price";
+                    //var apiUrl = $"{dispenser.ApiEndPoint}/price";
+                    var apiUrl = $"{dispenser.ApiEndPoint}price";
                     var jsonPayload = JsonSerializer.Serialize(pricePayload);
                     log.ApiRequest = jsonPayload;
 
