@@ -19,7 +19,7 @@
     
     <style>
         :root {
-            --primary-color: #4361ee;
+            --primary-color: #550000;
             --secondary-color: #6c757d;
             --success-color: #28a745;
             --danger-color: #dc3545;
@@ -31,7 +31,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #550000 0%, #330000 100%);
             min-height: 100vh;
             margin: 0;
             padding: 0;
@@ -40,14 +40,14 @@
         .dashboard-container {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 20px 40px rgba(85, 0, 0, 0.3);
             margin: 20px;
             padding: 0;
             overflow: hidden;
         }
 
         .dashboard-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #667eea 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #330000 100%);
             color: white;
             padding: 30px;
             border-radius: 20px 20px 0 0;
@@ -110,22 +110,22 @@
 
         .form-control:focus, .form-select:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+            box-shadow: 0 0 0 0.2rem rgba(85, 0, 0, 0.25);
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #667eea 100%);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #330000 100%);
             border: none;
             border-radius: 10px;
             padding: 12px 25px;
             font-weight: 600;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+            box-shadow: 0 4px 15px rgba(85, 0, 0, 0.3);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(67, 97, 238, 0.4);
+            box-shadow: 0 8px 25px rgba(85, 0, 0, 0.4);
         }
 
         .btn-success {
@@ -360,26 +360,6 @@
                     </div>
                 </div>
 
-                <!-- Nozzle Filter -->
-                <div class="col-lg-4 col-md-6 mb-2">
-                    <div class="filter-card">
-                        <div class="filter-title">
-                            <i class="fas fa-tint"></i>
-                            Nozzle Filter
-                        </div>
-                        <select id="nozzleSelect" class="form-select form-select-lg">
-                            <option value="ALL" selected>All Nozzles</option>
-                            @if (Model?.Transactions != null)
-                            {
-                                foreach (var n in Model.Transactions.Select(x => x.NozzleId).Distinct().OrderBy(x => x))
-                                {
-                                    <option value="@n">Nozzle @n</option>
-                                }
-                            }
-                        </select>
-                    </div>
-                </div>
-
                 <!-- Export Buttons Section -->
                 <div class="col-lg-4 col-md-6 mb-2">
                     <div class="filter-card">
@@ -514,11 +494,6 @@
             applyFilters();
         });
 
-        // Nozzle dropdown change handler
-        $('#nozzleSelect').change(function() {
-            applyFilters();
-        });
-
         function applyFilters() {
             var filters = collectFilterData();
             
@@ -544,7 +519,6 @@
                 FromDate: $('#fromDate').val(),
                 ToDate: $('#toDate').val(),
                 DispenserIds: $('#dispenserSelect').val() || [],
-                NozzleId: $('#nozzleSelect').val(),
                 ProductIds: $('#fuelTypeSelect').val() || [],
                 ViewType: $('#viewTypeSelect').val(),
                 FuelCategory: $('#categorySelect').val(),
@@ -557,7 +531,6 @@
             $('#dispenserSelect').val(['ALL']);
             $('#categorySelect').val('all');
             $('#fuelTypeSelect').val(['ALL']);
-            $('#nozzleSelect').val('ALL');
             $('#combineCategories').prop('checked', true);
             $('#periodSelect').val('last30days');
             $('#customDateRange').hide();
@@ -570,7 +543,6 @@
             var fromDate = $('#fromDate').val();
             var toDate = $('#toDate').val();
             var dispenserId = $('#dispenserSelect').val();
-            var nozzleId = $('#nozzleSelect').val();
             var productId = $('#fuelTypeSelect').val();
             var viewType = $('#viewTypeSelect').val();
             
@@ -586,7 +558,6 @@
                 fromDate: fromDate,
                 toDate: toDate,
                 dispenserId: dispenserId,
-                nozzleId: nozzleId,
                 productId: productId,
                 viewType: viewType
             };
@@ -601,7 +572,6 @@
             if (filters.fromDate) params.append('fromDate', filters.fromDate);
             if (filters.toDate) params.append('toDate', filters.toDate);
             if (filters.dispenserId && filters.dispenserId !== 'ALL') params.append('dispenserIds', filters.dispenserId);
-            if (filters.nozzleId && filters.nozzleId !== 'ALL') params.append('nozzleId', filters.nozzleId);
             if (filters.productId && filters.productId !== 'ALL') params.append('productIds', filters.productId);
             if (filters.viewType) params.append('viewType', filters.viewType);
             
@@ -620,7 +590,6 @@
             if (filters.fromDate) params.append('fromDate', filters.fromDate);
             if (filters.toDate) params.append('toDate', filters.toDate);
             if (filters.dispenserId && filters.dispenserId !== 'ALL') params.append('dispenserIds', filters.dispenserId);
-            if (filters.nozzleId && filters.nozzleId !== 'ALL') params.append('nozzleId', filters.nozzleId);
             if (filters.productId && filters.productId !== 'ALL') params.append('productIds', filters.productId);
             if (filters.viewType) params.append('viewType', filters.viewType);
             
