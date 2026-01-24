@@ -460,6 +460,60 @@
     }
 
     // ============================================
+    // THEME TOGGLE FUNCTIONALITY
+    // ============================================
+
+    window.toggleTheme = function() {
+        const body = document.body;
+        const themeBtn = document.getElementById('themeToggleBtn');
+        const themeText = themeBtn.querySelector('.theme-text');
+        const sunIcon = themeBtn.querySelector('.sun-icon');
+        const moonIcon = themeBtn.querySelector('.moon-icon');
+        
+        // Toggle light theme class
+        body.classList.toggle('light-theme');
+        
+        // Check current theme
+        const isLightTheme = body.classList.contains('light-theme');
+        
+        // Update button text and icons
+        if (isLightTheme) {
+            themeText.textContent = 'Dark Mode';
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+            localStorage.setItem('theme', 'light');
+        } else {
+            themeText.textContent = 'Light Mode';
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+            localStorage.setItem('theme', 'dark');
+        }
+    };
+
+    // Load saved theme on page load
+    function loadSavedTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const body = document.body;
+        const themeBtn = document.getElementById('themeToggleBtn');
+        
+        if (savedTheme === 'light' && themeBtn) {
+            body.classList.add('light-theme');
+            const themeText = themeBtn.querySelector('.theme-text');
+            const sunIcon = themeBtn.querySelector('.sun-icon');
+            const moonIcon = themeBtn.querySelector('.moon-icon');
+            
+            themeText.textContent = 'Dark Mode';
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        }
+    }
+
+    // Load theme when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSavedTheme();
+    });
+
+    // ============================================
     // CLEANUP
     // ============================================
 
