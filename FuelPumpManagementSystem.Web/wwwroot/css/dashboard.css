@@ -416,11 +416,22 @@ body {
     width: 100%;
 }
 
+/* Single dispenser: prevent stretching across full width */
+.dispensers-grid:has(.dispenser-card:only-child) {
+    grid-template-columns: minmax(350px, 500px);
+    justify-content: start;
+}
+
 /* Mobile only: force single column on very small screens */
 @media (max-width: 767px) {
     .dispensers-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
+    }
+    
+    /* Single dispenser on mobile: use full width */
+    .dispensers-grid:has(.dispenser-card:only-child) {
+        grid-template-columns: 1fr;
     }
 }
 
