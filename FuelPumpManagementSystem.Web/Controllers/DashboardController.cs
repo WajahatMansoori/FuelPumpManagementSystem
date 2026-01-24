@@ -123,43 +123,6 @@ namespace FuelPumpManagementSystem.Web.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequestDTO request)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(request.NewPassword))
-                {
-                    return Json(new { success = false, message = "New password is required" });
-                }
-
-                if (request.NewPassword.Length < 4)
-                {
-                    return Json(new { success = false, message = "Password must be at least 4 characters long" });
-                }
-
-                // Get the first non-admin user (IsAdminLogin = false)
-                var nonAdminUser = await _db.User
-                    .FirstOrDefaultAsync(u => !u.IsAdminLogin);
-
-                if (nonAdminUser == null)
-                {
-                    return Json(new { success = false, message = "No user found to update password" });
-                }
-
-                // Update the password
-                nonAdminUser.Password = request.NewPassword;
-
-                await _db.SaveChangesAsync();
-
-                return Json(new { success = true, message = "Password changed successfully" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error: {ex.Message}" });
-            }
-        }
-
         private NozzleModel MapNozzleModel(Shared.FPMS_DB.Entities.DispenserLiveStatus? liveStatus, Shared.FPMS_DB.Entities.DispenserNozzle? nozzleConfig)
         {
             // Check if nozzle is enabled
