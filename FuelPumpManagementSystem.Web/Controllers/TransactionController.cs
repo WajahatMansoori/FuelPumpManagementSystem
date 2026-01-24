@@ -15,12 +15,14 @@ namespace FuelPumpManagementSystem.Web.Controllers
         private readonly ITransactionService _transactionService;
         private readonly IProductService _productService;
         private readonly IPDFGenerationService _pdfGenerationService;
+        private readonly FPMSDbContext _db;
 
-        public TransactionController(ITransactionService transactionService, IProductService productService, IPDFGenerationService pdfGenerationService)
+        public TransactionController(ITransactionService transactionService, IProductService productService, IPDFGenerationService pdfGenerationService, FPMSDbContext db)
         {
             _transactionService = transactionService;
             _productService = productService;
             _pdfGenerationService = pdfGenerationService;
+            _db = db;
         }
 
         public async Task<IActionResult> Index(DateTime? fromDate, DateTime? toDate, string[] dispenserIds, string nozzleId, string[] productIds, int page = 1, int pageSize = 30, string search = "")
@@ -98,11 +100,18 @@ namespace FuelPumpManagementSystem.Web.Controllers
                 Products = products
             };
 
+            // Fetch site details from database
+            var siteDetail = await _db.SiteDetail
+                .Where(s => s.IsActive)
+                .OrderByDescending(s => s.CreatedAt)
+                .FirstOrDefaultAsync();
+
             ViewData["AllDispenserNozzles"] = allDispenserNozzles;
             ViewData["TotalRecords"] = totalRecords;
             ViewData["TotalPages"] = totalPages;
             ViewData["CurrentPage"] = page;
             ViewData["PageSize"] = pageSize;
+            ViewData["SiteDetail"] = siteDetail;
 
             return View(viewModel);
         }
