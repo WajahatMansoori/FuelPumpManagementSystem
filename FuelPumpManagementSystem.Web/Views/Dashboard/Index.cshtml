@@ -80,42 +80,8 @@
     <!-- DASHBOARD -->
     <div class="dashboard-content">
       <!-- STATS -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon petrol-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <small>Today Sales Petrol</small>
-            <p class="stat-value" id="petrolSales">0 L</p>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon hioctane-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <small>Today Sales Hi-Octane</small>
-            <p class="stat-value" id="hioctaneSales">0 L</p>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon diesel-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-            </svg>
-          </div>
-          <div class="stat-content">
-            <small>Today Sales Diesel</small>
-            <p class="stat-value" id="dieselSales">0 L</p>
-          </div>
-        </div>
+      <div class="stats-grid" id="statsCardsContent">
+        @await Html.PartialAsync("_StatsCards", Model.Stats)
       </div>
 
       <!-- Dispensers Grid -->

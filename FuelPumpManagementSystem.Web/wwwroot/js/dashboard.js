@@ -20,6 +20,8 @@
     document.addEventListener('DOMContentLoaded', function () {
         startDateTimeUpdates();
         initializeSignalR();
+        startHeaderCardAutoRefresh();
+        startStatsCardsAutoRefresh();
         
         // Handle Enter key press in access key input
         const accessKeyInput = document.getElementById('lockAccessKey');
@@ -394,6 +396,70 @@
 
 
     // ============================================
+    // HEADER CARD AUTO-REFRESH (AJAX ONLY)
+    // ============================================
+
+    let headerCardRefreshInterval = null;
+
+    function startHeaderCardAutoRefresh() {
+        // Refresh header card data every 5 seconds
+        headerCardRefreshInterval = setInterval(function() {
+            refreshHeaderCard();
+        }, 5000);
+    }
+
+    function refreshHeaderCard() {
+        fetch('/Dashboard/GetHeaderCardData')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(html => {
+                const headerCardContent = document.getElementById('headerCardContent');
+                if (headerCardContent) {
+                    headerCardContent.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing header card:', error);
+            });
+    }
+
+    // ============================================
+    // STATS CARDS AUTO-REFRESH (AJAX ONLY)
+    // ============================================
+
+    let statsCardsRefreshInterval = null;
+
+    function startStatsCardsAutoRefresh() {
+        // Refresh stats cards data every 3 seconds
+        statsCardsRefreshInterval = setInterval(function() {
+            refreshStatsCards();
+        }, 3000);
+    }
+
+    function refreshStatsCards() {
+        fetch('/Dashboard/GetStatsCardData')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(html => {
+                const statsCardsContent = document.getElementById('statsCardsContent');
+                if (statsCardsContent) {
+                    statsCardsContent.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Error refreshing stats cards:', error);
+            });
+    }
+
+    // ============================================
     // CLEANUP
     // ============================================
 
@@ -403,6 +469,16 @@
             clearInterval(intervalId);
         });
         activeAnimations.clear();
+
+        // Clear header card refresh interval
+        if (headerCardRefreshInterval) {
+            clearInterval(headerCardRefreshInterval);
+        }
+
+        // Clear stats cards refresh interval
+        if (statsCardsRefreshInterval) {
+            clearInterval(statsCardsRefreshInterval);
+        }
 
         // Stop SignalR connection
         if (connection) {

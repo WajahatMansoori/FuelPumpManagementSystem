@@ -94,6 +94,61 @@ namespace FuelPumpManagementSystem.Web.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetHeaderCardData()
+        {
+            try
+            {
+                var siteDetail = await _db.SiteDetail
+                    .Where(s => s.IsActive)
+                    .OrderByDescending(s => s.CreatedAt)
+                    .FirstOrDefaultAsync();
+
+                var model = new SiteDetailModel();
+                
+                if (siteDetail != null)
+                {
+                    model.SiteName = siteDetail.SiteName ?? string.Empty;
+                    model.SiteAddress = siteDetail.SiteAddress ?? string.Empty;
+                    model.SitePhone = siteDetail.SitePhone ?? string.Empty;
+                    model.SiteLogo = siteDetail.SiteLogo ?? string.Empty;
+                }
+
+                return PartialView("_HeaderCard", model);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error loading header data");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetStatsCardData()
+        {
+            try
+            {
+                var today = DateTime.Today;
+                var todayTransactions = await _db.Transaction
+                    .Where(t => t.IsActive && t.CreatedAt >= today)
+                    .ToListAsync();
+
+                var model = new StatsModel
+                {
+                    TotalPetrolSales = todayTransactions.Where(t => t.ProductTypeId == 1).Sum(t => t.Liter),
+                    TotalDieselSales = todayTransactions.Where(t => t.ProductTypeId == 3).Sum(t => t.Liter),
+                    TotalHiOctaneSales = todayTransactions.Where(t => t.ProductTypeId == 2).Sum(t => t.Liter),
+                    TotalRevenue = todayTransactions.Sum(t => t.Amount),
+                    LastUpdated = DateTime.Now
+                };
+
+                return PartialView("_StatsCards", model);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Error loading stats data");
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> ValidateLockAccessKey([FromBody] AccessKeyLoginViewModel model)
         {
