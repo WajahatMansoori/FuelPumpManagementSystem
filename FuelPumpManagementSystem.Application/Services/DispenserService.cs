@@ -262,13 +262,7 @@ namespace FuelPumpManagementSystem.Application.Services
                     throw new InvalidOperationException("Please enter a valid dispenser IP address before saving.");
                 }
 
-                // Ensure ApiEndPoint is unique per dispenser (excluding current dispenser)
-                bool exists = await _db.Dispenser.AnyAsync(d => d.ApiEndPoint == rawIp && d.DispenserId != request.DispenserId.Value);
-                if (exists)
-                {
-                    throw new InvalidOperationException("Dispenser IP already exists. Please use a unique IP address.");
-                }
-
+                // No IP uniqueness check in update mode - allow keeping existing IP
                 dispenser.ApiEndPoint = rawIp;
             }
             var nozzle1 = dispenser.Nozzles.FirstOrDefault(n => n.NozzleId == 1);
