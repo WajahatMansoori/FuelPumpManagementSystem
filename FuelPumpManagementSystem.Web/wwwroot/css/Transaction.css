@@ -1,0 +1,129 @@
+/* Transaction Print Receipt Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    padding: 20px;
+    background: #f9f9f9;
+    color: #000000;
+}
+
+.receipt-container {
+    max-width: 340px;
+    margin: 0 auto;
+    border: 1px solid #ddd;
+    padding: 25px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.logo-section {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed #ccc;
+}
+
+.logo-section img {
+    width: 50px;
+    height: 50px;
+    object-fit: contain;
+    border: 1px solid #ddd;
+    padding: 5px;
+    background: #fff;
+    border-radius: 6px;
+}
+
+.header-section {
+    text-align: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.station-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #222;
+}
+
+.station-info {
+    font-size: 11px;
+    line-height: 1.8;
+    color: #666;
+}
+
+.divider {
+    border-top: 1px dashed #ccc;
+    margin: 20px 0;
+}
+
+.transaction-section {
+    margin-bottom: 20px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #444;
+}
+
+.info-value {
+    text-align: right;
+    color: #222;
+}
+
+.totals-section {
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 2px solid #333;
+    background: #f5f5f5;
+    padding: 15px;
+    margin-left: -25px;
+    margin-right: -25px;
+    padding-left: 25px;
+    padding-right: 25px;
+}
+
+.total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 13px;
+    font-weight: bold;
+    color: #000;
+}
+
+.footer-section {
+    text-align: center;
+    margin-top: 25px;
+    padding-top: 20px;
+    border-top: 1px dashed #ccc;
+    font-size: 11px;
+    font-style: italic;
+    color: #888;
+}
+
+@media print {
+    body {
+        padding: 0;
+    }
+    .receipt-container {
+        border: none;
+        max-width: 100%;
+    }
+}

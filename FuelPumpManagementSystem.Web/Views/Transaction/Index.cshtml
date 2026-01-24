@@ -573,32 +573,197 @@
 
             // Use dynamic site detail or default values
             var siteName = siteDetail && siteDetail.siteName ? siteDetail.siteName : "RES FUELING STATION";
-            var siteAddress = siteDetail && siteDetail.siteAddress ? siteDetail.siteAddress : "Gulshan-e-Shamim, Block-9\nYaseenabad, Karachi";
+            var siteAddress = siteDetail && siteDetail.siteAddress ? siteDetail.siteAddress : "Gulshan-e-Shamim, Block-9<br>Yaseenabad, Karachi";
             var sitePhone = siteDetail && siteDetail.sitePhone ? siteDetail.sitePhone : "+92-330-8530186";
+            var siteLogo = siteDetail && siteDetail.siteLogo ? siteDetail.siteLogo : "/uploads/defaultlogo.png";
 
-            var receipt =
-"==============================\n" +
-siteName + "\n" +
-siteAddress + "\n" +
-"Tel: " + sitePhone + "\n" +
-"==============================\n\n" +
-"Transaction ID: " + tds.eq(0).text() + "\n" +
-"Date Time: " + tds.eq(1).text() + "\n" +
-"Dispenser: " + tds.eq(2).text() + "\n" +
-"Nozzle: " + tds.eq(3).text() + "\n" +
-"Fuel: " + tds.eq(4).text() + "\n" +
-"------------------------------\n" +
-"Litres: " + tds.eq(5).text() + "\n" +
-"Unit Price: " + tds.eq(6).text() + "\n" +
-"Amount: " + tds.eq(7).text() + "\n" +
-"------------------------------\n" +
-"Total Liter: " + tds.eq(8).text() + "\n" +
-"Total Cash: " + tds.eq(9).text() + "\n" +
-"------------------------------\n" +
-"Thank you for your business!";
+            // Create attractive HTML receipt with logo
+            var receiptHTML = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <title>Transaction Receipt</title>
+                    <style>
+                        * {
+                            margin: 0;
+                            padding: 0;
+                            box-sizing: border-box;
+                        }
+                        body {
+                            font-family: 'Arial', sans-serif;
+                            padding: 20px;
+                            background: #ffffff;
+                            color: #000000;
+                        }
+                        .receipt-container {
+                            max-width: 340px;
+                            margin: 0 auto;
+                            border: 1px solid #ddd;
+                            padding: 25px;
+                            background: #fff;
+                        }
+                        .logo-section {
+                            text-align: center;
+                            margin-bottom: 20px;
+                            padding-bottom: 20px;
+                            border-bottom: 1px dashed #ccc;
+                        }
+                        .logo-section img {
+                            width: 50px;
+                            height: 50px;
+                            object-fit: contain;
+                            border: 1px solid #ddd;
+                            padding: 5px;
+                            background: #fff;
+                            border-radius: 6px;
+                        }
+                        .header-section {
+                            text-align: center;
+                            margin-bottom: 25px;
+                            padding-bottom: 20px;
+                            border-bottom: 1px solid #ddd;
+                        }
+                        .station-name {
+                            font-size: 16px;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            color: #222;
+                        }
+                        .station-info {
+                            font-size: 11px;
+                            line-height: 1.8;
+                            color: #666;
+                        }
+                        .divider {
+                            border-top: 1px dashed #ccc;
+                            margin: 20px 0;
+                        }
+                        .transaction-section {
+                            margin-bottom: 20px;
+                        }
+                        .info-row {
+                            display: flex;
+                            justify-content: space-between;
+                            padding: 8px 0;
+                            font-size: 12px;
+                            line-height: 1.6;
+                        }
+                        .info-label {
+                            font-weight: 600;
+                            color: #444;
+                        }
+                        .info-value {
+                            text-align: right;
+                            color: #222;
+                        }
+                        .totals-section {
+                            margin-top: 25px;
+                            padding-top: 20px;
+                            border-top: 2px solid #333;
+                            background: #f5f5f5;
+                            padding: 15px;
+                            margin-left: -25px;
+                            margin-right: -25px;
+                            padding-left: 25px;
+                            padding-right: 25px;
+                        }
+                        .total-row {
+                            display: flex;
+                            justify-content: space-between;
+                            padding: 8px 0;
+                            font-size: 13px;
+                            font-weight: bold;
+                            color: #000;
+                        }
+                        .footer-section {
+                            text-align: center;
+                            margin-top: 25px;
+                            padding-top: 20px;
+                            border-top: 1px dashed #ccc;
+                            font-size: 11px;
+                            font-style: italic;
+                            color: #888;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-container">
+                        <div class="logo-section">
+                            <img src="${siteLogo}" alt="Station Logo" onerror="this.src='/uploads/defaultlogo.png'">
+                        </div>
+                        
+                        <div class="header-section">
+                            <div class="station-name">${siteName}</div>
+                            <div class="station-info">
+                                ${siteAddress}<br>
+                                Tel: ${sitePhone}
+                            </div>
+                        </div>
+                        
+                        <div class="transaction-section">
+                            <div class="info-row">
+                                <span class="info-label">Transaction ID:</span>
+                                <span class="info-value">${tds.eq(0).text()}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Date & Time:</span>
+                                <span class="info-value">${tds.eq(1).text()}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Dispenser:</span>
+                                <span class="info-value">${tds.eq(2).text()}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Nozzle:</span>
+                                <span class="info-value">${tds.eq(3).text()}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Fuel Type:</span>
+                                <span class="info-value">${tds.eq(4).text()}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="divider"></div>
+                        
+                        <div class="transaction-section">
+                            <div class="info-row">
+                                <span class="info-label">Litres:</span>
+                                <span class="info-value">${tds.eq(5).text()}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Unit Price:</span>
+                                <span class="info-value">${tds.eq(6).text()}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Amount:</span>
+                                <span class="info-value">${tds.eq(7).text()}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="totals-section">
+                            <div class="total-row">
+                                <span>Total Liter:</span>
+                                <span>${tds.eq(8).text()}</span>
+                            </div>
+                            <div class="total-row">
+                                <span>Total Cash:</span>
+                                <span>${tds.eq(9).text()}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="footer-section">
+                            Thank you for your business!
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
 
-            var w = window.open('', '', 'width=350,height=500');
-            w.document.write('<pre style="margin:0;padding:10px;">' + receipt + '</pre>');
+            var w = window.open('', '', 'width=400,height=600');
+            w.document.write(receiptHTML);
             w.document.close();
             w.print();
             w.close();
