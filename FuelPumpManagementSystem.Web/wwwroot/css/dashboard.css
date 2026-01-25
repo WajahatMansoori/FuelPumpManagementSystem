@@ -199,9 +199,9 @@ body {
 
 .theme-toggle-container {
     display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 0.75rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 1.25rem;
 }
 
 .datetime-display {
@@ -316,85 +316,154 @@ body {
     stroke-width: 2;
 }
 
-/* Theme Toggle Button */
+/* Theme Toggle Button - Enhanced Modern Design */
 .theme-toggle-btn {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.65rem 1.25rem;
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%);
-    border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 12px;
-    color: var(--text-primary);
+    gap: 0.75rem;
+    padding: 0.85rem 1.75rem;
+    background: linear-gradient(135deg, #550000 0%, #770000 50%, #550000 100%);
+    background-size: 200% 200%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50px;
+    color: #ffffff;
     cursor: pointer;
-    font-size: 0.9rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 0 20px rgba(85, 0, 0, 0.6), 0 4px 15px rgba(85, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
     backdrop-filter: blur(10px);
+    position: relative;
+    overflow: hidden;
+    animation: pulseGlow 3s ease-in-out infinite, gradientShift 4s ease infinite;
+}
+
+.theme-toggle-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    transition: left 0.5s ease;
+}
+
+.theme-toggle-btn:hover::before {
+    left: 100%;
 }
 
 .theme-toggle-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-    border-color: rgba(59, 130, 246, 0.5);
-    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(16, 185, 129, 0.2) 100%);
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 0 30px rgba(85, 0, 0, 0.8), 0 8px 25px rgba(85, 0, 0, 0.6), 0 4px 15px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+    animation: pulseGlow 1.5s ease-in-out infinite, gradientShift 2s ease infinite;
 }
 
 .theme-toggle-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+    transform: translateY(-1px) scale(0.98);
+    box-shadow: 0 3px 12px rgba(85, 0, 0, 0.4);
 }
 
 .theme-icon {
-    width: 18px;
-    height: 18px;
+    width: 22px;
+    height: 22px;
     stroke-width: 2.5;
-    transition: all 0.3s ease;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    filter: drop-shadow(0 2px 6px rgba(255, 255, 255, 0.4));
 }
 
 .theme-toggle-btn:hover .theme-icon {
-    transform: rotate(20deg) scale(1.1);
+    transform: rotate(180deg) scale(1.15);
+    filter: drop-shadow(0 3px 6px rgba(255, 255, 255, 0.5));
 }
 
 .theme-text {
-    font-weight: 600;
-    letter-spacing: 0.3px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 255, 255, 0.3);
+    transition: all 0.3s ease;
 }
 
-/* Light theme button styling */
+.theme-toggle-btn:hover .theme-text {
+    letter-spacing: 0.8px;
+    text-shadow: 0 2px 6px rgba(255, 255, 255, 0.4);
+}
+
+/* Pulsing Glow Animation */
+@keyframes pulseGlow {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(85, 0, 0, 0.6), 0 4px 15px rgba(85, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(85, 0, 0, 0.8), 0 6px 20px rgba(85, 0, 0, 0.6), 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* Gradient Shift Animation */
+@keyframes gradientShift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+/* Light theme button styling - Enhanced */
 body.light-theme .theme-toggle-btn {
-    background: linear-gradient(135deg, rgba(255, 165, 0, 0.15) 0%, rgba(239, 68, 68, 0.15) 100%);
-    border-color: rgba(255, 165, 0, 0.3);
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #1e40af 100%);
+    background-size: 200% 200%;
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 20px rgba(30, 64, 175, 0.6), 0 4px 15px rgba(30, 64, 175, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: pulseGlowBlue 3s ease-in-out infinite, gradientShift 4s ease infinite;
+}
+
+@keyframes pulseGlowBlue {
+    0%, 100% {
+        box-shadow: 0 0 20px rgba(30, 64, 175, 0.6), 0 4px 15px rgba(30, 64, 175, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(30, 64, 175, 0.8), 0 6px 20px rgba(30, 64, 175, 0.6), 0 3px 10px rgba(0, 0, 0, 0.3);
+    }
 }
 
 body.light-theme .theme-toggle-btn:hover {
-    background: linear-gradient(135deg, rgba(255, 165, 0, 0.2) 0%, rgba(239, 68, 68, 0.2) 100%);
-    border-color: rgba(255, 165, 0, 0.5);
-    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3);
+    box-shadow: 0 0 30px rgba(30, 64, 175, 0.9), 0 8px 25px rgba(30, 64, 175, 0.6), 0 4px 15px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    animation: pulseGlowBlue 1.5s ease-in-out infinite, gradientShift 2s ease infinite;
 }
 
 @media (max-width: 768px) {
     .theme-toggle-btn {
-        padding: 0.5rem 1rem;
+        padding: 0.65rem 1.2rem;
+        font-size: 0.9rem;
+        gap: 0.5rem;
+    }
+    
+    .theme-icon {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .theme-toggle-btn {
+        padding: 0.6rem 1rem;
         font-size: 0.85rem;
+        gap: 0.45rem;
     }
     
     .theme-icon {
         width: 16px;
         height: 16px;
     }
-}
-
-@media (max-width: 480px) {
-    .theme-toggle-btn {
-        padding: 0.45rem 0.85rem;
-        font-size: 0.8rem;
-    }
     
-    .theme-icon {
-        width: 14px;
-        height: 14px;
+    .theme-text {
+        font-size: 0.8rem;
     }
 }
 
@@ -520,10 +589,30 @@ body.light-theme .theme-toggle-btn:hover {
 .dispenser-card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 1rem;
     backdrop-filter: blur(10px);
     animation: fadeInUp 0.5s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.dispenser-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Light theme dispenser card styling */
+body.light-theme .dispenser-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    border: 2px solid #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+body.light-theme .dispenser-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), 0 4px 8px rgba(0, 0, 0, 0.08);
+    border-color: #d1d5db;
 }
 
 @keyframes fadeInUp {
@@ -676,9 +765,65 @@ body.light-theme .theme-toggle-btn:hover {
 .nozzle-card {
     background-color: rgba(0, 0, 0, 0.3);
     border: 1px solid var(--border-color);
-    border-radius: 8px;
+    border-radius: 12px;
     padding: 0.75rem;
     transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.nozzle-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: all 0.3s ease;
+}
+
+.nozzle-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Light theme nozzle card styling - Vibrant & Unique */
+body.light-theme .nozzle-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 2px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+body.light-theme .nozzle-card::before {
+    height: 4px;
+    background: linear-gradient(90deg, #10b981, #3b82f6, #ffa500);
+    opacity: 0.6;
+}
+
+body.light-theme .nozzle-card:hover {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1);
+    border-color: #cbd5e1;
+}
+
+body.light-theme .nozzle-card:hover::before {
+    opacity: 1;
+    height: 5px;
+}
+
+/* Fuel type specific colored accents for light theme */
+body.light-theme .nozzle-card:has(.fuel-nozzle.green)::before {
+    background: linear-gradient(90deg, transparent, #10b981, transparent);
+}
+
+body.light-theme .nozzle-card:has(.fuel-nozzle.blue)::before {
+    background: linear-gradient(90deg, transparent, #3b82f6, transparent);
+}
+
+body.light-theme .nozzle-card:has(.fuel-nozzle.gold)::before {
+    background: linear-gradient(90deg, transparent, #ffa500, transparent);
 }
 
 /* Disabled nozzle styling */
@@ -688,20 +833,20 @@ body.light-theme .theme-toggle-btn:hover {
     filter: grayscale(100%);
 }
 
-.nozzle-card.disabled .nozzle-label,
-.nozzle-card.disabled .detail-row span,
-.nozzle-card.disabled .detail-value,
-.nozzle-card.disabled .detail-value.amount,
-.nozzle-card.disabled .total-value {
-    color: #9ca3af !important;
-}
-
 .nozzle-card.disabled .fuel-nozzle {
     opacity: 0.4;
 }
 
 body.light-theme .nozzle-card:has(.nozzle-status.disabled) {
-    background-color: #d1d5db;
+    background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+    border-color: #d1d5db;
+    opacity: 0.65;
+    filter: grayscale(50%);
+}
+
+body.light-theme .nozzle-card:has(.nozzle-status.disabled)::before {
+    background: #9ca3af;
+    opacity: 0.3;
 }
 
 body.light-theme .nozzle-card:has(.nozzle-status.disabled) .nozzle-label,
@@ -710,6 +855,23 @@ body.light-theme .nozzle-card:has(.nozzle-status.disabled) .detail-value,
 body.light-theme .nozzle-card:has(.nozzle-status.disabled) .detail-value.amount,
 body.light-theme .nozzle-card:has(.nozzle-status.disabled) .total-value {
     color: #6b7280 !important;
+}
+
+/* Enhanced status badges for light theme */
+body.light-theme .status-badge.online {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.3) 100%);
+    color: #047857;
+    border: 1.5px solid rgba(16, 185, 129, 0.4);
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+}
+
+body.light-theme .status-badge.offline {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.3) 100%);
+    color: #b91c1c;
+    border: 1.5px solid rgba(239, 68, 68, 0.4);
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
 }
 
 .nozzle-header {

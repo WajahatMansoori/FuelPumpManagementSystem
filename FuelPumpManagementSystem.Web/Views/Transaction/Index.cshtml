@@ -639,17 +639,17 @@
                         }
                         .divider {
                             border-top: 1px dashed #ccc;
-                            margin: 20px 0;
+                            margin: 15px 0;
                         }
                         .transaction-section {
-                            margin-bottom: 20px;
+                            margin-bottom: 15px;
                         }
                         .info-row {
                             display: flex;
                             justify-content: space-between;
-                            padding: 8px 0;
+                            padding: 6px 0;
                             font-size: 12px;
-                            line-height: 1.6;
+                            line-height: 1.5;
                         }
                         .info-label {
                             font-weight: 600;
@@ -713,14 +713,6 @@
                                 <span class="info-value">${tds.eq(1).text()}</span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">Dispenser:</span>
-                                <span class="info-value">${tds.eq(2).text()}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Nozzle:</span>
-                                <span class="info-value">${tds.eq(3).text()}</span>
-                            </div>
-                            <div class="info-row">
                                 <span class="info-label">Fuel Type:</span>
                                 <span class="info-value">${tds.eq(4).text()}</span>
                             </div>
@@ -743,16 +735,7 @@
                             </div>
                         </div>
                         
-                        <div class="totals-section">
-                            <div class="total-row">
-                                <span>Total Liter:</span>
-                                <span>${tds.eq(8).text()}</span>
-                            </div>
-                            <div class="total-row">
-                                <span>Total Cash:</span>
-                                <span>${tds.eq(9).text()}</span>
-                            </div>
-                        </div>
+                        <div class="divider"></div>
                         
                         <div class="footer-section">
                             Thank you for your business!
