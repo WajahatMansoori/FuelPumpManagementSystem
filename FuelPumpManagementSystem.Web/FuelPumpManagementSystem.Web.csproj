@@ -7,6 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\FuelPumpManagementSystem.Application\FuelPumpManagementSystem.Application.csproj" />
   </ItemGroup>
 
