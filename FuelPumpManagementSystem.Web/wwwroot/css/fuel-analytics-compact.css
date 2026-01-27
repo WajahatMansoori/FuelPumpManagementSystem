@@ -1,0 +1,50 @@
+/* Compact spacing overrides for category and dispenser views */
+.category-view .card-body,
+.dispenser-view .card-body {
+    padding: 0.75rem !important;
+}
+
+.category-section .card,
+.dispenser-card .card {
+    margin-bottom: 0.5rem !important;
+}
+
+.category-view h6,
+.dispenser-view h6 {
+    margin-bottom: 0.25rem !important;
+    margin-top: 0 !important;
+}
+
+/* Reduce card body padding in summary cards */
+.category-view .card-body .card-body,
+.dispenser-view .card-body .card-body {
+    padding: 0.5rem !important;
+}
+
+/* Minimize chart container spacing */
+.category-view canvas,
+.dispenser-view canvas {
+    margin-bottom: 0 !important;
+    margin-top: 0 !important;
+    display: block !important;
+}
+
+/* Tighter row spacing */
+.category-view .row,
+.dispenser-view .row {
+    margin-bottom: 0.25rem !important;
+    margin-top: 0 !important;
+}
+
+/* Remove extra spacing from chart columns */
+.category-view .col-md-6,
+.dispenser-view .col-md-6 {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+/* Eliminate gaps in chart containers */
+.category-view .row.g-2,
+.dispenser-view .row.g-2 {
+    row-gap: 0 !important;
+}

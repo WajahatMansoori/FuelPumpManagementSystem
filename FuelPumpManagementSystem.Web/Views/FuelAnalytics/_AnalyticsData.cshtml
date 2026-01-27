@@ -155,10 +155,10 @@
     {
         <!-- View 2: Per Dispenser Sales -->
         <div class="dispenser-view">
-            <h4 class="mb-4">Per Dispenser Sales</h4>
+            <h4 class="mb-2">Per Dispenser Sales</h4>
             
             <!-- Dispenser Selection -->
-            <div class="dispenser-selection mb-4">
+            <div class="dispenser-selection mb-2">
                 <div class="card">
                     <div class="card-header">
                         <h6 class="card-title mb-0">Select Dispensers</h6>
@@ -194,14 +194,14 @@
                     {
                         var dispenserTransactions = Model.Transactions.Where(t => t.DispenserId == dispenser).ToList();
                         
-                        <div class="dispenser-card mb-4">
+                        <div class="dispenser-card mb-2">
                             <div class="card">
                                 <div class="card-header">
                                     <h6 class="card-title mb-0">Dispenser @dispenser Analytics</h6>
                                 </div>
                                 <div class="card-body">
                                     <!-- Summary Cards for this dispenser -->
-                                    <div class="row g-3 mb-3">
+                                    <div class="row g-3 mb-2">
                                         <div class="col-md-3">
                                             <div class="card text-center bg-light">
                                                 <div class="card-body">
@@ -237,7 +237,7 @@
                                     </div>
                                     
                                     <!-- Charts for this dispenser -->
-                                    <div class="row g-3">
+                                   @*  <div class="row g-3">
                                         <div class="col-md-6">
                                             <canvas id="dispenser_@dispenser.ToString()_fuelMix" height="200"></canvas>
                                         </div>
@@ -245,7 +245,7 @@
                                             <h6>Performance</h6>
                                             <canvas id="dispenser_@dispenser.ToString()_performance" height="200"></canvas>
                                         </div>
-                                    </div>
+                                    </div> *@
                                 </div>
                             </div>
                         </div>
@@ -258,7 +258,7 @@
     {
         <!-- View 3: Per Fuel Category Sales -->
         <div class="category-view">
-            <h4 class="mb-4">Per Fuel Category Sales</h4>
+            <h4 class="mb-2">Per Fuel Category Sales</h4>
             
             @if (Model.Products.Any())
             {
@@ -271,14 +271,14 @@
                         var categoryProductIds = categoryProducts.Select(p => p.ProductId).ToList();
                         var categoryTransactions = Model.Transactions.Where(t => categoryProductIds.Contains(t.ProductTypeId)).ToList();
                         
-                        <div class="category-section mb-4">
+                        <div class="category-section mb-2">
                             <div class="card">
                                 <div class="card-header">
                                     <h6 class="card-title mb-0">@category Category Analytics</h6>
                                 </div>
                                 <div class="card-body">
                                     <!-- Category Summary -->
-                                    <div class="row g-3 mb-3">
+                                    <div class="row g-2 mb-1">
                                         <div class="col-md-3">
                                             <div class="card text-center bg-light">
                                                 <div class="card-body">
@@ -314,16 +314,16 @@
                                     </div>
                                     
                                     <!-- Category Charts -->
-                                    <div class="row g-3">
+                                  @*   <div class="row g-2">
                                         <div class="col-md-6">
-                                            <h6>Dispenser Breakdown</h6>
-                                            <canvas id="category_@category.ToLower()_dispensers" height="200"></canvas>
+                                            <h6 class="mb-1">Dispenser Breakdown</h6>
+                                            <canvas id="category_@category.ToLower()_dispensers" height="100"></canvas>
                                         </div>
                                         <div class="col-md-6">
-                                            <h6>Monthly Trend</h6>
-                                            <canvas id="category_@category.ToLower()_trend" height="200"></canvas>
+                                            <h6 class="mb-1">Monthly Trend</h6>
+                                            <canvas id="category_@category.ToLower()_trend" height="100"></canvas>
                                         </div>
-                                    </div>
+                                    </div> *@
                                 </div>
                             </div>
                         </div>

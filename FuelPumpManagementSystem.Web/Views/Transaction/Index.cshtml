@@ -603,6 +603,45 @@
                             padding: 25px;
                             background: #fff;
                         }
+                        
+                        /* Thermal Printer Specific Styles */
+                        @@media print {
+                            @@page {
+                                size: 80mm auto;
+                                margin: 0;
+                            }
+                            
+                            * {
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                            }
+                            
+                            body {
+                                width: 80mm;
+                                padding: 0;
+                                margin: 0;
+                                background: #ffffff;
+                            }
+                            
+                            .receipt-container {
+                                max-width: 80mm;
+                                width: 80mm;
+                                margin: 0;
+                                padding: 10px;
+                                border: none;
+                                page-break-inside: avoid;
+                                page-break-after: avoid;
+                                page-break-before: avoid;
+                            }
+                            
+                            .logo-section,
+                            .header-section,
+                            .transaction-section,
+                            .divider,
+                            .footer-section {
+                                page-break-inside: avoid;
+                            }
+                        }
                         .logo-section {
                             text-align: center;
                             margin-bottom: 20px;
